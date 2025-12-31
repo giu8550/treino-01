@@ -106,14 +106,14 @@ export default function MacSplash({
 
     if (!visible) return null;
 
-    // Frases místicas (chinês) por fase: 1, 2, 3/4
-    const cnPhrase =
+    // Frases místicas (Coreano) por fase: 1, 2, 3/4
+    const krPhrase =
         phase >= 4 || phase === 3
-            ? "世界的希望诞生了。"
+            ? "세계의 희망이 탄생했습니다."
             : phase === 2
-                ? "太阳、月亮与群星是我们的家"
+                ? "태양, 달, 별은 우리의 집입니다"
                 : phase === 1
-                    ? "我们皆为一体"
+                    ? "우리는 모두 하나입니다"
                     : "";
 
     return (
@@ -159,8 +159,8 @@ export default function MacSplash({
                 </div>
 
                 {/* Espaço maior entre a barra e os textos */}
-                {/* Linha mística em chinês (azul), pequena e discreta */}
-                {cnPhrase && (
+                {/* Linha mística em coreano (azul), pequena e discreta */}
+                {krPhrase && (
                     <div
                         className="mt-6 text-center text-[9px] leading-tight text-sky-400/90"
                         style={{
@@ -169,7 +169,7 @@ export default function MacSplash({
                         }}
                         aria-hidden="true"
                     >
-                        {cnPhrase}
+                        {krPhrase}
                     </div>
                 )}
 

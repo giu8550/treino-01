@@ -6,16 +6,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation"; // --- ADDED THIS IMPORT ---
 import { slideInFromLeft, slideInFromRight, slideInFromTop } from "@/lib/motion";
 import onboardPng from "@/app/onboard.png";
 
-// --- IMPORTS CORRIGIDOS ---
+// --- IMPORTS ---
 import { useTranslation } from "react-i18next";
-
-// Se HeroContent está em "src/components/sub/", sobe 2 níveis para achar "src/i18n.ts"
 import "../../src/i18n";
-
-// Importa o background da pasta "src/components/main/"
 import MatrixRain from "@/components/main/star-background";
 
 /* ----------------------- Types & Constants ----------------------- */
@@ -40,7 +37,7 @@ type Role = typeof ROLES[number]["slug"];
 
 /* ----------------------- Onboarding Modal ----------------------- */
 
-function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => void; role: Role }) {
+function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClose: () => void; role: Role; onSuccess: (data: any) => void }) {
   const { t } = useTranslation();
 
   const [idValue, setIdValue] = useState("");
@@ -57,14 +54,12 @@ function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => v
   const phoneRef = useRef<HTMLInputElement | null>(null);
 
   const roleObj = ROLES.find((r) => r.slug === role);
-  // Fallback de segurança para o label
   const roleLabel = roleObj ? t(roleObj.key) : role;
 
   const getRequirements = () => {
     if (useWallet) {
       return { label: t("modal.wallet_label"), placeholder: t("modal.wallet_placeholder") };
     }
-
     switch (role) {
       case "student": return { label: t("modal.lbl_student"), placeholder: t("modal.ph_student") };
       case "researcher": return { label: t("modal.lbl_researcher"), placeholder: t("modal.ph_researcher") };
@@ -88,9 +83,7 @@ function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => v
   const validate = (idx: number) => {
     const key = steps[idx]?.key;
     if (!key) return false;
-    if (key === "id") {
-      return useWallet ? idValue.trim().length > 20 : idValue.trim().length > 3;
-    }
+    if (key === "id") return useWallet ? idValue.trim().length > 20 : idValue.trim().length > 3;
     if (key === "name") return fullName.trim().length > 2;
     if (key === "email") return /\S+@\S+\.\S+/.test(email);
     if (key === "phone") return phone.trim().replace(/\D/g, "").length >= 10;
@@ -101,20 +94,11 @@ function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => v
 
   useEffect(() => {
     if (open) {
-      setIdValue("");
-      setFullName("");
-      setEmail("");
-      setPhone("");
-      setStep(0);
-      setUseWallet(false);
-
+      setIdValue(""); setFullName(""); setEmail(""); setPhone(""); setStep(0); setUseWallet(false);
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       const t = setTimeout(() => idRef.current?.focus(), 20);
-      return () => {
-        clearTimeout(t);
-        document.body.style.overflow = originalOverflow;
-      };
+      return () => { clearTimeout(t); document.body.style.overflow = originalOverflow; };
     }
   }, [open]);
 
@@ -129,6 +113,21 @@ function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => v
     }, 10);
     return () => clearTimeout(t);
   }, [step, open]);
+
+  const handleSubmit = () => {
+    if (canSubmit) {
+      // Pass data back to parent for redirection logic
+      onSuccess({
+        role,
+        id: idValue,
+        idType: useWallet ? 'wallet' : 'role_id',
+        name: fullName,
+        email,
+        phone
+      });
+      onClose();
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
@@ -145,16 +144,8 @@ function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => v
       if (!validate(step)) return;
       if (step < lastIndex) {
         setStep((s) => Math.min(lastIndex, s + 1));
-      } else if (canSubmit) {
-        const q = new URLSearchParams({
-          role,
-          id: idValue,
-          idType: useWallet ? 'wallet' : 'role_id',
-          name: fullName,
-          email,
-          phone
-        }).toString();
-        window.location.assign(`/signup?${q}`);
+      } else {
+        handleSubmit();
       }
     }
   };
@@ -182,18 +173,10 @@ function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => v
                         <p className="text-[12px] text-white font-semibold">{s.label}</p>
                         {s.key === 'id' && (
                             <button
-                                onClick={() => {
-                                  setUseWallet(!useWallet);
-                                  setIdValue("");
-                                  idRef.current?.focus();
-                                }}
+                                onClick={() => { setUseWallet(!useWallet); setIdValue(""); idRef.current?.focus(); }}
                                 className="ml-2 text-[10px] uppercase font-bold tracking-wide text-cyan-400 hover:text-cyan-200 transition-colors flex items-center gap-1 bg-black/20 px-2 py-1 rounded"
                             >
-                              {useWallet ? (
-                                  <><IdentificationIcon className="w-3 h-3" /> {t("modal.use_id")}</>
-                              ) : (
-                                  <><WalletIcon className="w-3 h-3" /> {t("modal.use_wallet")}</>
-                              )}
+                              {useWallet ? ( <><IdentificationIcon className="w-3 h-3" /> {t("modal.use_id")}</> ) : ( <><WalletIcon className="w-3 h-3" /> {t("modal.use_wallet")}</> )}
                             </button>
                         )}
                       </div>
@@ -202,7 +185,7 @@ function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => v
                 );
               })}
               <div className="flex items-center gap-3 pt-3">
-                <button disabled={!canSubmit} onClick={() => {}} className={["rounded-xl px-5 h-10 text-sm font-semibold text-white", "bg-[linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)] hover:brightness-110", "shadow-[0_0_22px_rgba(56,189,248,0.38)] transition", !canSubmit ? "opacity-50 cursor-not-allowed" : ""].join(" ")}>{t("modal.continue")}</button>
+                <button disabled={!canSubmit} onClick={handleSubmit} className={["rounded-xl px-5 h-10 text-sm font-semibold text-white", "bg-[linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)] hover:brightness-110", "shadow-[0_0_22px_rgba(56,189,248,0.38)] transition", !canSubmit ? "opacity-50 cursor-not-allowed" : ""].join(" ")}>{t("modal.continue")}</button>
                 <button onClick={onClose} className="rounded-xl px-5 h-10 text-sm font-semibold text-white/80 hover:text-white border border-white/15">{t("modal.cancel")}</button>
               </div>
             </div>
@@ -218,9 +201,9 @@ function OnboardModal({ open, onClose, role }: { open: boolean; onClose: () => v
 
 /* ---------------------------------------------------------------- */
 
-// COMPONENTE INTERNO
 const HeroContentComponent = () => {
   const { t, i18n } = useTranslation();
+  const router = useRouter(); // --- HOOK FOR NAVIGATION ---
 
   const [index, setIndex] = useState(0);
   const [roleIndex, setRoleIndex] = useState(0);
@@ -236,6 +219,14 @@ const HeroContentComponent = () => {
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
+  };
+
+  // --- REDIRECTION LOGIC ---
+  const handleOnboardSuccess = (data: any) => {
+    // You can append query params here if you want to pass data to the WorkStation
+    const query = new URLSearchParams(data).toString();
+    // Redirect to the separated WorkStation page
+    router.push(`/workstation?${query}`);
   };
 
   useEffect(() => {
@@ -381,7 +372,7 @@ const HeroContentComponent = () => {
             <motion.div initial="hidden" animate="visible" className="flex-1 min-h-[60vh] flex items-start">
               <div>
                 <motion.div variants={slideInFromTop} className="w-fit py-2 px-3 border border-white/15 bg-white/5 rounded-lg flex items-center gap-2 shadow-[0_0_24px_rgba(34,211,238,0.16)]">
-                  <span className="text-[13px] text-white/85"></span>
+                  <span className="text-[13px] text-white/85">Research Node v2.1</span>
                 </motion.div>
                 <motion.h1 variants={slideInFromRight(0.28)} className="mt-6 text-5xl sm:text-6xl font-light tracking-tight leading-tight max-w-[780px] select-none">
                   <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)", backgroundSize: "260% 100%", WebkitTextStroke: "0.4px rgba(255,255,255,0.08)", }} />
@@ -391,10 +382,9 @@ const HeroContentComponent = () => {
           </div>
           <style jsx global>{` @keyframes float { 0%, 100% { transform: translateY(-4px) scale(1); opacity: .9; } 50% { transform: translateY(4px) scale(1.02); opacity: 1; } } `}</style>
         </div>
-        <OnboardModal open={onboardOpen} onClose={handleModalClose} role={chosenRole} />
+        <OnboardModal open={onboardOpen} onClose={handleModalClose} role={chosenRole} onSuccess={handleOnboardSuccess} />
       </>
   );
 }
 
-// --- EXPORT COMO DYNAMIC PARA CORRIGIR ERRO DE HIDRATAÇÃO ---
 export const HeroContent = dynamic(() => Promise.resolve(HeroContentComponent), { ssr: false });
