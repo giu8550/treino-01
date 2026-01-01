@@ -3,7 +3,7 @@
 **The Decentralized Knowledge Engine Powered by AI & VERY Blockchain**
 *(VERY Hackathon Submission)*
 
-![Zaeon Banner](./public/zaeon-brain.png)
+![Zaeon Banner](public/zaeon-logo.png)
 
 ## 🌍 Overview
 

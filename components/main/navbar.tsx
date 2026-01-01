@@ -1,87 +1,79 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic"; // Import para SSR
-
-// --- IMPORT CORRIGIDO ---
 import { useTranslation } from "react-i18next";
-// Se Navbar está em src/components/main/, subir 2 níveis chega em src/
-import "../../src/i18n";
-
-import CONSTS from "@/constants";
-import type { ComponentType } from "react";
 import logoPng from "@/app/zaeon-name.png";
 
-type NavLink = { title: string; link: string };
-type Social = { name: string; link: string; icon?: ComponentType<{ className?: string }> | null };
-type LinksObj = { sourceCode?: string };
-
-const RAW = (CONSTS as unknown) as {
-  NAV_LINKS?: NavLink[];
-  SOCIALS?: Social[];
-  LINKS?: LinksObj;
-} | undefined;
-
-const NAV_LINKS: NavLink[] = Array.isArray(RAW?.NAV_LINKS) ? (RAW!.NAV_LINKS as NavLink[]) : [];
-const SOCIALS: Social[] = Array.isArray(RAW?.SOCIALS) ? (RAW!.SOCIALS as Social[]) : [];
-const LINKS: LinksObj = RAW?.LINKS ?? {};
+// Importação do Botão de Tema (Essencial para sua feature nova)
+import ThemeToggle from "@/components/sub/ThemeToggle";
+// Ajuste o caminho do i18n se necessário
+import "../../src/i18n";
 
 const NavbarComponent = () => {
   const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-      <div className="w-full h-[90px] fixed top-0 z-50 flex justify-center items-center">
-        {/* container estilo notch centralizado e mais amplo */}
-        <div className="w-[96%] max-w-[1250px] h-[58px] rounded-3xl backdrop-blur-md bg-[#0a0a0a90] border border-[#1e293b66] shadow-[0_4px_20px_rgba(0,0,0,0.3)] flex items-center justify-between px-10 transition-all duration-300">
+      <div className="w-full h-[90px] fixed top-0 z-50 flex justify-center items-center pointer-events-none">
+        {/* pointer-events-auto no filho para que o clique funcione, mas o container não bloqueie a chuva */}
+        <div className="pointer-events-auto w-[96%] max-w-[1250px] h-[58px] rounded-3xl backdrop-blur-md
+                        bg-background/80 border border-foreground/10 shadow-lg
+                        flex items-center justify-between px-6 md:px-10 transition-all duration-300">
 
-          {/* logo (levemente menor) */}
+          {/* LOGO */}
           <Link href="/" className="flex items-center justify-center">
             <Image
                 src={logoPng}
                 alt="zaeonlogo"
-                width={180}
-                height={180}
+                width={190}
+                height={100}
                 priority
                 draggable={false}
-                className="h-14 w-auto object-contain"
+                className="h-8 w-auto object-contain invert dark:invert-0 transition-all" // Inverte cor no modo claro se for PNG preto/branco
             />
           </Link>
 
-          {/* menu desktop */}
-          <nav className="hidden md:flex justify-center flex-1 gap-12 text-[14px] font-medium text-slate-200 tracking-wide">
-            <Link href="#about-us" className="hover:text-[#5fb4ff] transition-all duration-200 hover:scale-105">
+          {/* MENU DESKTOP */}
+          <nav className="hidden md:flex justify-center flex-1 gap-12 text-[14px] font-medium text-foreground/80 tracking-wide">
+            <Link href="#about-us" className="hover:text-cyan-500 dark:hover:text-[#5fb4ff] transition-all duration-200 hover:scale-105">
               {t("navbar.about")}
             </Link>
-            <Link href="#roadmap" className="hover:text-[#5fb4ff] transition-all duration-200 hover:scale-105">
+            <Link href="#roadmap" className="hover:text-cyan-500 dark:hover:text-[#5fb4ff] transition-all duration-200 hover:scale-105">
               {t("navbar.roadmap")}
             </Link>
-            <Link href="#study-rooms" className="hover:text-[#5fb4ff] transition-all duration-200 hover:scale-105">
+            <Link href="#study-rooms" className="hover:text-cyan-500 dark:hover:text-[#5fb4ff] transition-all duration-200 hover:scale-105">
               {t("navbar.study_rooms")}
             </Link>
           </nav>
 
-          {/* menu mobile toggle */}
-          <button
-              className="md:hidden text-white focus:outline-none text-3xl"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            ☰
-          </button>
+          {/* DIREITA: TEMA + MOBILE TOGGLE */}
+          <div className="flex items-center gap-4">
+            {/* Botão de Tema Integrado */}
+            <ThemeToggle />
+
+            {/* Hamburger Mobile */}
+            <button
+                className="md:hidden text-foreground focus:outline-none text-2xl"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              ☰
+            </button>
+          </div>
         </div>
 
-        {/* menu mobile */}
+        {/* MENU MOBILE EXPANDIDO */}
         {isMobileMenuOpen && (
-            <div className="absolute top-[90px] left-0 w-full bg-[#0b0b0bcc] backdrop-blur-md p-6 flex flex-col items-center text-gray-300 md:hidden border-t border-[#1e293b80]">
-              <Link href="#about-us" className="py-2 hover:text-[#5fb4ff]" onClick={() => setIsMobileMenuOpen(false)}>
+            <div className="pointer-events-auto absolute top-[80px] w-[90%] max-w-[400px] rounded-2xl bg-background/95 border border-foreground/10 backdrop-blur-xl p-6 flex flex-col items-center text-foreground shadow-2xl animate-in slide-in-from-top-5">
+              <Link href="#about-us" className="py-3 w-full text-center hover:bg-foreground/5 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
                 {t("navbar.about")}
               </Link>
-              <Link href="#roadmap" className="py-2 hover:text-[#5fb4ff]" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="#roadmap" className="py-3 w-full text-center hover:bg-foreground/5 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
                 {t("navbar.roadmap")}
               </Link>
-              <Link href="#study-rooms" className="py-2 hover:text-[#5fb4ff]" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="#study-rooms" className="py-3 w-full text-center hover:bg-foreground/5 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
                 {t("navbar.study_rooms")}
               </Link>
             </div>
@@ -90,5 +82,5 @@ const NavbarComponent = () => {
   );
 };
 
-// Exportar com SSR: false para evitar erro de hidratação
+// SSR: false é vital para evitar erros de hidratação na Navbar (por causa do i18n e Theme)
 export const Navbar = dynamic(() => Promise.resolve(NavbarComponent), { ssr: false });
