@@ -48,6 +48,7 @@
     "url": "https://github.com/YOUR_USERNAME/zaeon-os/issues"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.1.1",
     "@react-three/drei": "^9.122.0",

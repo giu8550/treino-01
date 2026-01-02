@@ -14,7 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import dynamic from "next/dynamic"; // Importação vital para corrigir o erro de Hydration
+import dynamic from "next/dynamic";
 
 // Importações internas
 import { slideInFromLeft } from "@/lib/motion";
@@ -136,7 +136,6 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
 
   if (!open) return null;
 
-  // Input Class (Estilo Dark Glass Fixo)
   const inputClass = "h-10 rounded-lg border border-white/10 bg-black/70 px-3 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-cyan-400/60";
 
   return (
@@ -183,7 +182,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
   );
 }
 
-// --- MAIN HERO CONTENT COMPONENT (O Painel do Menu) ---
+// --- MAIN HERO CONTENT COMPONENT ---
 
 const HeroContentComponent = () => {
   const { t, i18n } = useTranslation();
@@ -240,9 +239,6 @@ const HeroContentComponent = () => {
 
   const handleModalClose = () => { setOnboardOpen(false); setPickerOpen(false); };
 
-  // --- CORREÇÃO DE LARGURA E POSIÇÃO ---
-  // Aumentei max-w para 550px para não ficar estreito
-  // Removi mx-auto e centralizações forçadas no container principal
   const panel = "relative w-full max-w-[480px] mt-24 rounded-2xl overflow-hidden backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.12)] bg-[linear-gradient(135deg,rgba(7,38,77,0.28),rgba(11,58,164,0.25),rgba(16,134,201,0.32),rgba(11,58,164,0.25),rgba(7,38,77,0.28))] bg-[length:400%_400%] animate-[gradientFlow_12s_ease-in-out_infinite] after:pointer-events-none after:absolute after:inset-0 after:bg-[repeating-linear-gradient(transparent_0px,transparent_8px,rgba(255,255,255,0.025)_9px,transparent_10px)] after:opacity-20";
   const cardBase = "group relative overflow-hidden flex items-center justify-between rounded-xl px-5 min-h-[64px] ring-1 ring-white/10 text-white transition-all duration-300 ease-out bg-[linear-gradient(120deg,rgba(3,22,45,0.55),rgba(6,42,90,0.55),rgba(7,60,120,0.55))] hover:bg-[linear-gradient(120deg,rgba(6,50,100,0.65),rgba(8,60,130,0.65))] hover:scale-[1.02] focus-visible:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_12px_rgba(34,211,238,0.12)]";
   const cardSelected = "ring-cyan-300/45 shadow-[0_0_28px_rgba(34,211,238,0.25)]";
@@ -270,8 +266,6 @@ const HeroContentComponent = () => {
   );
 
   return (
-      // CONTAINER PRINCIPAL: w-full e justify-start para forçar esquerda
-      // pl-4 md:pl-20 para dar um respiro da borda
       <div ref={containerRef} className="w-full min-h-screen flex justify-start items-start z-10 relative px-4 md:pl-20 py-12">
         <motion.aside variants={slideInFromLeft(0.12)} initial="hidden" animate="visible" className={panel}>
 
@@ -310,25 +304,30 @@ const HeroContentComponent = () => {
               ) : (
                   <motion.div key="options-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
                     <div className="flex items-center mb-1">
-                      <button onClick={() => setIsOptionsOpen(false)} className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+                      <button
+                          onClick={() => setIsOptionsOpen(false)}
+                          // MUDANÇA AQUI: Cor adaptável para Light (Azul Escuro) e Dark (Cyan Neon)
+                          className="flex items-center gap-2 text-sm font-bold transition-colors text-blue-600 hover:text-blue-500 dark:text-cyan-400 dark:hover:text-cyan-300"
+                      >
                         <ArrowLeftIcon className="w-4 h-4" />
-                        <span className="font-semibold uppercase tracking-wider text-[11px]">{t("menu.back")}</span>
+                        <span className="uppercase tracking-wider text-[11px]">{t("menu.back")}</span>
                       </button>
                     </div>
-                    {/* Language */}
+                    {/* Language Selector */}
                     <div className={`${cardBase} py-2`}>
                       <div className="flex flex-col">
                         <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.language")}</span>
                         <span className="text-[15px] font-semibold text-white">
-                          {i18n.language === 'en' ? 'English' : i18n.language === 'zh' ? '中文 (Mandarin)' : i18n.language === 'pt' ? 'Português' : i18n.language === 'es' ? 'Español' : 'Français'}
+                          {i18n.language === 'en' ? 'English' : i18n.language === 'zh' ? '中文 (Mandarin)' : i18n.language === 'ko' ? '한국어 (Korean)' : i18n.language === 'fr' ? 'Français' : i18n.language === 'pt' ? 'Português' : 'Español'}
                         </span>
                       </div>
                       <select className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" value={i18n.language} onChange={handleLanguageChange}>
                         <option className="bg-slate-900 text-white" value="en">English</option>
                         <option className="bg-slate-900 text-white" value="zh">中文 (Mandarin)</option>
+                        <option className="bg-slate-900 text-white" value="ko">한국어 (Korean)</option>
+                        <option className="bg-slate-900 text-white" value="fr">Français</option>
                         <option className="bg-slate-900 text-white" value="pt">Português (Brasil)</option>
                         <option className="bg-slate-900 text-white" value="es">Español (Spanish)</option>
-                        <option className="bg-slate-900 text-white" value="fr">Français</option>
                       </select>
                       <ChevronRightIcon className="h-5 w-5 text-white/40" />
                     </div>

@@ -5,7 +5,7 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 const resources = {
-    // --- INGLÊS ---
+    // 1. INGLÊS (EN)
     en: {
         translation: {
             menu: { new: "New Account", load: "Load Account", options: "Options", manual: "Manual", back: "Back to Menu" },
@@ -15,7 +15,6 @@ const resources = {
             footer: { powered: "Powered by Movement", version: "Zaeon OS - v0.1 / Testnet" },
             navbar: { about: "About Us", roadmap: "Roadmap", study_rooms: "Study Rooms" },
             encryption: { title: "AI Agents from Another Dimension.", button: "Learn more" },
-            // WORKSTATION KEYS
             agents: {
                 zenita: { role: "Technology" },
                 ballena: { role: "Health" },
@@ -51,7 +50,7 @@ const resources = {
             }
         }
     },
-    // --- CHINÊS ---
+    // 2. CHINÊS (ZH)
     zh: {
         translation: {
             menu: { new: "新账户", load: "加载账户", options: "选项", manual: "手册", back: "返回菜单" },
@@ -61,7 +60,6 @@ const resources = {
             footer: { powered: "Powered by Movement", version: "Zaeon OS - v0.1 / 测试网" },
             navbar: { about: "关于我们", roadmap: "路线图", study_rooms: "自习室" },
             encryption: { title: "来自另一个维度的 AI 代理。", button: "了解更多" },
-            // WORKSTATION KEYS
             agents: {
                 zenita: { role: "科技" },
                 ballena: { role: "健康" },
@@ -97,7 +95,97 @@ const resources = {
             }
         }
     },
-    // --- PORTUGUÊS ---
+    // 3. COREANO (KO)
+    ko: {
+        translation: {
+            menu: { new: "새 계정", load: "계정 불러오기", options: "옵션", manual: "매뉴얼", back: "메뉴로 돌아가기" },
+            roles: { student: "학생", researcher: "연구원", professional: "전문가", entrepreneur: "기업가" },
+            options: { language: "언어", node: "블록체인 노드", tutorials: "튜토리얼", on: "켜짐", off: "꺼짐" },
+            modal: { title: "새 계정", name: "이름", email: "이메일", phone: "전화번호", continue: "계속", cancel: "취소", use_wallet: "지갑 주소 사용", use_id: "ID 사용", wallet_label: "Movement 지갑 주소", wallet_placeholder: "0x...", ph_student: "학번 또는 ID", ph_researcher: "ORCID 또는 연구자 ID", ph_professional: "납세자 번호", ph_entrepreneur: "사업자 등록 번호", lbl_student: "ID 입력", lbl_researcher: "ORCID 입력", lbl_professional: "세금 ID 입력", lbl_entrepreneur: "사업자 ID 입력" },
+            footer: { powered: "Powered by Movement", version: "Zaeon OS - v0.1 / Testnet" },
+            navbar: { about: "소개", roadmap: "로드맵", study_rooms: "스터디 룸" },
+            encryption: { title: "다른 차원에서 온 AI 에이전트.", button: "더 알아보기" },
+            agents: {
+                zenita: { role: "기술" },
+                ballena: { role: "건강/의학" },
+                ethernaut: { role: "수학" }
+            },
+            workstation: {
+                system_init: "시스템 초기화 완료. 에이전트 대기 중.",
+                connected: "연결됨",
+                metamask: "메타마스크",
+                wepin: "위핀 (Wepin)",
+                active_agent: "활성 에이전트",
+                clear_history: "기록 지우기",
+                send: "전송",
+                auto_fix: "자동 수정",
+                generate: "생성",
+                processing: "처리 중...",
+                terminal_title: "터미널 (MOVEMENT 네트워크)",
+                session_homework: "숙제 세션",
+                session_save: "세션 저장",
+                chat_placeholder: "{{role}}의 어떤 주제를 연구하시겠습니까?",
+                doc_title_placeholder: "문서 제목 입력...",
+                doc_content_placeholder: "생성된 결과를 기다리는 중... (직접 작성할 수도 있습니다)",
+                logs: {
+                    switched: "활성 에이전트 변경: {{name}}",
+                    gen_protocol: "{{name}}를 통해 생성 프로토콜 시작...",
+                    content_gen: "콘텐츠 생성 완료. IPFS 암호화 중...",
+                    ipfs_success: "IPFS 저장 확인됨: {{hash}}",
+                    blockchain_init: "블록체인 트랜잭션 시작...",
+                    blockchain_securing: "블록체인: Movement 네트워크에 데이터 보호 중...",
+                    success: "성공: 지식 증명(Proof of Knowledge) 수립됨!",
+                    error: "오류: 업로드 실패."
+                }
+            }
+        }
+    },
+    // 4. FRANCÊS (FR)
+    fr: {
+        translation: {
+            menu: { new: "Nouveau Compte", load: "Charger Compte", options: "Options", manual: "Manuel", back: "Retour au Menu" },
+            roles: { student: "Étudiant", researcher: "Chercheur", professional: "Professionnel", entrepreneur: "Entrepreneur" },
+            options: { language: "Langue", node: "Nœud Blockchain", tutorials: "Tutoriels", on: "MARCHE", off: "ARRÊT" },
+            modal: { title: "Nouveau Compte", name: "Nom Complet", email: "E-mail", phone: "Téléphone", continue: "Continuer", cancel: "Annuler", use_wallet: "Utiliser Portefeuille", use_id: "Utiliser ID", wallet_label: "Adresse Portefeuille Movement", wallet_placeholder: "0x...", ph_student: "ID Étudiant", ph_researcher: "ORCID ou ID", ph_professional: "ID Fiscal", ph_entrepreneur: "ID Entreprise", lbl_student: "Entrez votre ID", lbl_researcher: "Entrez ORCID", lbl_professional: "Entrez ID Fiscal", lbl_entrepreneur: "Entrez ID Entreprise" },
+            footer: { powered: "Propulsé par Movement", version: "Zaeon OS - v0.1 / Testnet" },
+            navbar: { about: "À Propos", roadmap: "Roadmap", study_rooms: "Salles d'Étude" },
+            encryption: { title: "Agents IA d'une Autre Dimension.", button: "En savoir plus" },
+            agents: {
+                zenita: { role: "Technologie" },
+                ballena: { role: "Santé" },
+                ethernaut: { role: "Mathématiques" }
+            },
+            workstation: {
+                system_init: "Système initialisé. Agents en attente.",
+                connected: "Connecté",
+                metamask: "MetaMask",
+                wepin: "Wepin",
+                active_agent: "Agent Actif",
+                clear_history: "Effacer l'historique",
+                send: "ENVOYER",
+                auto_fix: "CORRIGER",
+                generate: "GÉNÉRER",
+                processing: "Traitement...",
+                terminal_title: "TERMINAL (RÉSEAU MOVEMENT)",
+                session_homework: "Session Devoirs",
+                session_save: "Sauvegarder la session",
+                chat_placeholder: "Quel sujet de {{role}} voulez-vous rechercher ?",
+                doc_title_placeholder: "Entrez le titre du document...",
+                doc_content_placeholder: "En attente de la sortie générée... (Vous pouvez écrire ici aussi)",
+                logs: {
+                    switched: "Agent actif changé : {{name}}",
+                    gen_protocol: "Lancement du protocole de génération via {{name}}...",
+                    content_gen: "Contenu généré. Chiffrement pour IPFS...",
+                    ipfs_success: "Stockage IPFS confirmé : {{hash}}",
+                    blockchain_init: "Lancement de la transaction Blockchain...",
+                    blockchain_securing: "Blockchain : Sécurisation des données sur le réseau Movement...",
+                    success: "SUCCÈS : Preuve de connaissance établie !",
+                    error: "ERREUR : Échec du téléchargement."
+                }
+            }
+        }
+    },
+    // 5. PORTUGUÊS (PT)
     pt: {
         translation: {
             menu: { new: "Nova Conta", load: "Carregar Conta", options: "Opções", manual: "Manual", back: "Voltar ao Menu" },
@@ -107,7 +195,6 @@ const resources = {
             footer: { powered: "Powered by Movement", version: "Zaeon OS - v0.1 / Testnet" },
             navbar: { about: "Sobre Nós", roadmap: "Roadmap", study_rooms: "Salas de Estudo" },
             encryption: { title: "Agentes de IA vindos de Outra Dimensão.", button: "Saiba mais" },
-            // WORKSTATION KEYS
             agents: {
                 zenita: { role: "Tecnologia" },
                 ballena: { role: "Saúde" },
@@ -143,17 +230,16 @@ const resources = {
             }
         }
     },
-    // --- ESPANHOL ---
+    // 6. ESPANHOL (ES)
     es: {
         translation: {
             menu: { new: "Nueva Cuenta", load: "Cargar Cuenta", options: "Opciones", manual: "Manual", back: "Volver al Menú" },
             roles: { student: "Estudiante", researcher: "Investigador", professional: "Profesional", entrepreneur: "Empresario" },
             options: { language: "Idioma", node: "Nodo Blockchain", tutorials: "Tutoriales", on: "ENCENDIDO", off: "APAGADO" },
-            modal: { title: "Nueva Cuenta", name: "Nombre Completo", email: "Correo", phone: "Teléfono", continue: "Continuar", cancel: "Cancelar", use_wallet: "Usar Billetera", use_id: "Usar ID", wallet_label: "Dirección de Billetera VERY", wallet_placeholder: "0x...", ph_student: "Documento de Identidad", ph_researcher: "ORCID o ID", ph_professional: "ID Fiscal", ph_entrepreneur: "ID de la Empresa", lbl_student: "Ingrese su ID", lbl_researcher: "Ingrese ORCID", lbl_professional: "Ingrese ID Fiscal", lbl_entrepreneur: "Ingrese ID Empresa" },
+            modal: { title: "Nueva Cuenta", name: "Nombre Completo", email: "Correo", phone: "Teléfono", continue: "Continuar", cancel: "Cancelar", use_wallet: "Usar Billetera", use_id: "Usar ID", wallet_label: "Dirección de Billetera Movement", wallet_placeholder: "0x...", ph_student: "Documento de Identidad", ph_researcher: "ORCID o ID", ph_professional: "ID Fiscal", ph_entrepreneur: "ID de la Empresa", lbl_student: "Ingrese su ID", lbl_researcher: "Ingrese ORCID", lbl_professional: "Ingrese ID Fiscal", lbl_entrepreneur: "Ingrese ID Empresa" },
             footer: { powered: "Powered by Movement", version: "Zaeon OS - v0.1 / Testnet" },
             navbar: { about: "Sobre Nosotros", roadmap: "Roadmap", study_rooms: "Salas de Estudio" },
             encryption: { title: "Agentes de IA de Otra Dimensión.", button: "Saber más" },
-            // WORKSTATION KEYS
             agents: {
                 zenita: { role: "Tecnología" },
                 ballena: { role: "Salud" },
@@ -188,55 +274,10 @@ const resources = {
                 }
             }
         }
-    },
-    // --- FRANCÊS ---
-    fr: {
-        translation: {
-            menu: { new: "Nouveau Compte", load: "Charger Compte", options: "Options", manual: "Manuel", back: "Retour au Menu" },
-            roles: { student: "Étudiant", researcher: "Chercheur", professional: "Professionnel", entrepreneur: "Entrepreneur" },
-            options: { language: "Langue", node: "Nœud Blockchain", tutorials: "Tutoriels", on: "MARCHE", off: "ARRÊT" },
-            modal: { title: "Nouveau Compte", name: "Nom Complet", email: "E-mail", phone: "Téléphone", continue: "Continuer", cancel: "Annuler", use_wallet: "Utiliser Portefeuille", use_id: "Utiliser ID", wallet_label: "Adresse Portefeuille VERY", wallet_placeholder: "0x...", ph_student: "ID Étudiant", ph_researcher: "ORCID ou ID", ph_professional: "ID Fiscal", ph_entrepreneur: "ID Entreprise", lbl_student: "Entrez votre ID", lbl_researcher: "Entrez ORCID", lbl_professional: "Entrez ID Fiscal", lbl_entrepreneur: "Entrez ID Entreprise" },
-            footer: { powered: "Propulsé par Movement", version: "Zaeon OS - v0.1 / Testnet" },
-            navbar: { about: "À Propos", roadmap: "Roadmap", study_rooms: "Salles d'Étude" },
-            encryption: { title: "Agents IA d'une Autre Dimension.", button: "En savoir plus" },
-            // WORKSTATION KEYS
-            agents: {
-                zenita: { role: "Technologie" },
-                ballena: { role: "Santé" },
-                ethernaut: { role: "Mathématiques" }
-            },
-            workstation: {
-                system_init: "Système initialisé. Agents en attente.",
-                connected: "Connecté",
-                metamask: "MetaMask",
-                wepin: "Wepin",
-                active_agent: "Agent Actif",
-                clear_history: "Effacer l'historique",
-                send: "ENVOYER",
-                auto_fix: "CORRIGER",
-                generate: "GÉNÉRER",
-                processing: "Traitement...",
-                terminal_title: "TERMINAL (RÉSEAU MOVEMENT)",
-                session_homework: "Session Devoirs",
-                session_save: "Sauvegarder la session",
-                chat_placeholder: "Quel sujet de {{role}} voulez-vous rechercher ?",
-                doc_title_placeholder: "Entrez le titre du document...",
-                doc_content_placeholder: "En attente de la sortie générée... (Vous pouvez écrire ici aussi)",
-                logs: {
-                    switched: "Agent actif changé : {{name}}",
-                    gen_protocol: "Lancement du protocole de génération via {{name}}...",
-                    content_gen: "Contenu généré. Chiffrement pour IPFS...",
-                    ipfs_success: "Stockage IPFS confirmé : {{hash}}",
-                    blockchain_init: "Lancement de la transaction Blockchain...",
-                    blockchain_securing: "Blockchain : Sécurisation des données sur le réseau Movement...",
-                    success: "SUCCÈS : Preuve de connaissance établie !",
-                    error: "ERREUR : Échec du téléchargement."
-                }
-            }
-        }
     }
 };
 
+// Inicialização segura para Next.js (Client Side Only)
 if (typeof window !== 'undefined' && !i18n.isInitialized) {
     i18n
         .use(LanguageDetector)
@@ -244,7 +285,7 @@ if (typeof window !== 'undefined' && !i18n.isInitialized) {
         .init({
             resources,
             fallbackLng: "en",
-            supportedLngs: ["en", "pt", "zh", "es", "fr"],
+            supportedLngs: ["en", "zh", "ko", "fr", "pt", "es"], // ORDEM CORRETA
             nonExplicitSupportedLngs: true,
             load: 'languageOnly',
             interpolation: {

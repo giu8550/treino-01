@@ -29,7 +29,7 @@ Thumbs.db
 .eslintcache
 .cache/
 *.pem
-
+zaeon-backend.json
 # debug
 npm-debug.log*
 yarn-debug.log*

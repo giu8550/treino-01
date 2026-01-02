@@ -46,17 +46,7 @@ const CONTRACT_ABI = [
     }
 ] as const;
 
-// --- ASSETS: PIXEL PYTHON SVG ---
-const PixelPython = ({ color = "#22d3ee" }: { color?: string }) => (
-    <svg width="45" height="45" viewBox="0 0 24 24" fill="none" className="drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]">
-        <path d="M10 4H14V6H16V10H14V8H10V10H8V6H10V10H8V6H10V4Z" fill={color} />
-        <path d="M16 10H18V14H16V16H8V14H6V10H8V12H16V10Z" fill={color} fillOpacity="0.7"/>
-        <rect x="9" y="5" width="1" height="1" fill="white" />
-        <rect x="13" y="5" width="1" height="1" fill="white" />
-    </svg>
-);
-
-// --- AGENT CONFIGURATION (Com Chaves de Tradução) ---
+// --- AGENT CONFIGURATION ---
 const AGENTS = {
     zenita: {
         name: "Zenita",
@@ -122,7 +112,6 @@ export default function WorkStationPage() {
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
 
-    // Initial translation log
     useEffect(() => {
         setMounted(true);
         setTimeout(() => addLog(t("workstation.system_init")), 100);
@@ -140,7 +129,6 @@ export default function WorkStationPage() {
 
     useEffect(() => { if (mounted) scrollToBottom(); }, [chatHistory, terminalLogs, mounted, isTyping, selectedAgent]);
 
-    // Monitoramento da Transação (Traduzido)
     useEffect(() => {
         if (isConfirming) {
             addLog(t("workstation.logs.blockchain_securing"));
@@ -167,20 +155,46 @@ export default function WorkStationPage() {
         setTimeout(() => { setIsImageLoading(false); }, 600);
     };
 
-    const handleSend = () => {
+    // --- NOVA LÓGICA DE ENVIO (INTEGRADA COM API) ---
+    const handleSend = async () => {
         if(!prompt.trim()) return;
-        setChatHistory(prev => [...prev, { role: 'user', text: prompt }]);
+
+        // 1. Captura o prompt e atualiza UI imediatamente
+        const currentPrompt = prompt;
+        setChatHistory(prev => [...prev, { role: 'user', text: currentPrompt }]);
         setPrompt("");
         setIsTyping(true);
 
-        const agent = AGENTS[selectedAgent];
-        setTimeout(() => {
-            setChatHistory(prev => [...prev, { role: 'ai', text: `${agent.name}: Acknowledged. I can process "${prompt}". Click GENERATE to compile the research paper.` }]);
+        try {
+            // 2. Chama a API Route criada (que protege a chave do Google)
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: currentPrompt,
+                    agent: selectedAgent // Envia qual agente está ativo para moldar a personalidade
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) throw new Error(data.error || "API Error");
+
+            // 3. Atualiza com a resposta real da IA
+            setChatHistory(prev => [...prev, { role: 'ai', text: data.text }]);
+
+        } catch (error) {
+            console.error("Chat Error:", error);
+            setChatHistory(prev => [...prev, {
+                role: 'ai',
+                text: "⚠️ Error: Connection to Zaeon Neural Core interrupted."
+            }]);
+            addLog("Error connecting to AI API.");
+        } finally {
             setIsTyping(false);
-        }, 1000);
+        }
     };
 
-    // --- MAIN LOGIC ---
     const handleGenerateProtocol = async () => {
         if (!isConnected) {
             alert("Connection required. Please link wallet.");
@@ -252,18 +266,6 @@ export default function WorkStationPage() {
                     onClick={() => setActiveSection('chat')}
                     className={`col-span-7 ${panelStyle} flex flex-col ${activeSection === 'chat' ? activeBorder : ''} relative h-full`}
                 >
-                    <AnimatePresence>
-                        {activeSection === 'chat' && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0, y: [0, -5, 0] }} exit={{ opacity: 0, x: -20 }}
-                                transition={{ y: { repeat: Infinity, duration: 2, ease: "easeInOut" } }}
-                                className="absolute -left-3 top-[-10px] z-30 pointer-events-none"
-                            >
-                                <PixelPython color="#22d3ee" />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
                     {/* --- HEADER: WALLET BUTTONS --- */}
                     <div className="absolute top-4 left-4 z-40">
                         {isConnected ? (
@@ -448,17 +450,6 @@ export default function WorkStationPage() {
                         onClick={() => setActiveSection('doc')}
                         className={`${panelStyle} flex-1 flex flex-col ${activeSection === 'doc' ? activeBorder : ''} group relative`}
                     >
-                        <AnimatePresence>
-                            {activeSection === 'doc' && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                                    className="absolute top-4 right-4 z-30 pointer-events-none"
-                                >
-                                    <PixelPython color="#60a5fa" />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
                         <div className="h-14 bg-black/40 border-b border-white/10 flex items-center px-6 shrink-0 gap-4">
                             <input
                                 value={docTitle}
@@ -477,15 +468,16 @@ export default function WorkStationPage() {
                             placeholder={t("workstation.doc_content_placeholder")}
                         />
 
-                        <div className="p-4 border-t border-white/10 bg-black/40 flex justify-end gap-3 rounded-b-xl">
-                            <button disabled={true} className={`${btnBase} opacity-50 cursor-not-allowed bg-cyan-900/20 text-cyan-400 border-cyan-500/30`}>
+                        {/* --- FOOTER SEM BORDA E COM FUNDO BRANCO --- */}
+                        <div className="p-4 bg-[#f1f5f9] flex justify-end gap-3 rounded-b-xl">
+                            <button disabled={true} className={`${btnBase} opacity-50 cursor-not-allowed bg-slate-200 text-slate-500 border-slate-300`}>
                                 <CpuChipIcon className="w-4 h-4" /> {t("workstation.auto_fix")}
                             </button>
 
                             <button
                                 onClick={handleGenerateProtocol}
                                 disabled={isConfirming || !isConnected}
-                                className={`${btnBase} ${isConfirming ? 'bg-yellow-900/20 border-yellow-500/30 text-yellow-400' : 'bg-green-900/20 text-green-400 border-green-500/30 hover:bg-green-500/20'} shadow-[0_0_10px_rgba(74,222,128,0.1)]`}
+                                className={`${btnBase} ${isConfirming ? 'bg-yellow-100 border-yellow-400 text-yellow-700' : 'bg-green-100 text-green-700 border-green-400 hover:bg-green-200'}`}
                             >
                                 {isConfirming ? (
                                     <>{t("workstation.processing")}</>
@@ -512,7 +504,7 @@ export default function WorkStationPage() {
                             </div>
                         </div>
 
-                        {/* TERMINAL LOGS */}
+                        {/* TERMINAL LOGS REAIS */}
                         <div ref={terminalRef} className="flex-1 p-4 font-mono text-xs text-green-500/90 bg-black/60 overflow-y-auto custom-scrollbar shadow-inner rounded-b-xl">
                             <div className="opacity-80 space-y-1">
                                 {terminalLogs.map((log, idx) => (
