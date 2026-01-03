@@ -16,8 +16,7 @@ import {
     EyeIcon,
     PowerIcon,
     UserCircleIcon,
-    SignalIcon,
-    ExclamationTriangleIcon
+    // Ícones removidos do header do terminal para limpeza visual
 } from "@heroicons/react/24/outline";
 import MatrixRain from "@/components/main/star-background";
 
@@ -81,10 +80,9 @@ export default function WorkStationPage() {
     const { data: session } = useSession();
 
     // --- ESTADO 2: INFRAESTRUTURA (PRIVY) ---
-    // Renomeei login para connectWallet para não confundir com o login do Google
-    const { login: connectWallet, authenticated: privyAuthenticated, ready: privyReady } = usePrivy();
+    const { login: connectWallet, authenticated: privyAuthenticated, ready: privyReady, logout: disconnectWallet } = usePrivy();
     const { wallets } = useWallets();
-    const wallet = wallets[0]; // A carteira ativa
+    const wallet = wallets[0];
 
     const { t } = useTranslation();
     const [mounted, setMounted] = useState(false);
@@ -129,7 +127,7 @@ export default function WorkStationPage() {
         }
     };
 
-    // Load Session (Baseado no Email do NextAuth ou Wallet)
+    // Load Session
     useEffect(() => {
         const loadSession = async () => {
             const userId = session?.user?.email || wallet?.address;
@@ -150,7 +148,7 @@ export default function WorkStationPage() {
             }
         };
         if (mounted && (session || wallet)) loadSession();
-    }, [mounted, session, wallet]); // Dependências: Session (Google) ou Wallet (Privy)
+    }, [mounted, session, wallet]);
 
     useEffect(() => { if (mounted) scrollToBottom(); }, [chatHistory, terminalLogs, mounted, isTyping, selectedAgent]);
 
@@ -192,12 +190,10 @@ export default function WorkStationPage() {
     };
 
     const saveSession = async () => {
-        // Salva preferencialmente no email do Google, senão na Wallet
         const userId = session?.user?.email || wallet?.address;
 
         if (!userId) {
-            alert(t("modal.title")); // "Nova Conta" / Login
-            // Se não tem nada, sugere login Google
+            alert(t("modal.title"));
             signIn('google');
             return;
         }
@@ -221,10 +217,9 @@ export default function WorkStationPage() {
     };
 
     const handleGenerateProtocol = async () => {
-        // Para gerar na blockchain, PRECISA da carteira (Privy), não basta o Google
         if (!privyAuthenticated || !wallet) {
             alert(t("workstation.no_wallet"));
-            connectWallet(); // Abre o modal do Privy
+            connectWallet();
             return;
         }
         if (!docTitle) {
@@ -256,7 +251,6 @@ export default function WorkStationPage() {
 
             addLog(t("workstation.logs.blockchain_init"));
 
-            // Simulação de transação EVM via Privy Provider
             await new Promise(r => setTimeout(r, 2000));
             const mockHash = "0x" + Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2);
 
@@ -300,10 +294,9 @@ export default function WorkStationPage() {
                 {/* --- 1. LEFT SIDE: CHAT WINDOW --- */}
                 <div onClick={() => setActiveSection('chat')} className={`col-span-7 ${panelStyle} flex flex-col ${activeSection === 'chat' ? activeBorder : ''} relative h-full`}>
 
-                    {/* --- HEADER: NEXT AUTH GOOGLE CARD (USANDO useSession) --- */}
+                    {/* --- HEADER: NEXT AUTH GOOGLE CARD --- */}
                     <div className="absolute top-4 left-4 z-40 flex gap-3">
                         {session ? (
-                            // LOGADO NO GOOGLE
                             <div className="flex items-center gap-3 bg-cyan-950/30 border border-cyan-500/20 px-4 py-2 rounded-xl backdrop-blur-md shadow-lg group hover:border-cyan-500/40 transition-all">
                                 {session.user?.image ? (
                                     <img src={session.user.image} alt="User" className="w-8 h-8 rounded-full border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.3)]" />
@@ -322,13 +315,11 @@ export default function WorkStationPage() {
                                     </span>
                                 </div>
                                 <div className="h-6 w-[1px] bg-white/10 mx-1" />
-                                {/* signOut do NextAuth */}
                                 <button onClick={() => signOut()} className="text-[10px] text-red-400 hover:text-red-300 uppercase font-bold hover:bg-red-500/10 px-2 py-1 rounded transition-all">
                                     {t("workstation.exit")}
                                 </button>
                             </div>
                         ) : (
-                            // DESLOGADO (NEXT AUTH) -> CHAMA signIn('google')
                             <button onClick={() => signIn('google')} className="flex items-center gap-2 bg-white/5 border border-white/20 px-4 py-2 rounded-xl hover:bg-white/10 transition-all group backdrop-blur-md hover:border-cyan-500/30">
                                 <UserCircleIcon className="w-5 h-5 text-white/70 group-hover:text-white" />
                                 <div className="flex flex-col items-start">
@@ -430,51 +421,42 @@ export default function WorkStationPage() {
                     {!isFocusMode && (
                         <div onClick={() => setActiveSection('terminal')} className={`${panelStyle} h-[28%] flex flex-col shrink-0 ${activeSection === 'terminal' ? activeBorder : ''}`}>
 
-                            {/* --- HEADER DO TERMINAL (STATUS CARTEIRA PRIVY) --- */}
-                            <div className="h-10 bg-[#0a0a0a] border-b border-white/5 flex items-center justify-between px-4 shrink-0 select-none">
-                                {/* Lado Esquerdo: Nó / Rede */}
-                                <div className="flex items-center gap-2.5">
-                                    <SignalIcon className="w-3.5 h-3.5 text-yellow-500/80" />
-                                    <span className="text-[10px] font-mono font-bold tracking-[0.1em] text-white/50 uppercase">
-                                        {t("options.node")} <span className="text-yellow-500/80 ml-1">M2</span>
-                                    </span>
-                                </div>
+                            {/* --- HEADER DO TERMINAL (LIMPO E VIBRANTE) --- */}
+                            {/* h-9: Reduzido para não cortar. Justify-Start: Tudo na esquerda. */}
+                            <div className="h-9 bg-[#0a0a0a] border-b border-white/5 flex items-center px-4 shrink-0 select-none gap-4">
 
-                                {/* Lado Direito: APENAS DADOS DA CARTEIRA PRIVY */}
-                                <div className="flex items-center gap-3">
-                                    {/* LED STATUS */}
-                                    <div
-                                        className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                                            isBlockchainProcessing ? 'bg-yellow-400 animate-pulse shadow-[0_0_10px_#facc15]' :
-                                                (privyAuthenticated && wallet) ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' :
-                                                    'bg-red-500/80 shadow-[0_0_5px_#ef4444]'
-                                        }`}
-                                    />
+                                {/* LED STATUS */}
+                                <div
+                                    className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] transition-colors duration-500 ${
+                                        isBlockchainProcessing ? 'bg-yellow-400 text-yellow-400 animate-pulse' :
+                                            (privyAuthenticated && wallet) ? 'bg-emerald-500 text-emerald-500' :
+                                                'bg-red-600 text-red-600 animate-pulse'
+                                    }`}
+                                />
 
-                                    <div className="flex flex-col items-end leading-none">
-                                        {privyReady && privyAuthenticated && wallet ? (
-                                            <>
-                                                <span className="text-[10px] font-mono text-white/90 font-medium tracking-wide">
-                                                    {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
-                                                </span>
-                                                <span className="text-[8px] uppercase tracking-wider text-white/30 font-bold mt-0.5">
-                                                    {t("workstation.linked")}
-                                                </span>
-                                            </>
-                                        ) : (
-                                            // Botão de Conectar Carteira no Terminal
-                                            <button
-                                                onClick={connectWallet}
-                                                className="flex items-center gap-1.5 text-red-400/50 hover:text-white transition-colors cursor-pointer group"
-                                            >
-                                                <ExclamationTriangleIcon className="w-3 h-3 group-hover:text-yellow-400" />
-                                                <span className="text-[10px] font-mono uppercase tracking-widest group-hover:underline">
-                                                    {t("workstation.no_wallet")}
-                                                </span>
-                                            </button>
-                                        )}
+                                {/* CARD DA CARTEIRA (Ao lado do ponto) */}
+                                {privyReady && privyAuthenticated && wallet ? (
+                                    // CONECTADO: Card Esmeralda/Escuro
+                                    <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/20 px-3 py-1 rounded hover:bg-emerald-500/10 transition-all cursor-default">
+                                        <span className="text-[10px] font-mono text-emerald-400/90 tracking-wide">
+                                            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+                                        </span>
+                                        {/* Botão X discreto */}
+                                        <button onClick={disconnectWallet} className="text-[10px] text-emerald-600 hover:text-emerald-400 font-bold px-1">✕</button>
                                     </div>
-                                </div>
+                                ) : (
+                                    // DESCONECTADO: Card Vermelho Vibrante (Sem ícones, apenas texto)
+                                    <button
+                                        onClick={connectWallet}
+                                        className="flex items-center bg-red-600/10 border border-red-600/40 px-3 py-1 rounded hover:bg-red-600/20 hover:border-red-500 transition-all group"
+                                    >
+                                        <span className="text-[10px] font-bold text-red-500 group-hover:text-red-400 tracking-wide uppercase">
+                                            {t("workstation.no_wallet")}
+                                        </span>
+                                    </button>
+                                )}
+
+                                {/* Lado direito vazio para manter o foco na esquerda */}
                             </div>
 
                             <div ref={terminalRef} className="flex-1 p-4 font-mono text-xs text-green-500/90 bg-black/60 overflow-y-auto custom-scrollbar shadow-inner rounded-b-xl">

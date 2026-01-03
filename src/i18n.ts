@@ -42,13 +42,13 @@ const resources = {
                 focus_mode: "Focus Mode",
                 system_init: "System initialized. Agents standing by.",
                 // Identidade (Topo Esquerdo)
-                connected: "Authenticated",
-                welcome: "Welcome",
-                login: "Login / Connect",
+                connected: "Logged",       // Ajustado para "Logged"
+                welcome: "Disconnected",   // Ajustado para "Disconnected"
+                login: "Login",
                 exit: "Exit",
                 // Terminal (Inferior Direito)
-                linked: "Wallet Linked",
-                no_wallet: "No Wallet",
+                linked: "Linked",
+                no_wallet: "Connect Wallet", // Botão de ação
                 // Geral
                 metamask: "MetaMask",
                 wepin: "Wepin",
@@ -113,13 +113,13 @@ const resources = {
                 focus_mode: "专注模式",
                 system_init: "系统初始化。智能体待命。",
                 // Identidade
-                connected: "已认证",
-                welcome: "欢迎",
-                login: "登录 / 连接",
+                connected: "已登录",
+                welcome: "未连接",
+                login: "登录",
                 exit: "退出",
                 // Terminal
-                linked: "钱包已链接",
-                no_wallet: "无钱包",
+                linked: "已链接",
+                no_wallet: "连接钱包",
                 // Geral
                 metamask: "MetaMask",
                 wepin: "Wepin",
@@ -184,13 +184,13 @@ const resources = {
                 focus_mode: "집중 모드",
                 system_init: "시스템 초기화 완료. 에이전트 대기 중.",
                 // Identidade
-                connected: "인증됨",
-                welcome: "환영합니다",
-                login: "로그인 / 연결",
+                connected: "로그인됨",
+                welcome: "연결 끊김",
+                login: "로그인",
                 exit: "종료",
                 // Terminal
-                linked: "지갑 연결됨",
-                no_wallet: "지갑 없음",
+                linked: "연결됨",
+                no_wallet: "지갑 연결",
                 // Geral
                 metamask: "메타마스크",
                 wepin: "위핀 (Wepin)",
@@ -255,13 +255,13 @@ const resources = {
                 focus_mode: "Mode Concentration",
                 system_init: "Système initialisé. Agents en attente.",
                 // Identidade
-                connected: "Authentifié",
-                welcome: "Bienvenue",
+                connected: "Connecté",
+                welcome: "Déconnecté",
                 login: "Connexion",
                 exit: "Quitter",
                 // Terminal
-                linked: "Portefeuille Lié",
-                no_wallet: "Aucun portefeuille",
+                linked: "Lié",
+                no_wallet: "Connecter Wallet",
                 // Geral
                 metamask: "MetaMask",
                 wepin: "Wepin",
@@ -326,13 +326,13 @@ const resources = {
                 focus_mode: "Modo Foco",
                 system_init: "Sistema inicializado. Agentes aguardando.",
                 // Identidade
-                connected: "Autenticado",
-                welcome: "Bem-vindo",
-                login: "Entrar / Conectar",
+                connected: "Logado",
+                welcome: "Desconectado",
+                login: "Entrar",
                 exit: "Sair",
                 // Terminal
                 linked: "Vinculada",
-                no_wallet: "Sem Carteira",
+                no_wallet: "Conectar Carteira",
                 // Geral
                 metamask: "MetaMask",
                 wepin: "Wepin",
@@ -397,13 +397,13 @@ const resources = {
                 focus_mode: "Modo Enfoque",
                 system_init: "Sistema inicializado. Agentes en espera.",
                 // Identidade
-                connected: "Autenticado",
-                welcome: "Bienvenido",
-                login: "Conectar",
+                connected: "Conectado",
+                welcome: "Desconectado",
+                login: "Entrar",
                 exit: "Salir",
                 // Terminal
                 linked: "Vinculada",
-                no_wallet: "Sin Billetera",
+                no_wallet: "Conectar Billetera",
                 // Geral
                 metamask: "MetaMask",
                 wepin: "Wepin",
