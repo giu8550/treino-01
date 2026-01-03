@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const siteConfig: Metadata = {
-  title: "Visio VR",
-  description: "Novos Horizontes",
+  title: "Zaeon",
+  description: "AI Agents that educate",
   keywords: [
     "reactjs",
     "nextjs",
@@ -35,7 +35,7 @@ export const siteConfig: Metadata = {
     "css",
   ] as Array<string>,
   authors: {
-    name: "Sanidhya Kumar Verma",
-    url: "https://github.com/sanidhyy",
+    name: "Don Martinez",
+    url: "https://github.com/web3-engineer",
   },
 } as const;

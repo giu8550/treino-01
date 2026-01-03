@@ -15,7 +15,6 @@ const resources = {
             footer: { powered: "Powered by Movement", version: "Zaeon OS - v0.1 / Testnet" },
             navbar: { about: "About Us", homework: "Homework", workstation: "Research Lab", study_rooms: "Study Rooms" },
             encryption: { title: "AI Agents from Another Dimension.", subtitle: "They came to help you to be the best.", button: "Learn more" },
-            // NOVA SEÇÃO STUDY ROOMS
             study_rooms: {
                 system: "SYSTEM_OPTIMAL",
                 secure: "SECURE_CHANNEL",
@@ -52,7 +51,6 @@ const resources = {
                 generate: "GENERATE",
                 processing: "Processing...",
                 terminal_title: "TERMINAL (MOVEMENT NETWORK)",
-                session_homework: "Homework Session",
                 session_save: "Save Session",
                 chat_placeholder: "What topic from {{role}} do you want to research?",
                 doc_title_placeholder: "Enter Document Title...",
@@ -116,7 +114,6 @@ const resources = {
                 generate: "生成",
                 processing: "处理中...",
                 terminal_title: "终端 (MOVEMENT 网络)",
-                session_homework: "作业会话",
                 session_save: "保存会话",
                 chat_placeholder: "您想研究 {{role}} 的哪个主题？",
                 doc_title_placeholder: "输入文档标题...",
@@ -180,7 +177,6 @@ const resources = {
                 generate: "생성",
                 processing: "처리 중...",
                 terminal_title: "터미널 (MOVEMENT 네트워크)",
-                session_homework: "숙제 세션",
                 session_save: "세션 저장",
                 chat_placeholder: "{{role}}의 어떤 주제를 연구하시겠습니까?",
                 doc_title_placeholder: "문서 제목 입력...",
@@ -244,7 +240,6 @@ const resources = {
                 generate: "GÉNÉRER",
                 processing: "Traitement...",
                 terminal_title: "TERMINAL (RÉSEAU MOVEMENT)",
-                session_homework: "Session Devoirs",
                 session_save: "Sauvegarder la session",
                 chat_placeholder: "Quel sujet de {{role}} voulez-vous rechercher ?",
                 doc_title_placeholder: "Entrez le titre du document...",
@@ -308,7 +303,6 @@ const resources = {
                 generate: "GERAR",
                 processing: "Processando...",
                 terminal_title: "TERMINAL (REDE MOVEMENT)",
-                session_homework: "Sessão Estudo Dirigido",
                 session_save: "Salvar Sessão",
                 chat_placeholder: "Qual tópico de {{role}} você quer pesquisar?",
                 doc_title_placeholder: "Digite o Título do Documento...",
@@ -335,7 +329,7 @@ const resources = {
             modal: { title: "Nueva Cuenta", name: "Nombre Completo", email: "Correo", phone: "Teléfono", continue: "Continuar", cancel: "Cancelar", use_wallet: "Usar Billetera", use_id: "Usar ID", wallet_label: "Dirección de Billetera Movement", wallet_placeholder: "0x...", ph_student: "Documento de Identidad", ph_researcher: "ORCID o ID", ph_professional: "ID Fiscal", ph_entrepreneur: "ID de la Empresa", lbl_student: "Ingrese su ID", lbl_researcher: "Ingrese ORCID", lbl_professional: "Ingrese ID Fiscal", lbl_entrepreneur: "Ingrese ID Empresa" },
             footer: { powered: "Powered by Movement", version: "Zaeon OS - v0.1 / Testnet" },
             navbar: { about: "Sobre Nosotros", homework: "Actividades", workstation: "Lab. de Investigación", study_rooms: "Salas de Estudio" },
-            encryption: { title: "Agentes de IA de Otra Dimensión.", subtitle: "Vinieron para ayudarte a ser el mejor.", button: "Saber más" },
+            encryption: { title: "Agentes de IA de Otra Dimensión.", subtitle: "Vinieron para ayudarte a ser o mejor.", button: "Saber más" },
             study_rooms: {
                 system: "SISTEMA ÓPTIMO",
                 secure: "CANAL SEGURO",
@@ -372,7 +366,6 @@ const resources = {
                 generate: "GENERAR",
                 processing: "Procesando...",
                 terminal_title: "TERMINAL (RED MOVEMENT)",
-                session_homework: "Sesión de Actividades",
                 session_save: "Guardar Sesión",
                 chat_placeholder: "¿Qué tema de {{role}} quieres investigar?",
                 doc_title_placeholder: "Ingrese el Título del Documento...",
@@ -392,7 +385,6 @@ const resources = {
     }
 };
 
-// Inicialização segura para Next.js (Client Side Only)
 if (typeof window !== 'undefined' && !i18n.isInitialized) {
     i18n
         .use(LanguageDetector)
@@ -400,7 +392,7 @@ if (typeof window !== 'undefined' && !i18n.isInitialized) {
         .init({
             resources,
             fallbackLng: "en",
-            supportedLngs: ["en", "zh", "ko", "fr", "pt", "es"], // ORDEM CORRETA
+            supportedLngs: ["en", "zh", "ko", "fr", "pt", "es"],
             nonExplicitSupportedLngs: true,
             load: 'languageOnly',
             interpolation: {

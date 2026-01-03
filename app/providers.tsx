@@ -1,21 +1,14 @@
-'use client';
+"use client";
 
-import { WagmiProvider } from 'wagmi';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
+import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { config } from '@/app/config/wagmi';
+import { type ThemeProviderProps } from "next-themes/dist/types";
 
-const queryClient = new QueryClient();
-
-export function Web3Provider({ children }: { children: ReactNode }) {
+// Agora exportamos apenas o ThemeProvider limpo
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     return (
-        <WagmiProvider config={config}>
-            <QueryClientProvider client={queryClient}>
-                <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-                    {children}
-                </NextThemesProvider>
-            </QueryClientProvider>
-        </WagmiProvider>
+        <NextThemesProvider {...props}>
+            {children}
+        </NextThemesProvider>
     );
 }

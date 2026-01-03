@@ -7,9 +7,13 @@ import { Footer } from "@/components/main/footer";
 import { Navbar } from "@/components/main/navbar";
 import { siteConfig } from "@/config";
 import { cn } from "@/lib/utils";
-import { Web3Provider } from "./providers";
-// ADICIONADO: O provedor de sessão do NextAuth
+
+// --- PROVIDERS ---
+import { MovementWalletProvider } from "@/components/providers/MovementWalletProvider";
 import AuthProvider from "@/src/providers/SessionProvider";
+// ADICIONADO: O provedor de tema que configuramos (assumindo que está em app/providers.tsx)
+import { ThemeProvider } from "./providers";
+
 import "../src/i18n";
 import "./globals.css";
 
@@ -37,7 +41,8 @@ export const metadata: Metadata = siteConfig;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
-        <html lang="en" className="scroll-smooth">
+        // suppressHydrationWarning é recomendado pelo next-themes para evitar erros no console
+        <html lang="en" className="scroll-smooth" suppressHydrationWarning>
         <body
             className={cn(
                 "relative bg-background text-foreground overflow-x-hidden overflow-y-scroll",
@@ -46,14 +51,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 "font-sans"
             )}
         >
-        <Web3Provider>
-            <AuthProvider> {/* <--- ENVOLVENDO A APP COM SESSÃO */}
-                <StarsCanvas />
-                <Navbar />
-                {children}
-                <Footer />
-            </AuthProvider>
-        </Web3Provider>
+        {/* 1. ThemeProvider envolve tudo para controlar as cores */}
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+        >
+            {/* 2. Movement Blockchain Provider */}
+            <MovementWalletProvider>
+                {/* 3. Session Auth Provider */}
+                <AuthProvider>
+                    <StarsCanvas />
+                    <Navbar />
+                    {children}
+                    <Footer />
+                </AuthProvider>
+            </MovementWalletProvider>
+        </ThemeProvider>
         </body>
         </html>
     );
