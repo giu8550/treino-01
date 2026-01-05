@@ -281,7 +281,7 @@ export default function WorkStationPage() {
             </div>
 
             {/* --- FOCUS MODE TOGGLE --- */}
-            <div className="fixed top-[18px] right-10 z-[150] flex flex-col items-center">
+            <div className="fixed top-[18px] right-2 z-[150] flex flex-col items-center">
                 <div onClick={() => setIsFocusMode(!isFocusMode)} title={t("workstation.focus_mode")} className={`w-8 h-14 rounded-full border transition-all duration-300 cursor-pointer backdrop-blur-xl shadow-lg flex flex-col items-center p-1 ${isFocusMode ? "bg-gradient-to-b from-cyan-900/80 to-blue-950/80 border-cyan-500/50 shadow-[0_0_15px_rgba(8,145,178,0.4)]" : "bg-white/80 border-slate-300 dark:bg-white/10 dark:border-white/20"}`}>
                     <motion.div className={`w-5 h-5 rounded-full shadow-sm flex items-center justify-center ${isFocusMode ? "bg-cyan-400 text-black" : "bg-slate-400 dark:bg-white/40 text-white"}`} animate={{ y: isFocusMode ? 0 : 26 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
                         {isFocusMode ? <EyeIcon className="w-3 h-3" /> : <PowerIcon className="w-3 h-3" />}

@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import "@/src/i18n";
 import {
     PlusIcon, ChevronRightIcon, BookmarkIcon, ArrowPathIcon,
-    VideoCameraIcon, ClipboardIcon, SparklesIcon, TrashIcon
+    VideoCameraIcon, ClipboardIcon, SparklesIcon, TrashIcon,
+    EyeIcon, PowerIcon // Importados para o switch de foco
 } from "@heroicons/react/24/outline";
 import MatrixRain from "@/components/main/star-background";
 import ResearchCardPDF from "@/components/ui/ResearchCardPDF";
@@ -37,6 +38,9 @@ export default function HomeworkPage() {
     const { t } = useTranslation();
     const [mounted, setMounted] = useState(false);
 
+    // --- ESTADO DO MODO FOCO ---
+    const [isFocusMode, setIsFocusMode] = useState(false);
+
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -50,14 +54,14 @@ export default function HomeworkPage() {
     const [prompt, setPrompt] = useState("");
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const mainScrollRef = useRef<HTMLDivElement>(null);
     const citationsRef = useRef<HTMLElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
-    // --- LOGICA DE INTERAÇÃO COM O CHAT (RESTAURADA) ---
     const handleUserQuestion = async () => {
         if(!prompt.trim()) return;
         const currentPrompt = prompt;
-        setPrompt(""); // Limpa o input imediatamente
+        setPrompt("");
         setIsTyping(true);
 
         try {
@@ -67,8 +71,6 @@ export default function HomeworkPage() {
                 body: JSON.stringify({ prompt: currentPrompt, agent: "zenita" })
             });
             const data = await response.json();
-
-            // Adiciona apenas o insight da IA ao histórico
             setChatHistory(prev => [...prev, { role: 'ai', text: data.text }]);
         } catch (e) {
             console.error("Erro na conexão neural:", e);
@@ -98,6 +100,7 @@ export default function HomeworkPage() {
     const handlePlayDocument = async (doc: StudyDoc) => {
         setIsProcessing(true);
         setActiveSection(null);
+
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -112,7 +115,9 @@ export default function HomeworkPage() {
                 setActiveSection('citations');
                 citationsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 800);
-        } catch (e) { setIsProcessing(false); }
+        } catch (e) {
+            setIsProcessing(false);
+        }
     };
 
     const ActionButton = ({ icon: Icon, label, onClick, colorClass = "hover:text-cyan-500" }: any) => (
@@ -129,8 +134,35 @@ export default function HomeworkPage() {
     if (!mounted) return <div className="w-full h-screen bg-[#f0f4f8] dark:bg-[#030014]" />;
 
     return (
-        <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }} className="relative w-full h-screen bg-[#f0f4f8] dark:bg-[#030014] overflow-hidden flex flex-row transition-colors duration-500">
+        <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
+            // CORREÇÃO: No Modo Foco, usamos Z-index alto para cobrir o menu global
+            className={`relative w-full h-screen transition-all duration-500 overflow-hidden flex flex-row 
+                ${isFocusMode ? 'z-[200] bg-[#030014]' : 'bg-[#f0f4f8] dark:bg-[#030014]'}`}
+        >
             <div className="absolute inset-0 z-0 pointer-events-none opacity-20"><MatrixRain /></div>
+
+            {/* --- SWITCH DE MODO FOCO (PADRÃO ZAEON) --- */}
+            <div className="fixed top-4 right-17 z-[250] flex flex-col items-center">
+                <div
+                    onClick={() => setIsFocusMode(!isFocusMode)}
+                    title={t("workstation.focus_mode")}
+                    className={`w-8 h-14 rounded-full border transition-all duration-300 cursor-pointer backdrop-blur-xl shadow-lg flex flex-col items-center p-1 
+                        ${isFocusMode ? "bg-cyan-900/80 border-cyan-500/50 shadow-[0_0_15px_rgba(8,145,178,0.4)]" : "bg-white/80 border-slate-300 dark:bg-white/10"}`}
+                >
+                    <motion.div
+                        className={`w-5 h-5 rounded-full shadow-sm flex items-center justify-center ${isFocusMode ? "bg-cyan-400 text-black" : "bg-slate-400 text-white"}`}
+                        animate={{ y: isFocusMode ? 0 : 26 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    >
+                        {isFocusMode ? <EyeIcon className="w-3 h-3" /> : <PowerIcon className="w-3 h-3" />}
+                    </motion.div>
+                </div>
+                <span className="hidden">
+                    {t("workstation.focus_mode")}
+                </span>
+            </div>
 
             <AnimatePresence>
                 {(activeSection || isProcessing) && (
@@ -140,14 +172,20 @@ export default function HomeworkPage() {
 
             <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf" multiple onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }} />
 
-            <main onClick={() => setActiveSection(null)} className={`relative z-20 flex-1 h-full overflow-y-auto pt-[120px] pl-10 pb-40 custom-scrollbar pr-[460px] space-y-12 transition-all duration-700 ${isProcessing ? 'blur-[4px] opacity-40' : ''}`}>
-
+            {/* CORREÇÃO: pt-10 no Modo Foco para remover o espaço vazio do menu superior */}
+            <main
+                ref={mainScrollRef}
+                onClick={() => setActiveSection(null)}
+                className={`relative z-20 flex-1 h-full overflow-y-auto pb-40 custom-scrollbar pr-[460px] space-y-12 transition-all duration-700 
+                    ${isFocusMode ? 'pt-10' : 'pt-[120px]'}
+                    ${isProcessing ? 'blur-[4px] opacity-40' : ''}`}
+            >
                 {/* 1. STUDY FILES */}
-                <section onClick={(e) => { e.stopPropagation(); setActiveSection('study'); }} className={`relative rounded-[41px] p-[1px] transition-all duration-500 ${activeSection === 'study' ? 'z-[35]' : 'z-[10]'}`}>
+                <section onClick={(e) => { e.stopPropagation(); setActiveSection('study'); }} className={`relative rounded-[41px] p-[1px] transition-all duration-500 ${activeSection === 'study' ? 'z-[30]' : 'z-[10]'}`}>
                     <div className={`relative p-6 rounded-[40px] border transition-all duration-300 ${activeSection === 'study' ? 'border-cyan-500 shadow-2xl bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
                         <div className="flex items-center gap-4 mb-6">
-                            <span className="bg-cyan-500 text-white text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest">{t("homework.study_title")}</span>
-                            <ActionButton icon={PlusIcon} label={t("homework.add_files")} onClick={() => fileInputRef.current?.click()} />
+                            <span className="bg-cyan-500 text-white text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-lg shadow-cyan-500/20">{t("homework.study_title")}</span>
+                            <ActionButton icon={PlusIcon} label={t("homework.add_files")} onClick={(e: any) => { e.stopPropagation(); fileInputRef.current?.click(); }} />
                         </div>
                         <div className="flex flex-row gap-6 overflow-x-auto pb-4 min-h-[300px]">
                             {studyFiles.map(doc => (
@@ -158,54 +196,50 @@ export default function HomeworkPage() {
                 </section>
 
                 {/* 2. AI CITATIONS */}
-                <section ref={citationsRef} onClick={(e) => { e.stopPropagation(); setActiveSection('citations'); }} className={`relative rounded-[41px] p-[1px] transition-all duration-500 ${activeSection === 'citations' ? 'z-[35]' : 'z-[10]'}`}>
-                    <div className={`relative p-6 rounded-[40px] border transition-all duration-300 ${activeSection === 'citations' ? 'border-cyan-500 shadow-2xl bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
-                        <div className="flex items-center justify-between mb-4 pr-4">
+                <section ref={citationsRef} onClick={(e) => { e.stopPropagation(); setActiveSection('citations'); }} className={`relative rounded-[40px] p-6 border transition-all duration-500 ${activeSection === 'citations' ? 'border-cyan-500 shadow-2xl z-[30] bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
+                    <div className="flex items-center justify-between mb-4 pr-4">
+                        <div className="flex items-center gap-4">
                             <span className="text-slate-500 dark:text-cyan-400/60 text-[10px] font-black uppercase tracking-widest">{t("homework.citations_title")}</span>
                             <div className="flex gap-2">
                                 <ActionButton icon={ArrowPathIcon} label={t("homework.reload")} onClick={() => {}} />
                                 <ActionButton icon={BookmarkIcon} label={t("homework.save_all")} onClick={() => {}} colorClass="hover:text-emerald-500" />
                             </div>
                         </div>
-                        <div className="h-[100px] bg-slate-50/50 dark:bg-black/20 rounded-2xl flex items-center justify-center italic text-slate-400 text-xs">{t("homework.citations_empty")}</div>
                     </div>
+                    <div className="h-[100px] bg-slate-50/50 dark:bg-black/20 rounded-2xl flex items-center justify-center italic text-slate-400 text-xs">{t("homework.citations_empty")}</div>
                 </section>
 
                 {/* 3. VIDEOS */}
-                <section onClick={(e) => { e.stopPropagation(); setActiveSection('videos'); }} className={`relative rounded-[41px] p-[1px] transition-all duration-500 ${activeSection === 'videos' ? 'z-[35]' : 'z-[10]'}`}>
-                    <div className={`relative p-6 rounded-[40px] border transition-all duration-300 ${activeSection === 'videos' ? 'border-cyan-400 shadow-2xl bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
-                        <div className="flex items-center gap-4 mb-6">
-                            <span className="text-slate-500 dark:text-cyan-400/60 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <VideoCameraIcon className="w-5 h-5" /> {t("homework.videos_title")}
-                            </span>
-                            <div className="flex gap-3">
-                                <ActionButton icon={ClipboardIcon} label={t("homework.paste_link")} onClick={handlePasteVideo} />
-                                <ActionButton icon={SparklesIcon} label={t("homework.suggest")} onClick={() => {}} colorClass="hover:text-blue-500" />
+                <section onClick={(e) => { e.stopPropagation(); setActiveSection('videos'); }} className={`relative rounded-[40px] p-6 border transition-all duration-500 ${activeSection === 'videos' ? 'border-cyan-400 shadow-2xl z-[30] bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
+                    <div className="flex items-center gap-4 mb-6">
+                        <span className="text-slate-500 dark:text-cyan-400/60 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><VideoCameraIcon className="w-5 h-5" /> {t("homework.videos_title")}</span>
+                        <div className="flex gap-3">
+                            <ActionButton icon={ClipboardIcon} label={t("homework.paste_link")} onClick={handlePasteVideo} />
+                            <ActionButton icon={SparklesIcon} label={t("homework.suggest")} onClick={() => {}} colorClass="hover:text-blue-500" />
+                        </div>
+                    </div>
+                    <div className="flex flex-row gap-8 overflow-x-auto pb-4 min-h-[300px]">
+                        {videos.map(vid => (
+                            <div key={vid.id} className="flex-shrink-0 w-[480px] h-[270px] bg-black rounded-[32px] overflow-hidden shadow-2xl relative group/vid border border-white/5">
+                                <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${vid.youtubeId}`} frameBorder="0" allowFullScreen />
+                                <button onClick={() => setVideos(prev => prev.filter(v => v.id !== vid.id))} className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full opacity-0 group-hover/vid:opacity-100 transition-opacity"><TrashIcon className="w-4 h-4" /></button>
                             </div>
-                        </div>
-                        <div className="flex flex-row gap-8 overflow-x-auto pb-6 custom-scrollbar min-h-[300px]">
-                            {videos.map(vid => (
-                                <div key={vid.id} className="flex-shrink-0 w-[480px] h-[270px] bg-black rounded-[32px] overflow-hidden shadow-2xl relative group/vid border border-white/5">
-                                    <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${vid.youtubeId}`} frameBorder="0" allowFullScreen />
-                                    <button onClick={() => setVideos(prev => prev.filter(v => v.id !== vid.id))} className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full opacity-0 group-hover/vid:opacity-100 transition-opacity"><TrashIcon className="w-4 h-4" /></button>
-                                </div>
-                            ))}
-                        </div>
+                        ))}
                     </div>
                 </section>
             </main>
 
-            {/* CHAT DE INSIGHTS */}
-            <aside className={`fixed right-6 z-[60] w-[420px] bg-slate-50 shadow-2xl rounded-[40px] flex flex-col border border-slate-200 transition-all duration-700 top-[123px] h-[calc(100vh-155px)] ${
-                isProcessing || isTyping ? 'top-10 h-[calc(100vh-60px)] border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.3)]' : ''
-            }`}>
+            {/* CHAT DE INSIGHTS (BRANCO GELO / PAPEL) */}
+            <aside className={`fixed right-6 z-[60] w-[420px] bg-slate-50 shadow-2xl rounded-[40px] flex flex-col border border-slate-200 transition-all duration-700 
+                ${isFocusMode ? 'top-6 h-[calc(100vh-48px)]' : 'top-[123px] h-[calc(100vh-155px)]'}
+                ${isProcessing || isTyping ? 'border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.3)]' : ''}`}
+            >
                 <div className="p-8 border-b border-slate-200 flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${isProcessing || isTyping ? 'bg-cyan-500 animate-pulse' : 'bg-slate-300'}`} />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         {isProcessing ? t("homework.status_digesting") : t("homework.chat_header")}
                     </span>
                 </div>
-
                 <div ref={chatContainerRef} className="relative flex-1 overflow-y-auto p-10 space-y-6 text-slate-800 text-[14px] leading-relaxed font-serif custom-scrollbar">
                     <AnimatePresence>
                         {isProcessing && (
@@ -221,21 +255,10 @@ export default function HomeworkPage() {
                     ))}
                     {isTyping && !isProcessing && <div className="text-cyan-600 text-[10px] animate-pulse">{t("homework.status_typing")}</div>}
                 </div>
-
                 <div className="p-8 bg-white rounded-b-[40px] border-t border-slate-100">
                     <div className="relative">
-                        <input
-                            type="text"
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleUserQuestion()}
-                            placeholder={t("homework.chat_placeholder")}
-                            className="w-full bg-white border border-black rounded-2xl py-4 px-6 text-[14px] text-black focus:outline-none shadow-sm"
-                        />
-                        <button
-                            onClick={handleUserQuestion}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black rounded-xl text-white hover:bg-slate-800 transition-colors"
-                        >
+                        <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUserQuestion()} placeholder={t("homework.chat_placeholder")} className="w-full bg-white border border-black rounded-2xl py-4 px-6 text-[14px] text-black focus:outline-none shadow-sm" />
+                        <button onClick={handleUserQuestion} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black rounded-xl text-white hover:bg-slate-800 transition-colors">
                             <ChevronRightIcon className="w-4 h-4" />
                         </button>
                     </div>
