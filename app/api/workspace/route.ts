@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/src/lib/db';
-import Workspace from '@/src/models/Workspace';
+import Workspace from '@/src/models/workspace';
 
 export async function POST(req: Request) {
     try {

@@ -37,6 +37,7 @@ const ROLES = [
   { slug: "researcher", key: "roles.researcher" },
   { slug: "professional", key: "roles.professional" },
   { slug: "entrepreneur", key: "roles.entrepreneur" },
+  { slug: "cyber_hall", key: "Hall Cibernético" },
 ] as const;
 
 type Role = typeof ROLES[number]["slug"];
@@ -162,7 +163,14 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                     onClick={handleGoogleQuickStart}
                     className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-100 font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                 >
-                  <img src="https://authjs.dev/img/providers/google.svg" alt="Google" className="w-5 h-5" />
+                  {/* ALTERAÇÃO AQUI: <img ...> para <Image ...> */}
+                  <Image
+                      src="https://authjs.dev/img/providers/google.svg"
+                      alt="Google"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                  />
                   Entrar com Google (Recomendado)
                 </button>
                 <div className="flex items-center gap-2 mt-3 mb-2 opacity-50">
@@ -228,6 +236,9 @@ const HeroContentComponent = () => {
   };
 
   const handleOnboardSuccess = (data: any) => {
+    if (data.role === "cyber_hall") {
+      router.push("/study-rooms/tech");
+    }
     const query = new URLSearchParams(data).toString();
     router.push(`/workstation?${query}`);
   };

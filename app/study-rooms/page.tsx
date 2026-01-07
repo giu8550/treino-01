@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useRouter } from "next/navigation"; // 1. IMPORTAR ROUTER
 import { useTranslation } from "react-i18next";
 import {
     UserGroupIcon,
@@ -16,6 +17,7 @@ import MatrixRain from "@/components/main/star-background";
 
 export default function StudyRoomsPage() {
     const { t } = useTranslation();
+    const router = useRouter(); // 2. INICIALIZAR ROUTER
     const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
     const [mounted, setMounted] = useState(false);
 
@@ -23,12 +25,63 @@ export default function StudyRoomsPage() {
         setMounted(true);
     }, []);
 
+    // 3. ADICIONAR AS ROTAS ESPECÍFICAS EM CADA OBJETO
     const ROOMS = [
-        { id: 1, nameKey: "cyber_name", topicKey: "cyber_topic", users: 142, ping: "12ms", icon: CpuChipIcon, color: "text-cyan-300", bg: "bg-cyan-500/20" },
-        { id: 2, nameKey: "bio_name", topicKey: "bio_topic", users: 89, ping: "24ms", icon: BeakerIcon, color: "text-green-300", bg: "bg-green-500/20" },
-        { id: 3, nameKey: "quantum_name", topicKey: "quantum_topic", users: 56, ping: "18ms", icon: CalculatorIcon, color: "text-purple-300", bg: "bg-purple-500/20" },
-        { id: 4, nameKey: "global_name", topicKey: "global_topic", users: 310, ping: "45ms", icon: GlobeAltIcon, color: "text-blue-300", bg: "bg-blue-500/20" },
+        {
+            id: 1,
+            nameKey: "cyber_name",
+            topicKey: "cyber_topic",
+            users: 142,
+            ping: "12ms",
+            icon: CpuChipIcon,
+            color: "text-cyan-300",
+            bg: "bg-cyan-500/20",
+            route: "/study-rooms/cyber" // Rota do Hall Cibernético
+        },
+        {
+            id: 2,
+            nameKey: "bio_name",
+            topicKey: "bio_topic",
+            users: 89,
+            ping: "24ms",
+            icon: BeakerIcon,
+            color: "text-green-300",
+            bg: "bg-green-500/20",
+            route: "/study-rooms/bio" // Rota do Bio-Lab
+        },
+        {
+            id: 3,
+            nameKey: "quantum_name",
+            topicKey: "quantum_topic",
+            users: 56,
+            ping: "18ms",
+            icon: CalculatorIcon,
+            color: "text-purple-300",
+            bg: "bg-purple-500/20",
+            route: "/study-rooms/quantic" // Rota do Campo Quântico
+        },
+        {
+            id: 4,
+            nameKey: "global_name",
+            topicKey: "global_topic",
+            users: 310,
+            ping: "45ms",
+            icon: GlobeAltIcon,
+            color: "text-blue-300",
+            bg: "bg-blue-500/20",
+            route: "/study-rooms/lounge" // Rota do Lounge Global
+        },
     ];
+
+    // 4. FUNÇÃO PARA NAVEGAR QUANDO CLICAR EM ENTRAR
+    const handleJoinRoom = () => {
+        if (!selectedRoom) return;
+
+        const room = ROOMS.find((r) => r.id === selectedRoom);
+        if (room?.route) {
+            router.push(room.route);
+        }
+    };
 
     // Estilos de vidro (Dark Blue Glass - Transparente)
     const glassPanelStyle = "backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.1)] bg-[linear-gradient(135deg,rgba(7,38,77,0.4),rgba(11,58,164,0.3),rgba(7,38,77,0.4))]";
@@ -75,13 +128,12 @@ export default function StudyRoomsPage() {
             {/* --- CONTEÚDO PRINCIPAL --- */}
             <div className="z-20 w-full max-w-[1700px] h-full grid grid-cols-1 lg:grid-cols-12 gap-0 relative">
 
-                {/* --- COLUNA ESQUERDA: PERSONAGEM (CORRIGIDO PARA COLAR NO CHÃO) --- */}
+                {/* --- COLUNA ESQUERDA: PERSONAGEM --- */}
                 <div className="absolute bottom-0 left-0 w-full h-full lg:static lg:col-span-7 lg:h-full flex items-end justify-center lg:justify-start pointer-events-none z-10">
                     <motion.div
                         initial={{ opacity: 0, x: -50 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        // h-full garante que a div interna estique até o topo e base
                         className="relative w-full h-full flex items-end"
                     >
                         <div className="absolute bottom-0 left-[5%] w-[90%] h-[60%] blur-[100px] rounded-full bg-slate-400/30 dark:bg-blue-900/15" />
@@ -89,7 +141,6 @@ export default function StudyRoomsPage() {
                             src="/study-char.png"
                             alt="Study Character"
                             fill
-                            // object-bottom força a imagem para baixo, scale-100 usa o tamanho natural máximo do container
                             className="object-contain object-bottom drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)] dark:drop-shadow-[0_0_60px_rgba(0,0,0,0.9)] scale-100 origin-bottom"
                             priority
                         />
@@ -155,7 +206,6 @@ export default function StudyRoomsPage() {
                                                         </div>
                                                         <div>
                                                             <h3 className="text-sm font-bold text-white transition-colors">{t(`study_rooms.rooms.${room.nameKey}`)}</h3>
-                                                            {/* TEXTO DE DESTAQUE: CLARO PARA LEITURA */}
                                                             <p className="text-[9px] uppercase tracking-wider text-cyan-200/80 font-medium">{t(`study_rooms.rooms.${room.topicKey}`)}</p>
                                                         </div>
                                                     </div>
@@ -175,6 +225,7 @@ export default function StudyRoomsPage() {
                             {/* Footer */}
                             <div className="p-4 border-t border-white/10 bg-black/20">
                                 <button
+                                    onClick={handleJoinRoom} // 5. EVENTO DE CLIQUE ADICIONADO AQUI
                                     disabled={!selectedRoom}
                                     className={`w-full py-3 rounded-lg font-bold text-xs uppercase tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-2 ${selectedRoom ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-[0_0_20px_rgba(34,211,238,0.4)]" : "bg-white/5 text-white/20 cursor-not-allowed"}`}
                                 >

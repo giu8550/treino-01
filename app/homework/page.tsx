@@ -7,12 +7,12 @@ import "@/src/i18n";
 import {
     PlusIcon, ChevronRightIcon, BookmarkIcon, ArrowPathIcon,
     VideoCameraIcon, ClipboardIcon, SparklesIcon, TrashIcon,
-    EyeIcon, PowerIcon // Importados para o switch de foco
+    EyeIcon, PowerIcon
 } from "@heroicons/react/24/outline";
 import MatrixRain from "@/components/main/star-background";
 import ResearchCardPDF from "@/components/ui/ResearchCardPDF";
 
-interface StudyDoc { id: string; title: string; url: string; }
+interface StudyDoc { id: string; title: string; url: string; file?: File; }
 interface VideoItem { id: string; youtubeId: string; }
 
 const IosLoader = ({ status }: { status: string }) => (
@@ -28,64 +28,89 @@ const IosLoader = ({ status }: { status: string }) => (
                 />
             ))}
         </div>
-        <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse text-center">
-            {status}
-        </span>
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse text-center">{status}</span>
     </div>
 );
 
 export default function HomeworkPage() {
     const { t } = useTranslation();
     const [mounted, setMounted] = useState(false);
-
-    // --- ESTADO DO MODO FOCO ---
     const [isFocusMode, setIsFocusMode] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     const [studyFiles, setStudyFiles] = useState<StudyDoc[]>([]);
     const [videos, setVideos] = useState<VideoItem[]>([]);
     const [activeSection, setActiveSection] = useState<string | null>(null);
-    const [chatHistory, setChatHistory] = useState<{role: 'ai', text: string}[]>([]);
+    const [chatHistory, setChatHistory] = useState<{role: 'ai' | 'user', text: string}[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [prompt, setPrompt] = useState("");
+    const [activeFileContext, setActiveFileContext] = useState<string | null>(null);
+    const [processingFileId, setProcessingFileId] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const citationsRef = useRef<HTMLElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
+    useEffect(() => { setMounted(true); }, []);
+
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve((reader.result as string).split(',')[1]);
+            reader.onerror = error => reject(error);
+        });
+    };
+
+    const handlePlayDocument = async (doc: StudyDoc) => {
+        if (!doc.file) return;
+        if (doc.file.size > 15 * 1024 * 1024) {
+            alert("Arquivo muito grande. Limite de 15MB.");
+            return;
+        }
+        setProcessingFileId(doc.id);
+        setIsProcessing(true);
+        setActiveSection(null);
+        try {
+            const base64Data = await fileToBase64(doc.file);
+            setActiveFileContext(base64Data);
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: `Analise o documento "${doc.title}"`, agent: "zenita", fileData: base64Data })
+            });
+            const data = await response.json();
+            setChatHistory(prev => [...prev, { role: 'ai', text: `[INSIGHT: ${doc.title}]\n\n${data.text}` }]);
+            setTimeout(() => { citationsRef.current?.scrollIntoView({ behavior: 'smooth' }); }, 300);
+        } catch (e) { console.error("Erro:", e); } finally {
+            setIsProcessing(false);
+            setProcessingFileId(null);
+        }
+    };
+
     const handleUserQuestion = async () => {
         if(!prompt.trim()) return;
         const currentPrompt = prompt;
         setPrompt("");
+        setChatHistory(prev => [...prev, { role: 'user', text: currentPrompt }]);
         setIsTyping(true);
-
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: currentPrompt, agent: "zenita" })
+                body: JSON.stringify({ prompt: currentPrompt, agent: "zenita", fileData: activeFileContext })
             });
             const data = await response.json();
             setChatHistory(prev => [...prev, { role: 'ai', text: data.text }]);
-        } catch (e) {
-            console.error("Erro na conexão neural:", e);
-        } finally {
-            setIsTyping(false);
-        }
+        } finally { setIsTyping(false); }
     };
 
     const handleFiles = (files: FileList | null) => {
         if (!files) return;
         const newFiles = Array.from(files).filter(f => f.type === 'application/pdf').map(file => ({
-            id: crypto.randomUUID(), title: file.name, url: URL.createObjectURL(file)
+            id: crypto.randomUUID(), title: file.name, url: URL.createObjectURL(file), file: file
         }));
         setStudyFiles(prev => [...prev, ...newFiles]);
-        setActiveSection('study');
     };
 
     const handlePasteVideo = async () => {
@@ -97,126 +122,65 @@ export default function HomeworkPage() {
         } catch (err) { console.error("Clipboard error"); }
     };
 
-    const handlePlayDocument = async (doc: StudyDoc) => {
-        setIsProcessing(true);
-        setActiveSection(null);
-
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: `Analyze the document ${doc.title}`, agent: "zenita" })
-            });
-            const data = await response.json();
-            setChatHistory(prev => [...prev, { role: 'ai', text: `[INSIGHT: ${doc.title}]\n\n${data.text}` }]);
-
-            setTimeout(() => {
-                setIsProcessing(false);
-                setActiveSection('citations');
-                citationsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 800);
-        } catch (e) {
-            setIsProcessing(false);
-        }
-    };
-
     const ActionButton = ({ icon: Icon, label, onClick, colorClass = "hover:text-cyan-500" }: any) => (
         <div className="group relative flex flex-col items-center">
             <button onClick={(e) => { e.stopPropagation(); onClick(e); }} className={`p-2 bg-white/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full transition-all ${colorClass}`}>
                 <Icon className="w-4 h-4" />
             </button>
-            <span className="absolute -top-8 scale-0 group-hover:scale-100 transition-all bg-slate-800 text-white text-[9px] px-2 py-1 rounded font-bold uppercase whitespace-nowrap z-[100] shadow-xl">
-                {label}
-            </span>
+            <span className="absolute -top-8 scale-0 group-hover:scale-100 transition-all bg-slate-800 text-white text-[9px] px-2 py-1 rounded font-bold uppercase whitespace-nowrap z-[100] shadow-xl">{label}</span>
         </div>
     );
 
-    if (!mounted) return <div className="w-full h-screen bg-[#f0f4f8] dark:bg-[#030014]" />;
+    if (!mounted) return null;
 
     return (
-        <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
-            // CORREÇÃO: No Modo Foco, usamos Z-index alto para cobrir o menu global
-            className={`relative w-full h-screen transition-all duration-500 overflow-hidden flex flex-row 
-                ${isFocusMode ? 'z-[200] bg-[#030014]' : 'bg-[#f0f4f8] dark:bg-[#030014]'}`}
-        >
+        <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
+             className={`relative w-full h-screen transition-all duration-500 overflow-hidden flex flex-row ${isFocusMode ? 'z-[200] bg-[#030014]' : 'bg-[#f0f4f8] dark:bg-[#030014]'}`}>
             <div className="absolute inset-0 z-0 pointer-events-none opacity-20"><MatrixRain /></div>
 
-            {/* --- SWITCH DE MODO FOCO (PADRÃO ZAEON) --- */}
+            {/* SWITCH MODO FOCO */}
             <div className="fixed top-4 right-17 z-[250] flex flex-col items-center">
-                <div
-                    onClick={() => setIsFocusMode(!isFocusMode)}
-                    title={t("workstation.focus_mode")}
-                    className={`w-8 h-14 rounded-full border transition-all duration-300 cursor-pointer backdrop-blur-xl shadow-lg flex flex-col items-center p-1 
-                        ${isFocusMode ? "bg-cyan-900/80 border-cyan-500/50 shadow-[0_0_15px_rgba(8,145,178,0.4)]" : "bg-white/80 border-slate-300 dark:bg-white/10"}`}
-                >
-                    <motion.div
-                        className={`w-5 h-5 rounded-full shadow-sm flex items-center justify-center ${isFocusMode ? "bg-cyan-400 text-black" : "bg-slate-400 text-white"}`}
-                        animate={{ y: isFocusMode ? 0 : 26 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    >
+                <div onClick={() => setIsFocusMode(!isFocusMode)} className={`w-8 h-14 rounded-full border transition-all cursor-pointer backdrop-blur-xl flex flex-col items-center p-1 ${isFocusMode ? "bg-cyan-900/80 border-cyan-500/50 shadow-lg" : "bg-white/80 border-slate-300 dark:bg-white/10"}`}>
+                    <motion.div className={`w-5 h-5 rounded-full flex items-center justify-center ${isFocusMode ? "bg-cyan-400 text-black" : "bg-slate-400 text-white"}`} animate={{ y: isFocusMode ? 0 : 26 }}>
                         {isFocusMode ? <EyeIcon className="w-3 h-3" /> : <PowerIcon className="w-3 h-3" />}
                     </motion.div>
                 </div>
-                <span className="hidden">
-                    {t("workstation.focus_mode")}
-                </span>
             </div>
 
             <AnimatePresence>
-                {(activeSection || isProcessing) && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[15] bg-black/20 backdrop-blur-[1px] pointer-events-none" />
-                )}
+                {(activeSection || isProcessing) && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[15] bg-black/20 backdrop-blur-[1px] pointer-events-none" />}
             </AnimatePresence>
 
             <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf" multiple onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }} />
 
-            {/* CORREÇÃO: pt-10 no Modo Foco para remover o espaço vazio do menu superior */}
-            <main
-                ref={mainScrollRef}
-                onClick={() => setActiveSection(null)}
-                className={`relative z-20 flex-1 h-full overflow-y-auto pb-40 custom-scrollbar pr-[460px] space-y-12 transition-all duration-700 
-                    ${isFocusMode ? 'pt-10' : 'pt-[120px]'}
-                    ${isProcessing ? 'blur-[4px] opacity-40' : ''}`}
-            >
+            <main ref={mainScrollRef} onClick={() => setActiveSection(null)} className={`relative z-20 flex-1 h-full overflow-y-auto pb-40 custom-scrollbar pr-[460px] space-y-12 transition-all duration-700 ${isFocusMode ? 'pt-10' : 'pt-[120px]'} ${isProcessing ? 'blur-[4px] opacity-40' : ''}`}>
+
                 {/* 1. STUDY FILES */}
-                <section onClick={(e) => { e.stopPropagation(); setActiveSection('study'); }} className={`relative rounded-[41px] p-[1px] transition-all duration-500 ${activeSection === 'study' ? 'z-[30]' : 'z-[10]'}`}>
-                    <div className={`relative p-6 rounded-[40px] border transition-all duration-300 ${activeSection === 'study' ? 'border-cyan-500 shadow-2xl bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
+                <section onClick={(e) => { e.stopPropagation(); setActiveSection('study'); }} className={`relative rounded-[41px] p-[1px] transition-all ${activeSection === 'study' ? 'z-[30]' : 'z-[10]'}`}>
+                    <div className={`relative p-6 rounded-[40px] border transition-all ${activeSection === 'study' ? 'border-cyan-500 shadow-2xl bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
                         <div className="flex items-center gap-4 mb-6">
-                            <span className="bg-cyan-500 text-white text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-lg shadow-cyan-500/20">{t("homework.study_title")}</span>
-                            <ActionButton icon={PlusIcon} label={t("homework.add_files")} onClick={(e: any) => { e.stopPropagation(); fileInputRef.current?.click(); }} />
+                            <span className="bg-cyan-500 text-white text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-lg">{t("homework.study_title")}</span>
+                            <ActionButton icon={PlusIcon} label={t("homework.add_files")} onClick={() => fileInputRef.current?.click()} />
                         </div>
                         <div className="flex flex-row gap-6 overflow-x-auto pb-4 min-h-[300px]">
                             {studyFiles.map(doc => (
-                                <ResearchCardPDF key={doc.id} title={doc.title} fileUrl={doc.url} onDelete={() => setStudyFiles(prev => prev.filter(f => f.id !== doc.id))} onPlay={() => handlePlayDocument(doc)} />
+                                <ResearchCardPDF key={doc.id} title={doc.title} fileUrl={doc.url} isProcessing={processingFileId === doc.id} onDelete={() => setStudyFiles(prev => prev.filter(f => f.id !== doc.id))} onPlay={() => handlePlayDocument(doc)} />
                             ))}
                         </div>
                     </div>
                 </section>
 
                 {/* 2. AI CITATIONS */}
-                <section ref={citationsRef} onClick={(e) => { e.stopPropagation(); setActiveSection('citations'); }} className={`relative rounded-[40px] p-6 border transition-all duration-500 ${activeSection === 'citations' ? 'border-cyan-500 shadow-2xl z-[30] bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
-                    <div className="flex items-center justify-between mb-4 pr-4">
-                        <div className="flex items-center gap-4">
-                            <span className="text-slate-500 dark:text-cyan-400/60 text-[10px] font-black uppercase tracking-widest">{t("homework.citations_title")}</span>
-                            <div className="flex gap-2">
-                                <ActionButton icon={ArrowPathIcon} label={t("homework.reload")} onClick={() => {}} />
-                                <ActionButton icon={BookmarkIcon} label={t("homework.save_all")} onClick={() => {}} colorClass="hover:text-emerald-500" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="h-[100px] bg-slate-50/50 dark:bg-black/20 rounded-2xl flex items-center justify-center italic text-slate-400 text-xs">{t("homework.citations_empty")}</div>
+                <section ref={citationsRef} onClick={(e) => { e.stopPropagation(); setActiveSection('citations'); }} className={`relative rounded-[40px] p-6 border transition-all ${activeSection === 'citations' ? 'border-cyan-500 shadow-2xl z-[30] bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
+                    <span className="text-slate-500 dark:text-cyan-400/60 text-[10px] font-black uppercase tracking-widest mb-4 block">{t("homework.citations_title")}</span>
+                    <div className="h-[100px] bg-slate-50/50 dark:bg-black/20 rounded-2xl flex items-center justify-center italic text-slate-400 text-xs">{activeFileContext ? "Contexto Ativo" : t("homework.citations_empty")}</div>
                 </section>
 
                 {/* 3. VIDEOS */}
-                <section onClick={(e) => { e.stopPropagation(); setActiveSection('videos'); }} className={`relative rounded-[40px] p-6 border transition-all duration-500 ${activeSection === 'videos' ? 'border-cyan-400 shadow-2xl z-[30] bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
+                <section onClick={(e) => { e.stopPropagation(); setActiveSection('videos'); }} className={`relative rounded-[40px] p-6 border transition-all ${activeSection === 'videos' ? 'border-cyan-400 shadow-2xl z-[30] bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
                     <div className="flex items-center gap-4 mb-6">
                         <span className="text-slate-500 dark:text-cyan-400/60 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><VideoCameraIcon className="w-5 h-5" /> {t("homework.videos_title")}</span>
-                        <div className="flex gap-3">
-                            <ActionButton icon={ClipboardIcon} label={t("homework.paste_link")} onClick={handlePasteVideo} />
-                            <ActionButton icon={SparklesIcon} label={t("homework.suggest")} onClick={() => {}} colorClass="hover:text-blue-500" />
-                        </div>
+                        <ActionButton icon={ClipboardIcon} label={t("homework.paste_link")} onClick={handlePasteVideo} />
                     </div>
                     <div className="flex flex-row gap-8 overflow-x-auto pb-4 min-h-[300px]">
                         {videos.map(vid => (
@@ -229,38 +193,22 @@ export default function HomeworkPage() {
                 </section>
             </main>
 
-            {/* CHAT DE INSIGHTS (BRANCO GELO / PAPEL) */}
-            <aside className={`fixed right-6 z-[60] w-[420px] bg-slate-50 shadow-2xl rounded-[40px] flex flex-col border border-slate-200 transition-all duration-700 
-                ${isFocusMode ? 'top-6 h-[calc(100vh-48px)]' : 'top-[123px] h-[calc(100vh-155px)]'}
-                ${isProcessing || isTyping ? 'border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.3)]' : ''}`}
-            >
+            {/* CHAT ASIDE */}
+            <aside className={`fixed right-6 z-[60] w-[420px] bg-slate-50 shadow-2xl rounded-[40px] flex flex-col border border-slate-200 transition-all duration-700 ${isFocusMode ? 'top-6 h-[calc(100vh-48px)]' : 'top-[123px] h-[calc(100vh-155px)]'}`}>
                 <div className="p-8 border-b border-slate-200 flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${isProcessing || isTyping ? 'bg-cyan-500 animate-pulse' : 'bg-slate-300'}`} />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {isProcessing ? t("homework.status_digesting") : t("homework.chat_header")}
-                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t("homework.chat_header")}</span>
                 </div>
-                <div ref={chatContainerRef} className="relative flex-1 overflow-y-auto p-10 space-y-6 text-slate-800 text-[14px] leading-relaxed font-serif custom-scrollbar">
-                    <AnimatePresence>
-                        {isProcessing && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 flex items-center justify-center bg-slate-50/80 backdrop-blur-sm">
-                                <IosLoader status={t("homework.status_digesting")} />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-10 space-y-6 text-slate-800 text-[14px] leading-relaxed custom-scrollbar">
                     {chatHistory.map((msg, i) => (
-                        <div key={i} className="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm italic text-slate-600 animate-in fade-in slide-in-from-right-4 duration-500">
-                            {msg.text.split('\n').map((line, idx) => <p key={idx}>{line}</p>)}
-                        </div>
+                        <div key={i} className={`p-5 rounded-2xl italic ${msg.role === 'user' ? 'bg-cyan-50 ml-4' : 'bg-white mr-4 shadow-sm'}`}>{msg.text}</div>
                     ))}
-                    {isTyping && !isProcessing && <div className="text-cyan-600 text-[10px] animate-pulse">{t("homework.status_typing")}</div>}
+                    {isProcessing && <div className="flex justify-center"><IosLoader status="Digerindo..." /></div>}
                 </div>
-                <div className="p-8 bg-white rounded-b-[40px] border-t border-slate-100">
+                <div className="p-8 border-t border-slate-100 bg-white rounded-b-[40px]">
                     <div className="relative">
-                        <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUserQuestion()} placeholder={t("homework.chat_placeholder")} className="w-full bg-white border border-black rounded-2xl py-4 px-6 text-[14px] text-black focus:outline-none shadow-sm" />
-                        <button onClick={handleUserQuestion} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black rounded-xl text-white hover:bg-slate-800 transition-colors">
-                            <ChevronRightIcon className="w-4 h-4" />
-                        </button>
+                        <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUserQuestion()} placeholder={t("homework.chat_placeholder")} className="w-full bg-white border border-black rounded-2xl py-4 px-6 text-[14px] focus:outline-none" />
+                        <button onClick={handleUserQuestion} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black rounded-xl text-white hover:bg-slate-800"><ChevronRightIcon className="w-4 h-4" /></button>
                     </div>
                 </div>
             </aside>

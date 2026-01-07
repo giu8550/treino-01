@@ -86,9 +86,17 @@ const useScrambleText = (
         startTimeRef.current = 0;
         lastStateChangeTimeRef.current = 0;
 
-        if (start) animationFrameRef.current = requestAnimationFrame(animate);
-        else setDisplayText("");
-        return () => animationFrameRef.current && cancelAnimationFrame(animationFrameRef.current);
+        if (start) {
+            animationFrameRef.current = requestAnimationFrame(animate);
+        } else {
+            setDisplayText("");
+        }
+
+        return () => {
+            if (animationFrameRef.current !== undefined) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
     }, [animate, start, targetText]);
 
     return { displayText, isComplete };
@@ -215,7 +223,7 @@ export default function AboutUsPage() {
                     <p>{t('about.mission.p1')}</p>
                     <p>{t('about.mission.p2')}</p>
                     <p className="text-white/60 text-sm italic border-l-2 border-purple-500/50 pl-4 mt-4">
-                        "{t('about.mission.quote')}"
+                        {t('about.mission.quote')}
                     </p>
                 </TextBlock>
 

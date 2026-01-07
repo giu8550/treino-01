@@ -90,6 +90,28 @@ const resources = {
                     join: "Join Zaeon",
                     button: "Start Protocol"
                 }
+            },
+            // --- TECH ROOM ---
+            tech_room: {
+                gateway_title: "SECURE_GATEWAY_V3",
+                access_denied_code: "ACCESS_DENIED",
+                restricted_title: "RESTRICTED ACCESS",
+                student_area: "student area",
+                msg_denied: "Access Denied.",
+                msg_id_req: "Identification required.",
+                key_label: "Access Key",
+                btn_auth: "AUTHENTICATE",
+                btn_wrong: "WRONG KEY",
+                tunnel: "Encrypted Tunnel: ZAEON-NET",
+                status_fail: "Status: ERR_AUTH_FAIL",
+                status_wait: "Status: AWAITING_KEY",
+                courses: {
+                    cs: "Computer Science", se: "Software Engineering", is: "Information Systems", ce: "Computer Engineering",
+                    ads: "Systems Analysis & Dev", net: "Computer Networks", infosec: "Info Security", db: "Databases",
+                    it_mgmt: "IT Management", games: "Digital Games", ai: "Artificial Intelligence", ds: "Data Science",
+                    cloud: "Cloud Computing", devops: "DevOps", cyber: "Cybersecurity", block: "Blockchain",
+                    bigdata: "Big Data Analytics", mba: "MBA IT Project Mgmt"
+                }
             }
         }
     },
@@ -179,6 +201,28 @@ const resources = {
                     join: "Junte-se à Zaeon",
                     button: "Iniciar Protocolo"
                 }
+            },
+            // --- TECH ROOM ---
+            tech_room: {
+                gateway_title: "SECURE_GATEWAY_V3",
+                access_denied_code: "ACCESS_DENIED",
+                restricted_title: "ACESSO RESTRITO",
+                student_area: "área para alunos",
+                msg_denied: "Acesso Negado.",
+                msg_id_req: "Identificação necessária.",
+                key_label: "Chave de Acesso",
+                btn_auth: "AUTENTICAR",
+                btn_wrong: "CHAVE ERRADA",
+                tunnel: "Túnel Encriptado: ZAEON-NET",
+                status_fail: "Status: ERR_AUTH_FAIL",
+                status_wait: "Status: AWAITING_KEY",
+                courses: {
+                    cs: "Ciência da Computação", se: "Engenharia de Software", is: "Sistemas de Informação", ce: "Engenharia da Computação",
+                    ads: "Análise e Desenv. de Sistemas", net: "Redes de Computadores", infosec: "Segurança da Informação", db: "Banco de Dados",
+                    it_mgmt: "Gestão de TI", games: "Jogos Digitais", ai: "Inteligência Artificial", ds: "Data Science",
+                    cloud: "Computação em Nuvem", devops: "DevOps", cyber: "Cibersegurança", block: "Blockchain",
+                    bigdata: "Big Data Analytics", mba: "MBA Gestão de Projetos TI"
+                }
             }
         }
     },
@@ -263,6 +307,28 @@ const resources = {
                     wait: "未来期待您的连接",
                     join: "加入 Zaeon",
                     button: "启动协议"
+                }
+            },
+            // --- TECH ROOM (CHINESE) ---
+            tech_room: {
+                gateway_title: "SECURE_GATEWAY_V3",
+                access_denied_code: "ACCESS_DENIED",
+                restricted_title: "访问受限",
+                student_area: "学生专区",
+                msg_denied: "访问被拒绝。",
+                msg_id_req: "需要身份验证。",
+                key_label: "访问密钥",
+                btn_auth: "认证",
+                btn_wrong: "密钥错误",
+                tunnel: "加密隧道: ZAEON-NET",
+                status_fail: "状态: ERR_AUTH_FAIL",
+                status_wait: "状态: AWAITING_KEY",
+                courses: {
+                    cs: "计算机科学", se: "软件工程", is: "信息系统", ce: "计算机工程",
+                    ads: "系统分析与开发", net: "计算机网络", infosec: "信息安全", db: "数据库",
+                    it_mgmt: "IT管理", games: "数字游戏", ai: "人工智能", ds: "数据科学",
+                    cloud: "云计算", devops: "DevOps", cyber: "网络安全", block: "区块链",
+                    bigdata: "大数据分析", mba: "MBA IT项目管理"
                 }
             }
         }
@@ -349,6 +415,28 @@ const resources = {
                     join: "Zaeon에 참여하세요",
                     button: "프로토콜 시작"
                 }
+            },
+            // --- TECH ROOM (KOREAN) ---
+            tech_room: {
+                gateway_title: "SECURE_GATEWAY_V3",
+                access_denied_code: "ACCESS_DENIED",
+                restricted_title: "접근 제한",
+                student_area: "학생 전용 구역",
+                msg_denied: "접근 거부됨.",
+                msg_id_req: "신분 확인 필요.",
+                key_label: "액세스 키",
+                btn_auth: "인증",
+                btn_wrong: "잘못된 키",
+                tunnel: "암호화 터널: ZAEON-NET",
+                status_fail: "상태: ERR_AUTH_FAIL",
+                status_wait: "상태: AWAITING_KEY",
+                courses: {
+                    cs: "컴퓨터 과학", se: "소프트웨어 공학", is: "정보 시스템", ce: "컴퓨터 공학",
+                    ads: "시스템 분석 및 개발", net: "컴퓨터 네트워크", infosec: "정보 보안", db: "데이터베이스",
+                    it_mgmt: "IT 관리", games: "디지털 게임", ai: "인공지능", ds: "데이터 사이언스",
+                    cloud: "클라우드 컴퓨팅", devops: "DevOps", cyber: "사이버 보안", block: "블록체인",
+                    bigdata: "빅데이터 분석", mba: "MBA IT 프로젝트 관리"
+                }
             }
         }
     },
@@ -434,6 +522,28 @@ const resources = {
                     join: "Únete a Zaeon",
                     button: "Iniciar Protocolo"
                 }
+            },
+            // --- TECH ROOM (SPANISH) ---
+            tech_room: {
+                gateway_title: "SECURE_GATEWAY_V3",
+                access_denied_code: "ACCESS_DENIED",
+                restricted_title: "ACCESO RESTRINGIDO",
+                student_area: "área para estudiantes",
+                msg_denied: "Acceso Denegado.",
+                msg_id_req: "Identificación necesaria.",
+                key_label: "Clave de Acceso",
+                btn_auth: "AUTENTICAR",
+                btn_wrong: "CLAVE INCORRECTA",
+                tunnel: "Túnel Encriptado: ZAEON-NET",
+                status_fail: "Estado: ERR_AUTH_FAIL",
+                status_wait: "Estado: AWAITING_KEY",
+                courses: {
+                    cs: "Ciencias de la Computación", se: "Ingeniería de Software", is: "Sistemas de Información", ce: "Ingeniería Informática",
+                    ads: "Análisis y Des. de Sistemas", net: "Redes de Computadoras", infosec: "Seguridad de la Información", db: "Base de Datos",
+                    it_mgmt: "Gestión de TI", games: "Juegos Digitales", ai: "Inteligencia Artificial", ds: "Ciencia de Datos",
+                    cloud: "Computación en la Nube", devops: "DevOps", cyber: "Ciberseguridad", block: "Blockchain",
+                    bigdata: "Análisis de Big Data", mba: "MBA Gestión de Proyectos TI"
+                }
             }
         }
     },
@@ -518,6 +628,28 @@ const resources = {
                     wait: "Le futur attend votre connexion",
                     join: "Rejoindre Zaeon",
                     button: "Démarrer le Protocole"
+                }
+            },
+            // --- TECH ROOM (FRENCH) ---
+            tech_room: {
+                gateway_title: "SECURE_GATEWAY_V3",
+                access_denied_code: "ACCESS_DENIED",
+                restricted_title: "ACCÈS RESTREINT",
+                student_area: "zone étudiante",
+                msg_denied: "Accès Refusé.",
+                msg_id_req: "Identification requise.",
+                key_label: "Clé d'Accès",
+                btn_auth: "AUTHENTIFIER",
+                btn_wrong: "CLÉ INCORRECTE",
+                tunnel: "Tunnel Chiffré: ZAEON-NET",
+                status_fail: "Statut: ERR_AUTH_FAIL",
+                status_wait: "Statut: AWAITING_KEY",
+                courses: {
+                    cs: "Informatique", se: "Génie Logiciel", is: "Systèmes d'Information", ce: "Génie Informatique",
+                    ads: "Analyse et Dév. de Systèmes", net: "Réseaux Informatiques", infosec: "Sécurité de l'Information", db: "Bases de Données",
+                    it_mgmt: "Gestion TI", games: "Jeux Numériques", ai: "Intelligence Artificielle", ds: "Science des Données",
+                    cloud: "Cloud Computing", devops: "DevOps", cyber: "Cybersécurité", block: "Blockchain",
+                    bigdata: "Analyse Big Data", mba: "MBA Gestion de Projets TI"
                 }
             }
         }

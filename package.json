@@ -84,6 +84,7 @@
     "react-i18next": "^16.5.0",
     "react-icons": "^5.0.1",
     "react-intersection-observer": "^9.5.3",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^2.2.0",
     "three": "^0.160.1",
     "viem": "^2.43.5"
