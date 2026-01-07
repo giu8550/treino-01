@@ -12,7 +12,7 @@ import ThemeToggle from "@/components/sub/ThemeToggle";
 import "../../src/i18n";
 
 const NavbarComponent = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation(); // Pega o 'i18n' para checar status
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -21,12 +21,16 @@ const NavbarComponent = () => {
     setMounted(true);
   }, []);
 
-  // Lógica de Alternância (Mantida, mas sem estilo visual agressivo)
+  // Evita Hydration Mismatch e erro de instância
+  // Se não estiver montado ou o i18n não carregou, renderiza uma barra vazia ou logo estático
+  if (!mounted || !i18n.isInitialized) {
+    return <div className="w-full h-[90px] fixed top-0 z-50" />;
+  }
+
   const isHomeworkPage = pathname === "/homework";
   const toggleLink = isHomeworkPage ? "/workstation" : "/homework";
   const toggleLabel = isHomeworkPage ? t("navbar.workstation") : t("navbar.homework");
 
-  // Estilo padrão para todos os links (Minimalista)
   const linkStyle = "hover:text-cyan-500 dark:hover:text-[#5fb4ff] transition-all duration-200 hover:scale-105 cursor-pointer";
 
   return (
@@ -43,31 +47,25 @@ const NavbarComponent = () => {
                 width={280}
                 height={150}
                 priority
-                draggable={false}
                 className="h-12 w-auto object-contain invert dark:invert-0 transition-all"
             />
           </Link>
 
-          {/* MENU DESKTOP - Agora todos os itens são iguais */}
+          {/* MENU DESKTOP */}
           <nav className="hidden md:flex justify-center flex-1 gap-12 text-[14px] font-medium text-foreground/80 tracking-wide">
             <Link href="/#about-us" className={linkStyle}>
               {t("navbar.about")}
             </Link>
-
             <Link href="/#study-rooms" className={linkStyle}>
               {t("navbar.study_rooms")}
             </Link>
-
-            {/* O Botão Toggle agora tem o MESMO ESTILO dos outros */}
             <Link href={toggleLink} className={linkStyle}>
               {toggleLabel}
             </Link>
           </nav>
 
-          {/* DIREITA: TEMA + MOBILE TOGGLE */}
           <div className="flex items-center gap-4">
             <ThemeToggle />
-
             <button
                 className="md:hidden text-foreground focus:outline-none text-2xl"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
