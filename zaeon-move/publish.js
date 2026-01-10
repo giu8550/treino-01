@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 const PRIVATE_KEY_STR = "0x3fdb890d03facd5dbbc781674913df95dbae400c9bcc209045d82291c8df2ffc";
-const MOVEMENT_RPC = "https://aptos.testnet.m1.movementlabs.xyz/v1";
+const MOVEMENT_RPC = "https://testnet.movementnetwork.xyz/v1";
 
 async function publish() {
     const config = new AptosConfig({ network: Network.CUSTOM, fullnode: MOVEMENT_RPC });
