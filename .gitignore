@@ -13,13 +13,9 @@ build/
 .yarn/build-state.yml
 .yarn/.vscode/
 
-# --- SMART MODULES (Movement / Aptos Move) ---
-# Onde ficam os arquivos compilados (Bytecode)
-build/
-# Onde a CLI guarda metadados locais e contas de teste (NUNCA envie isso ao GitHub)
-.aptos/
-# Arquivo de trava de dependências do Move
-Move.lock
+# --- casper ---
+zaeon-contracts/keys/
+secret_key.pem
 
 # --- AMBIENTE E SEGURANÇA ---
 .env
