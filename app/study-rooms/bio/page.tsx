@@ -2,14 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Dna, Lock, XCircle, Activity, CheckCircle2 } from 'lucide-react';
+import { Dna, Lock, XCircle, Activity } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-// Importação de imagem otimizada
-import Image from 'next/image';
 
-// Termos Biológicos
-const BIO_TERMS = [
+// Lista Duplicada para garantir fluxo contínuo sem buracos
+const BASE_TERMS = [
     "Mitochondria", "Ribosome", "Nucleus", "Cytoplasm", "Membrane",
     "Lysosome", "Golgi", "Endoplasmic", "Vacuole", "Chloroplast",
     "DNA", "RNA", "CRISPR", "Enzyme", "Protein",
@@ -18,6 +16,8 @@ const BIO_TERMS = [
     "Hemoglobin", "Leukocyte", "Platelet", "Plasma", "Antibody",
     "Antigen", "Virus", "Bacteria", "Fungi", "Mitosis"
 ];
+// Concatenamos 2x para ter moléculas suficientes preenchendo qualquer altura de tela
+const BIO_TERMS = [...BASE_TERMS, ...BASE_TERMS];
 
 const ZaeonBiologyRoom = () => {
     const { t } = useTranslation();
@@ -26,20 +26,18 @@ const ZaeonBiologyRoom = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [isError, setIsError] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(true); // Estado para o tema
+    const [isDarkMode, setIsDarkMode] = useState(true);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
-    // --- 1. DETECÇÃO DE TEMA (Igual à Cyber Page) ---
+    // --- 1. DETECÇÃO DE TEMA ---
     useEffect(() => {
         const checkTheme = () => {
             const isDark = document.documentElement.classList.contains('dark');
             setIsDarkMode(isDark);
         };
         checkTheme();
-
-        // Observa mudanças na classe 'dark' do HTML
         const observer = new MutationObserver(checkTheme);
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
@@ -55,7 +53,6 @@ const ZaeonBiologyRoom = () => {
         if (inputValue === "ZA-2026") {
             setIsError(false);
             console.log("Acesso Biológico Permitido");
-            // router.push('/dashboard-bio');
         } else {
             setIsError(true);
             setTimeout(() => setIsError(false), 1000);
@@ -66,7 +63,7 @@ const ZaeonBiologyRoom = () => {
         if (e.key === 'Enter') handleAuth();
     };
 
-    // --- 3. BIO-PHYSICS ENGINE (DNA 3D) ---
+    // --- 3. BIO-PHYSICS ENGINE (DNA 3D Fluido) ---
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -74,7 +71,8 @@ const ZaeonBiologyRoom = () => {
         if (!ctx) return;
 
         let animationFrameId: number;
-        let mouse = { x: -1000, y: -1000, radius: 250 }; // Raio de repulsão
+        let mouse = { x: -1000, y: -1000 };
+        const interactionRadius = 300;
 
         const handleMouseMove = (event: MouseEvent) => {
             mouse.x = event.clientX;
@@ -92,12 +90,15 @@ const ZaeonBiologyRoom = () => {
         window.addEventListener('resize', resize);
         resize();
 
+        // Configuração Geométrica do DNA
+        const SPACING = 50; // Espaço fixo entre moléculas
+        const TOTAL_HEIGHT = BIO_TERMS.length * SPACING; // Altura total do loop
+
         class Molecule {
             text: string;
             y: number;
             strand: 1 | 2;
             x: number = 0;
-            z: number = 0;
             scale: number = 1;
             opacity: number = 1;
             color: string;
@@ -107,66 +108,60 @@ const ZaeonBiologyRoom = () => {
                 this.text = text;
                 this.y = startY;
                 this.strand = strand;
-                // Cores baseadas no tema serão definidas no draw, mas aqui definimos o tom base
                 this.color = strand === 1 ? '#10B981' : '#06b6d4';
             }
 
-            update(canvasW: number, canvasH: number, speed: number) {
+            update(canvasW: number, speed: number) {
+                // 1. Movimento Vertical
                 this.y -= speed;
 
-                // Loop Infinito Vertical
-                const totalHeight = BIO_TERMS.length * 45;
-                if (this.y < -50) {
-                    this.y += totalHeight;
+                // Lógica de Loop Perfeito (Sem quebra)
+                // Se sair muito pra cima (-100), vai para o final exato da fila
+                if (this.y < -100) {
+                    this.y += TOTAL_HEIGHT;
                 }
 
-                // --- MATEMÁTICA DA DUPLA HÉLICE ---
-                const helixRadius = 140; // Raio mais largo para ver melhor
-                const helixCenter = canvasW * 0.18; // Posição fixa à esquerda (Coluna de DNA)
-                const frequency = 0.006; // Frequência da onda
+                // 2. Matemática da Hélice
+                const helixRadius = 140;
+                const helixCenter = canvasW * 0.18;
+                const frequency = 0.005; // Frequência um pouco mais suave
 
-                // Calcula o ângulo baseado na altura (Y)
                 const angle = (this.y * frequency) + (this.strand === 1 ? 0 : Math.PI);
-
-                // Posição Base (Sem mouse)
                 this.baseX = helixCenter + Math.cos(angle) * helixRadius;
-                const baseZ = Math.sin(angle); // Profundidade (-1 a 1)
+                const baseZ = Math.sin(angle);
 
-                // Define Escala e Opacidade baseadas na profundidade (Z)
-                this.scale = 0.6 + (baseZ + 1) * 0.25;
-                this.opacity = 0.4 + (baseZ + 1) * 0.4;
+                let targetScale = 0.6 + (baseZ + 1) * 0.25;
+                let targetOpacity = 0.4 + (baseZ + 1) * 0.4;
 
-                // Inicializa X se for a primeira vez
+                // 3. Física de Mola Sutil
+                const dx = mouse.x - this.baseX;
+                const dy = mouse.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                let targetX = this.baseX;
+
+                if (dist < interactionRadius && dist > 0) {
+                    const pullStrength = Math.pow(1 - dist / interactionRadius, 2);
+                    const maxPullDistance = 60;
+                    const offsetX = (dx / dist) * pullStrength * maxPullDistance;
+                    targetX = this.baseX + offsetX;
+                    targetScale = Math.min(targetScale * 1.2, 1.5);
+                    targetOpacity = 1;
+                }
+
                 if (this.x === 0) this.x = this.baseX;
 
-                // --- FÍSICA DE MOUSE ---
-                const dx = mouse.x - this.x;
-                const dy = mouse.y - this.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-
-                // Força de Retorno (Elasticidade para voltar ao DNA)
-                this.x += (this.baseX - this.x) * 0.08;
-
-                // Força de Repulsão (Mouse)
-                if (dist < mouse.radius) {
-                    const force = (mouse.radius - dist) / mouse.radius;
-                    const repulsionX = (dx / dist) * force * 40; // Empurrão forte
-                    const repulsionY = (dy / dist) * force * 40;
-
-                    this.x -= repulsionX;
-                    this.y -= repulsionY;
-                    this.scale = Math.min(this.scale * 1.3, 1.5); // Aumenta ao passar o mouse
-                    this.opacity = 1;
-                }
+                // Suavização do movimento (Lerp)
+                this.x += (targetX - this.x) * 0.1;
+                this.scale += (targetScale - this.scale) * 0.1;
+                this.opacity += (targetOpacity - this.opacity) * 0.1;
             }
 
             draw(ctx: CanvasRenderingContext2D, isDark: boolean) {
-                // Ajuste de cores para Claro/Escuro
                 let displayColor = this.color;
                 let textColor = isDark ? '#ffffff' : '#1f2937';
 
                 if (!isDark) {
-                    // No modo claro, escurecemos um pouco as cores do DNA para contraste
                     displayColor = this.strand === 1 ? '#059669' : '#0891b2';
                 }
 
@@ -174,20 +169,20 @@ const ZaeonBiologyRoom = () => {
                 ctx.translate(this.x, this.y);
                 ctx.scale(this.scale, this.scale);
 
-                // Círculo da Molécula
+                // Círculo
                 ctx.beginPath();
                 ctx.arc(0, 0, 6, 0, Math.PI * 2);
                 ctx.fillStyle = displayColor;
                 ctx.globalAlpha = this.opacity;
                 ctx.fill();
 
-                // Brilho (apenas modo escuro)
+                // Sombra suave (Glow)
                 if (isDark) {
                     ctx.shadowBlur = 15;
                     ctx.shadowColor = displayColor;
                 }
 
-                // Texto (Balão)
+                // Texto
                 ctx.fillStyle = textColor;
                 ctx.globalAlpha = this.opacity;
                 ctx.font = 'bold 11px monospace';
@@ -199,61 +194,70 @@ const ZaeonBiologyRoom = () => {
             }
         }
 
-        // Instanciação
         const molecules: Molecule[] = [];
-        const spacing = 45;
 
+        // Inicialização precisa para evitar buracos no start
         BIO_TERMS.forEach((term, i) => {
             const strand = i % 2 === 0 ? 1 : 2;
-            const startY = canvas.height + (i * spacing);
+            // Começamos desenhando um pouco abaixo da tela para já ter continuidade ao subir
+            const startY = canvas.height + (i * SPACING);
             molecules.push(new Molecule(term, startY, strand));
         });
 
-        // Loop de Renderização
         const animate = () => {
             if (!ctx || !canvas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Verifica tema atual no DOM
             const isDarkNow = document.documentElement.classList.contains('dark');
 
-            // --- DESENHO DAS FITAS (STRANDS) ---
-            // Desenhamos as linhas ANTES dos pontos para ficar "atrás"
-            // Separamos por fita e ordenamos por Y
+            // Função para desenhar as linhas conectando as moléculas
             const drawStrand = (strandNum: 1 | 2) => {
                 const strandMols = molecules.filter(m => m.strand === strandNum).sort((a, b) => a.y - b.y);
 
                 ctx.beginPath();
-                // Cor da linha
                 ctx.strokeStyle = isDarkNow
                     ? (strandNum === 1 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(6, 182, 212, 0.4)')
                     : (strandNum === 1 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(8, 145, 178, 0.3)');
 
-                ctx.lineWidth = 4; // Linha grossa para ser visível
+                ctx.lineWidth = isDarkNow ? 5 : 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
 
-                // Suavização da linha (Bézier curves se possível, ou lineTo simples)
                 if (strandMols.length > 0) {
-                    ctx.moveTo(strandMols[0].x, strandMols[0].y);
-                    for (let i = 1; i < strandMols.length; i++) {
-                        // Só conecta se a distância não for o "pulo" do loop infinito
-                        if (Math.abs(strandMols[i].y - strandMols[i-1].y) < 100) {
-                            ctx.lineTo(strandMols[i].x, strandMols[i].y);
+                    // Começa do primeiro visível
+                    let started = false;
+
+                    for (let i = 0; i < strandMols.length - 1; i++) {
+                        const curr = strandMols[i];
+                        const next = strandMols[i+1];
+
+                        // Apenas desenha se a distância for razoável (evita linha cruzando a tela no loop)
+                        if (Math.abs(curr.y - next.y) < SPACING * 2.5) {
+                            if (!started) {
+                                ctx.moveTo(curr.x, curr.y);
+                                started = true;
+                            }
+                            // Curva quadrática para suavidade extra na mola
+                            const midX = (curr.x + next.x) / 2;
+                            const midY = (curr.y + next.y) / 2;
+                            ctx.quadraticCurveTo(curr.x, curr.y, midX, midY);
+                            ctx.quadraticCurveTo(midX, midY, next.x, next.y);
                         } else {
-                            ctx.moveTo(strandMols[i].x, strandMols[i].y);
+                            started = false; // Quebra a linha se for o ponto de loop
                         }
                     }
                 }
                 ctx.stroke();
             };
 
-            // Atualiza posições
-            molecules.forEach(m => m.update(canvas.width, canvas.height, 0.6));
+            // Velocidade 1.2 (Um pouco mais rápido)
+            molecules.forEach(m => m.update(canvas.width, 1.2));
 
-            // Desenha Fitas
+            // Desenha as fitas primeiro (fundo)
             drawStrand(1);
             drawStrand(2);
 
-            // Desenha Moléculas (Pontos e Texto) - Ordenado por Z (escala) para profundidade correta
+            // Desenha as moléculas (frente)
             molecules.sort((a, b) => a.scale - b.scale);
             molecules.forEach(m => m.draw(ctx, isDarkNow));
 
@@ -268,19 +272,22 @@ const ZaeonBiologyRoom = () => {
             window.removeEventListener('mouseout', handleMouseLeave);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []); // Array vazio para rodar apenas no mount
+    }, []);
 
     return (
-        // Fundo: Verde Escuro (Dark) e Cinza Claro (Light)
-        <div className="relative w-screen h-screen overflow-hidden bg-gray-100 dark:bg-[#021f15] font-mono transition-colors duration-500">
+        // FUNDO ATUALIZADO: Degradê Verde Confortável e Bonito
+        // from-emerald-800: Verde vivo no topo esquerdo
+        // via-teal-900: Verde azulado no meio
+        // to-black: Preto apenas no canto inferior direito para profundidade
+        <div className={`relative w-screen h-screen overflow-hidden font-mono transition-colors duration-500
+            bg-gray-100 
+            dark:bg-[linear-gradient(to_bottom_right,_#065f46_0%,_#022c22_60%,_#000000_100%)]
+        `}>
 
-            {/* CAMADA 1: IMAGEM FIXA (Opcional, se tiver assets/dna.png) */}
-            {/* Se não tiver imagem específica, removemos ou usamos um placeholder sutil */}
-
-            {/* CAMADA 2: CANVAS (O DNA Interativo) */}
+            {/* CAMADA 2: CANVAS (O DNA) */}
             <canvas ref={canvasRef} className="absolute inset-0 z-20 pointer-events-none" />
 
-            {/* CAMADA 3: MODAL CENTRAL (Cópia exata da lógica Cyber) */}
+            {/* CAMADA 3: MODAL CENTRAL (Mantido idêntico) */}
             <AnimatePresence>
                 {isLoaded && (
                     <motion.div
@@ -307,7 +314,7 @@ const ZaeonBiologyRoom = () => {
                             <div className={`border-b p-2 py-1.5 flex items-center justify-between select-none transition-colors duration-300
                                 ${isError
                                 ? 'bg-red-50 dark:bg-red-900/30 border-red-100 dark:border-red-800/50'
-                                : 'bg-gray-50 dark:bg-green-900/20 border-gray-100 dark:border-green-800/50'
+                                : 'bg-green-900/20 border-green-800/50'
                             }`}>
                                 <div className={`flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest ${isError ? 'text-red-500' : 'text-gray-500 dark:text-green-500'}`}>
                                     <Activity size={10} />
@@ -318,14 +325,12 @@ const ZaeonBiologyRoom = () => {
                                 </div>
                             </div>
 
-                            {/* Corpo do Modal */}
+                            {/* Corpo */}
                             <div className="p-5 relative overflow-hidden">
-                                {/* Grid decorativo sutil */}
                                 <div className="absolute inset-0 bg-[length:100%_3px] pointer-events-none z-0 opacity-0 dark:opacity-50
                                      bg-[linear-gradient(rgba(16,185,129,0)_50%,rgba(16,185,129,0.05)_50%)]"></div>
 
                                 <div className="relative z-10 flex flex-col gap-4">
-
                                     {/* Header */}
                                     <div className={`border-l-2 pl-3 py-0.5 transition-colors duration-300 ${isError ? 'border-red-500' : 'border-gray-400 dark:border-green-600'}`}>
                                         <h2 className={`text-base font-bold tracking-wider flex items-center gap-2 ${isError ? 'text-red-600 dark:text-red-500' : 'text-gray-800 dark:text-white'}`}>
@@ -337,7 +342,7 @@ const ZaeonBiologyRoom = () => {
                                         </p>
                                     </div>
 
-                                    {/* Input Field */}
+                                    {/* Input */}
                                     <div className="space-y-3 pt-1">
                                         <div className="relative group">
                                             <label className={`text-[9px] uppercase font-bold mb-1 block transition-colors ${isError ? 'text-red-500' : 'text-gray-400 dark:text-green-500/50'}`}>
@@ -348,7 +353,7 @@ const ZaeonBiologyRoom = () => {
                                                 ? 'border-red-300 bg-red-50 dark:border-red-500/60 dark:bg-red-900/10'
                                                 : 'border-gray-200 bg-gray-50 dark:border-green-500/60 dark:bg-green-900/10'
                                             }`}>
-                                                <span className={`pl-3 font-bold text-sm transition-colors ${isError ? 'text-red-500' : 'text-gray-400 dark:text-green-500'}`}>{'>'}</span>
+                                                <span className={`pl-3 font-bold text-sm transition-colors ${isError ? 'text-red-500' : 'text-green-500'}`}>{'>'}</span>
                                                 <input
                                                     type="password"
                                                     value={inputValue}
