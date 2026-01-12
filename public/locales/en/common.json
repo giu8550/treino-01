@@ -26,8 +26,8 @@
     "off": "OFF"
   },
   "footer": {
-    "powered": "Powered by Casper",
-    "version": "Zaeon OS - v0.1"
+    "powered": "Powered by Mantle",
+    "version": "Zaeon OS - v1.0"
   },
   "modal": {
     "title": "New Account",
@@ -38,7 +38,7 @@
     "cancel": "Cancel",
     "use_wallet": "Use Wallet",
     "use_id": "Use ID",
-    "wallet_label": "Movement Wallet",
+    "wallet_label": "Mantle Wallet",
     "wallet_placeholder": "0x...",
     "lbl_student": "Student ID",
     "ph_student": "000...",
@@ -116,7 +116,7 @@
       "gen_protocol": "Protocol initiated via {{name}}",
       "content_gen": "Content generated.",
       "ipfs_success": "IPFS Success: {{hash}}",
-      "blockchain_init": "Securing on Movement...",
+      "blockchain_init": "Securing on Mantle...",
       "success": "Success!",
       "error": "Error."
     }
@@ -145,24 +145,27 @@
     },
     "mission": {
       "title": "Our Mission",
-      "p1": "To empower the next generation of students, researchers, and teachers by offering high-impact tools for the daily life of those seeking knowledge and education.",
-      "p2": "We use Movement technology to record your evolution in a way that no one can erase or alter. Here, your research isn't a copied and pasted text; it's an eternal and secure digital record.",
-      "quote": "Knowledge should not just be acquired; it must be preserved and secured."
+      "p1": "To empower the next generation of students, researchers, and teachers by offering simple-to-use tools for the daily life on high performance education.",
+      "p2": "Leading them to a complete monetization platform for their academic endurance."
     },
     "architecture": {
       "title": "The Zaeon Architecture",
       "subtitle": "Innovative technology set to impact millions of students worldwide.",
-      "card1_t": "Intelligent Agents",
-      "card1_d": "We offer expert mentors with refined knowledge tailored to each country, institution, and field of study. Everything is customizable and specific to you.",
-      "card2_t": "Trusted Blockchain",
-      "card2_d": "Movement acts as a high-performance database, ensuring every document generated is your intellectual property and acting as a credential validator.",
-      "card3_t": "Hybrid Study",
-      "card3_d": "Agents encourage regional study groups while controlling digital environments where global collaboration happens in real-time."
+      "card_title": "MANTLE NETWORK RWA ENGINE",
+      "card_desc": "Monetize your research with the help of AI Agents. IP Equity & Real Yield.",
+      "flow": {
+        "step1": "RESEARCH",
+        "step2": "VALIDATION",
+        "step3": "MANTLE NETWORK",
+        "step4": "RWA ENGINE",
+        "step5": "INTELLECTUAL ASSET",
+        "step6": "RESEARCH MONETIZATION",
+        "step7": "PROFIT POOL"
+      }
     },
     "cta": {
-      "wait": "The future awaits your connection",
-      "join": "Join Zaeon",
-      "button": "Start Protocol"
+      "tour_title": "TAKE A TOUR TO MEET ALL FEATURES",
+      "button_go": "GO !"
     }
   },
   "tech_room": {
