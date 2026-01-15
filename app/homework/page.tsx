@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import "@/src/i18n";
 import {
     PlusIcon, ChevronRightIcon, BookmarkIcon,
@@ -57,6 +59,9 @@ const ActionButton = ({ icon: Icon, label, onClick, colorClass = "hover:text-cya
 
 export default function HomeworkPage() {
     const { t } = useTranslation();
+    const router = useRouter();
+    const { data: session, status } = useSession();
+
     const [mounted, setMounted] = useState(false);
     const [isFocusMode, setIsFocusMode] = useState(false);
 
@@ -78,6 +83,30 @@ export default function HomeworkPage() {
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const citationsRef = useRef<HTMLElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
+
+    // --- BLINDAGEM DA PÁGINA COM PODER DE ADMIN ---
+    useEffect(() => {
+        if (status === "loading") return;
+
+        if (status === "unauthenticated") {
+            router.replace("/");
+            return;
+        }
+
+        if (status === "authenticated") {
+            // Checa a flag isAdmin que criamos no NextAuth
+            const isAdmin = (session?.user as any)?.isAdmin;
+            const userRole = (session?.user as any)?.role;
+
+            // Se for ADMIN, ele tem passe livre (não faz nada e deixa o componente renderizar)
+            if (isAdmin) return;
+
+            // Se NÃO for Admin, aplica a restrição normal de Role
+            if (userRole === "professional" || userRole === "entrepreneur") {
+                router.replace("/workstation");
+            }
+        }
+    }, [status, session, router]);
 
     useEffect(() => { setMounted(true); }, []);
 
@@ -215,7 +244,21 @@ export default function HomeworkPage() {
         window.open('https://chat.google.com', '_blank');
     };
 
-    if (!mounted) return null;
+    // --- RENDERIZAÇÃO CONDICIONAL ---
+    if (!mounted || status === "loading") {
+        return (
+            <div className="w-full h-screen bg-[#030014] flex items-center justify-center z-[999]">
+                <IosLoader status="VALIDANDO ACESSO ADMIN..." />
+            </div>
+        );
+    }
+
+    // Se não for admin e não tiver role autorizada, o useEffect acima já terá disparado o router.replace
+    // mas retornamos null aqui por segurança enquanto o redirect acontece.
+    const isAdmin = (session?.user as any)?.isAdmin;
+    const isAuthorized = isAdmin || (session?.user as any)?.role === "student" || (session?.user as any)?.role === "researcher";
+
+    if (status === "unauthenticated" || !isAuthorized) return null;
 
     return (
         <div
@@ -238,7 +281,6 @@ export default function HomeworkPage() {
                 {(activeSection || isProcessing) && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[15] bg-black/20 backdrop-blur-[1px] pointer-events-none" />}
             </AnimatePresence>
 
-            {/* Input de Arquivo Oculto */}
             <input
                 type="file"
                 ref={fileInputRef}
@@ -286,14 +328,12 @@ export default function HomeworkPage() {
                     </div>
                 </section>
 
-                {/* 3. VIDEOS (COM NOVO BOTÃO SPARKLE) */}
+                {/* 3. VIDEOS */}
                 <section onClick={(e) => { e.stopPropagation(); setActiveSection('videos'); }} className={`relative rounded-[40px] p-6 border transition-all ${activeSection === 'videos' ? 'border-cyan-400 shadow-2xl z-[30] bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
                     <div className="flex items-center gap-4 mb-6">
                         <span className="text-slate-500 dark:text-cyan-400/60 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><VideoCameraIcon className="w-5 h-5" /> {t("homework.videos_title")}</span>
                         <div className="flex items-center gap-2">
-                            {/* Botão de Colar Link */}
                             <ActionButton icon={ClipboardIcon} label={t("homework.paste_link")} onClick={handlePasteVideo} />
-                            {/* NOVO: Botão Sparkle */}
                             <ActionButton icon={SparklesIcon} label="Insights de Vídeo" onClick={() => alert("Em breve: Análise de vídeo!")} colorClass="text-purple-500 hover:text-purple-600" />
                         </div>
                     </div>
@@ -307,12 +347,10 @@ export default function HomeworkPage() {
                     </div>
                 </section>
 
-                {/* 4. SPECIALISTS CHAT CARDS (COM EFEITO DE FOCO) */}
+                {/* 4. SPECIALISTS CHAT CARDS */}
                 <section className="grid grid-cols-2 gap-6 pb-20">
                     {[1, 2].map((num) => {
-                        // Verifica se este card específico está ativo
                         const isActive = activeSection === `specialist-${num}`;
-
                         return (
                             <div
                                 key={num}

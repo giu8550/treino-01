@@ -14,7 +14,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
-// IMPORTAR SIGNIN DO NEXTAUTH
 import { signIn } from "next-auth/react";
 
 // Importações internas
@@ -27,7 +26,7 @@ type MenuItem = { labelKey: string; href: string };
 
 const MENU_ITEMS: MenuItem[] = [
   { labelKey: "menu.new", href: "/signup" },
-  { labelKey: "menu.load", href: "#" }, // Link vazio pois vamos interceptar
+  { labelKey: "menu.load", href: "#" },
   { labelKey: "menu.options", href: "/settings" },
   { labelKey: "menu.manual", href: "/manual" },
 ];
@@ -125,9 +124,9 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
     }
   };
 
-  // LOGIN DIRETO COM GOOGLE DENTRO DO MODAL
   const handleGoogleQuickStart = () => {
-    signIn('google', { callbackUrl: '/workstation' });
+    // Mantém a escolha de conta para "New Account"
+    signIn('google', { callbackUrl: '/workstation' }, { prompt: "select_account" });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -157,13 +156,11 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                 <p className="text-sm text-white/85 tracking-wide">{t("modal.title")} · {roleLabel}</p>
               </div>
 
-              {/* --- BOTÃO DE GOOGLE QUICK START --- */}
               <div className="mb-4">
                 <button
                     onClick={handleGoogleQuickStart}
                     className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-100 font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                 >
-                  {/* ALTERAÇÃO AQUI: <img ...> para <Image ...> */}
                   <Image
                       src="https://authjs.dev/img/providers/google.svg"
                       alt="Google"
@@ -171,7 +168,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                       height={20}
                       className="w-5 h-5"
                   />
-                  Entrar com Google (Recomendado)
+                  {t("login.google") || "Sign in with Google"}
                 </button>
                 <div className="flex items-center gap-2 mt-3 mb-2 opacity-50">
                   <div className="h-px bg-white/30 flex-1"></div>
@@ -236,16 +233,35 @@ const HeroContentComponent = () => {
   };
 
   const handleOnboardSuccess = (data: any) => {
+    // --- LÓGICA DE ADMIN (NOVA) ---
+    // Se o e-mail preenchido manualmente for o seu, ignora as roles e vai para workstation
+    if (data.email === "donmartinezcaiudoceu@gmail.com") {
+      router.push("/workstation");
+      return;
+    }
+
     if (data.role === "cyber_hall") {
       router.push("/study-rooms/tech");
+      return;
     }
-    const query = new URLSearchParams(data).toString();
-    router.push(`/workstation?${query}`);
+
+    const query = new URLSearchParams({
+      role: data.role,
+      name: data.name,
+    }).toString();
+
+    if (data.role === "student" || data.role === "researcher") {
+      router.push(`/homework?${query}`);
+    } else if (data.role === "professional" || data.role === "entrepreneur") {
+      router.push(`/workstation?${query}`);
+    } else {
+      router.push(`/workstation?${query}`);
+    }
   };
 
-  // --- LÓGICA DO MENU LOAD ---
   const handleLoadGame = () => {
-    // Abre o popup do Google para "Carregar" o jogo
+    // O redirecionamento via Google cai em /workstation.
+    // Lá, a Page.tsx usará a session do NextAuth (com a flag isAdmin) para permitir o acesso.
     signIn('google', { callbackUrl: '/workstation' });
   };
 
@@ -269,7 +285,6 @@ const HeroContentComponent = () => {
         const item = MENU_ITEMS[index];
         if (!item) return;
         if (item.labelKey === "menu.new") { e.preventDefault(); setPickerOpen(true); return; }
-        // INTERCEPTANDO O LOAD VIA TECLADO
         if (item.labelKey === "menu.load") { e.preventDefault(); handleLoadGame(); return; }
         if (item.labelKey === "menu.options") { setIsOptionsOpen(true); return; }
         window.location.assign(item.href);
@@ -335,12 +350,10 @@ const HeroContentComponent = () => {
                                   <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
                                 </button>
                             ) : isLoad ? (
-                                // --- BOTÃO LOAD COM AÇÃO GOOGLE ---
                                 <button onClick={handleLoadGame} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
                                   <span className={accentBar(selected)} />
                                   <div className="flex items-center gap-3">
                                     <span className={labelClass}>{t(item.labelKey)}</span>
-                                    {/* Indicador sutil de que é Google */}
                                     {selected && <span className="text-[10px] text-white/50 bg-white/10 px-2 py-0.5 rounded ml-2">Google Save</span>}
                                   </div>
                                   <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { useRouter } from "next/navigation"; // Importado para proteção
 import {
     PaperAirplaneIcon,
     TrashIcon,
@@ -80,8 +81,27 @@ const AGENTS = {
 
 type AgentKey = keyof typeof AGENTS;
 
+// --- COMPONENTES AUXILIARES ---
+const IosLoader = ({ status }: { status: string }) => (
+    <div className="flex flex-col items-center justify-center space-y-4 py-4">
+        <div className="relative w-8 h-8">
+            {[...Array(8)].map((_, i) => (
+                <motion.div
+                    key={i}
+                    className="absolute w-[2px] h-[8px] bg-slate-400 rounded-full"
+                    style={{ left: "50%", top: "30%", transformOrigin: "50% 180%", rotate: i * 45 }}
+                    animate={{ opacity: [0.1, 1, 0.1] }}
+                    transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.1 }}
+                />
+            ))}
+        </div>
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">{status}</span>
+    </div>
+);
+
 export default function WorkStationPage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+    const router = useRouter();
     const { login: connectWallet, authenticated: privyAuthenticated, ready: privyReady, logout: disconnectWallet } = usePrivy();
     const { wallets } = useWallets();
     const wallet = wallets[0];
@@ -105,6 +125,29 @@ export default function WorkStationPage() {
 
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
+
+    // --- BLINDAGEM DA PÁGINA COM PODER DE ADMIN ---
+    useEffect(() => {
+        if (status === "loading") return;
+
+        if (status === "unauthenticated") {
+            router.replace("/");
+            return;
+        }
+
+        if (status === "authenticated") {
+            const isAdmin = (session?.user as any)?.isAdmin;
+            const userRole = (session?.user as any)?.role;
+
+            // Se for ADMIN, ignora restrições
+            if (isAdmin) return;
+
+            // Se for estudante ou pesquisador, não pertence à Workstation
+            if (userRole === "student" || userRole === "researcher") {
+                router.replace("/homework");
+            }
+        }
+    }, [status, session, router]);
 
     useEffect(() => {
         setMounted(true);
@@ -146,7 +189,6 @@ export default function WorkStationPage() {
 
     useEffect(() => { if (mounted) scrollToBottom(); }, [chatHistory, terminalLogs, mounted, isTyping, selectedAgent]);
 
-    // --- CORREÇÃO: ALTERNAR PERSONAGEM FUNCIONAL ---
     const handleAgentSwitch = (key: AgentKey) => {
         if (key === selectedAgent) return;
         setIsAgentMenuOpen(false);
@@ -175,7 +217,6 @@ export default function WorkStationPage() {
         } finally { setIsTyping(false); }
     };
 
-    // --- NOVO: LÓGICA DE TRANSAÇÃO + MONGODB ---
     const handleBoostAndSave = async () => {
         if (!privyAuthenticated || !wallet) {
             connectWallet();
@@ -188,13 +229,12 @@ export default function WorkStationPage() {
         try {
             const provider = await wallet.getEthereumProvider();
 
-            // DISPARO DA TRANSAÇÃO REAL (MODAL PRIVY)
             const txHash = await provider.request({
                 method: 'eth_sendTransaction',
                 params: [{
                     from: wallet.address,
-                    to: '0x0000000000000000000000000000000000000000', // Endereço do Contrato Zaeon
-                    data: '0x', // Encode da função mintBadge()
+                    to: '0x0000000000000000000000000000000000000000',
+                    data: '0x',
                     value: '0x0',
                 }],
             });
@@ -203,7 +243,6 @@ export default function WorkStationPage() {
             await new Promise(r => setTimeout(r, 2000));
             addLog("✅ Badge Minted. Memory Persistence Authorized.");
 
-            // AGORA SALVA NO MONGODB
             const userId = session?.user?.email || wallet?.address;
             const res = await fetch('/api/workspace', {
                 method: 'POST',
@@ -225,7 +264,6 @@ export default function WorkStationPage() {
         }
     };
 
-    // --- REINTEGRAÇÃO: GERADOR DE PROTOCOLO (IPFS) ---
     const handleGenerateProtocol = async () => {
         if (!privyAuthenticated || !wallet) {
             alert(t("workstation.no_wallet"));
@@ -253,7 +291,19 @@ export default function WorkStationPage() {
         }
     };
 
-    if (!mounted) return <div className="w-full h-screen bg-[#030014]" />;
+    // --- RENDERIZAÇÃO CONDICIONAL (LOADING / AUTH) ---
+    if (!mounted || status === "loading") {
+        return (
+            <div className="w-full h-screen bg-[#030014] flex items-center justify-center z-[999]">
+                <IosLoader status="SINCRONIZANDO WORKSTATION..." />
+            </div>
+        );
+    }
+
+    const isAdmin = (session?.user as any)?.isAdmin;
+    const isAuthorized = isAdmin || (session?.user as any)?.role === "professional" || (session?.user as any)?.role === "entrepreneur";
+
+    if (status === "unauthenticated" || !isAuthorized) return null;
 
     const activeConfig = AGENTS[selectedAgent];
     const panelStyle = "relative overflow-hidden backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.12)] bg-[linear-gradient(135deg,rgba(7,38,77,0.4),rgba(11,58,164,0.3),rgba(7,38,77,0.4))] rounded-[24px] transition-all duration-300";
@@ -313,7 +363,7 @@ export default function WorkStationPage() {
                             </AnimatePresence>
                         </div>
 
-                        {/* AGENT MENU (FUNCIONAL) */}
+                        {/* AGENT MENU */}
                         <div className="relative mt-2">
                             <AnimatePresence>
                                 {isAgentMenuOpen && (
@@ -371,7 +421,6 @@ export default function WorkStationPage() {
                         <textarea value={docContent} onChange={(e) => setDocContent(e.target.value)} className="flex-1 p-8 font-mono text-sm text-slate-900 bg-[#f1f5f9] outline-none resize-none" />
 
                         <div className="p-4 bg-[#f1f5f9] flex justify-end gap-3 rounded-b-[24px]">
-                            {/* ABRE O BOOSTER GATE */}
                             <button onClick={() => setIsBoosterOpen(true)} className="px-4 py-2 rounded-xl text-[11px] font-bold border transition flex items-center gap-2 bg-blue-100 text-blue-700 border-blue-400 hover:bg-blue-200 uppercase tracking-wider">
                                 <ArrowDownTrayIcon className="w-4 h-4" /> Save Session
                             </button>
@@ -381,7 +430,6 @@ export default function WorkStationPage() {
                         </div>
                     </div>
 
-                    {/* --- TERMINAL WEB3 (RESTAURADO) --- */}
                     {!isFocusMode && (
                         <div onClick={() => setActiveSection('terminal')} className={`${panelStyle} h-[28%] flex flex-col shrink-0`}>
                             <div className="h-9 bg-[#0a0a0a] border-b border-white/5 flex items-center px-4 shrink-0 justify-between">
@@ -418,14 +466,12 @@ export default function WorkStationPage() {
                 </div>
             </div>
 
-            {/* --- SESSION BOOSTER MODAL (Dinamico e Gatekeeper) --- */}
+            {/* --- SESSION BOOSTER MODAL --- */}
             <AnimatePresence>
                 {isBoosterOpen && (
                     <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
-                        {/* Backdrop */}
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBoosterOpen(false)} className="absolute inset-0 bg-[#030014]/90 backdrop-blur-md cursor-pointer" />
 
-                        {/* Modal Body */}
                         <motion.div initial={{ opacity: 0, scale: 0.9, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 40 }}
                                     className="relative w-full max-w-5xl bg-[#0a0a0a] border border-cyan-500/20 rounded-[40px] overflow-hidden shadow-[0_0_100px_rgba(34,211,238,0.2)] flex flex-col md:flex-row min-h-[500px]"
                         >
@@ -433,16 +479,13 @@ export default function WorkStationPage() {
                                 <XMarkIcon className="w-6 h-6" />
                             </button>
 
-                            {/* LADO ESQUERDO: IMAGEM DINAMICA */}
                             <div className="w-full md:w-1/2 relative min-h-[400px] bg-black">
                                 <motion.div key={activeConfig.boosterImage} initial={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }} animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }} transition={{ duration: 0.8, ease: "easeOut" }} className="relative w-full h-full">
                                     <Image src={activeConfig.boosterImage} alt="Neural Booster" fill className="object-cover" priority />
-                                    {/* Efeito de fade no lado direito para fundir com o conteudo */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0a0a0a] hidden md:block" />
                                 </motion.div>
                             </div>
 
-                            {/* LADO DIREITO: TRANSACTION GATE */}
                             <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
                                     <RocketLaunchIcon className="w-3 h-3" /> Movement EVM Upgrade

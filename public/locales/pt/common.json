@@ -1,8 +1,8 @@
 {
   "navbar": {
     "about": "Sobre Nós",
-    "homework": "Estudo Dirigido",
-    "workstation": "Laboratório",
+    "homework": "Laboratório de Pesquisa",
+    "workstation": "Estaçãp de Trabalho",
     "study_rooms": "Salas de Estudo"
   },
   "menu": {
@@ -15,7 +15,7 @@
   "roles": {
     "student": "Estudante",
     "researcher": "Pesquisador",
-    "professional": "Profissional",
+    "professional": "Professor",
     "entrepreneur": "Empresário"
   },
   "options": {
@@ -26,7 +26,7 @@
     "off": "DESLIGADO"
   },
   "footer": {
-    "powered": "Powered by Casper",
+    "powered": "Powered by Mantle",
     "version": "Zaeon OS - v0.1"
   },
   "modal": {
@@ -61,7 +61,7 @@
     "status_digesting": "Digerindo Documento",
     "status_typing": "Gerando anotações...",
     "chat_header": "Insights de Pesquisa",
-    "chat_placeholder": "Interagir com a mesa...",
+    "chat_placeholder": "Interagir com o PDF...",
     "reload": "Recarregar",
     "save_all": "Salvar Tudo",
     "paste_link": "Colar Link",
@@ -69,14 +69,14 @@
   },
   "encryption": {
     "title": "Agentes de IA de Outra Dimensão.",
-    "subtitle": "Eles vieram para ajudar você a ser o melhor.",
+    "subtitle": "Eles vieram para mudar sua vida.",
     "button": "Saiba mais"
   },
   "study_rooms": {
     "system": "SISTEMA_IDEAL",
     "secure": "CANAL_SEGURO",
     "encrypted": "ENCRIPTADO",
-    "highlight": "Encontre seu Esquadrão. Pesquise. Publique.",
+    "highlight": "Encontre seu time. Pesquisem. Publiquem.",
     "together": "JUNTOS.",
     "lobby_status": "STATUS_LOBBY: AO VIVO",
     "find_party": "Encontre sua Equipe",

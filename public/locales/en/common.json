@@ -1,8 +1,8 @@
 {
   "navbar": {
     "about": "About Us",
-    "homework": "Homework",
-    "workstation": "Research Lab",
+    "homework": "Research Lab",
+    "workstation": "Workstation",
     "study_rooms": "Study Rooms"
   },
   "menu": {
@@ -15,7 +15,7 @@
   "roles": {
     "student": "Student",
     "researcher": "Researcher",
-    "professional": "Professional",
+    "professional": "Teacher",
     "entrepreneur": "Entrepreneur"
   },
   "options": {

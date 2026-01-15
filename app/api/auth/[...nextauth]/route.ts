@@ -10,15 +10,19 @@ const handler = NextAuth({
     ],
     callbacks: {
         async session({ session, token }) {
-            // Passa o ID do usuário para a sessão (útil para o MongoDB)
             if (session?.user) {
                 // @ts-ignore
                 session.user.id = token.sub;
+
+                // --- DEFINIÇÃO DE ADMIN ---
+                // Se o e-mail logado for o seu, injetamos a flag isAdmin na sessão
+                // @ts-ignore
+                session.user.isAdmin = session.user.email === "donmartinezcaiudoceu@gmail.com";
             }
             return session;
         },
     },
-    secret: process.env.NEXTAUTH_SECRET, // Obrigatório em produção
+    secret: process.env.NEXTAUTH_SECRET,
 });
 
 export { handler as GET, handler as POST };
