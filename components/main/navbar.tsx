@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useTranslation } from "react-i18next";
-import { useSession } from "next-auth/react"; // Importado para checar admin
+import { useSession } from "next-auth/react";
 import logoPng from "@/app/zaeon-name.png";
 
 import ThemeToggle from "@/components/sub/ThemeToggle";
@@ -14,7 +14,7 @@ import "../../src/i18n";
 
 const NavbarComponent = () => {
   const { t, i18n } = useTranslation();
-  const { data: session } = useSession(); // Pegamos a sessão
+  const { data: session } = useSession();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -27,13 +27,28 @@ const NavbarComponent = () => {
     return <div className="w-full h-[90px] fixed top-0 z-50" />;
   }
 
-  // Verifica se o usuário logado é o admin definido no NextAuth
-  const isAdmin = (session?.user as any)?.isAdmin === true;
+  // --- LÓGICA DE PERMISSÃO E VISIBILIDADE ---
+  const user = session?.user as any;
+  const role = user?.role;
+  const email = user?.email?.toLowerCase();
+
+  // 1. Definição de Permissões de Admin/Fundador
+  const isFounder = email === "donmartinezcaiudoceu@gmail.com";
+  const isSessionAdmin = user?.isAdmin === true;
+  const isSuperUser = isFounder || isSessionAdmin;
+
+  // 2. Definição de Grupos
+  const isStudentGroup = role === "student" || role === "researcher";
+  const isProGroup = role === "professional" || role === "entrepreneur";
+
+  // 3. Regras de Exibição
+  // Se for SuperUser, vê tudo.
+  // Se for Pro, vê Workstation.
+  // Se for Student, vê Homework.
+  const showHomework = isSuperUser || isStudentGroup;
+  const showWorkstation = isSuperUser || isProGroup;
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
-
-  const isWorkstationContext = isActive("/workstation");
-  const isHomeworkContext = isActive("/homework");
 
   const baseLinkStyle = "transition-all duration-200 hover:scale-105 cursor-pointer";
   const inactiveStyle = "text-foreground/80 hover:text-cyan-500 dark:hover:text-[#5fb4ff]";
@@ -68,22 +83,16 @@ const NavbarComponent = () => {
               {t("navbar.study_rooms")}
             </Link>
 
-            {/* LÓGICA DE ADMIN vs USUÁRIO COMUM */}
-            {isAdmin ? (
-                <>
-                  <Link href="/homework" className={getLinkClassName("/homework")}>
-                    {t("navbar.homework")}
-                  </Link>
-                  <Link href="/workstation" className={getLinkClassName("/workstation")}>
-                    {t("navbar.workstation")}
-                  </Link>
-                </>
-            ) : (
-                <Link
-                    href={isWorkstationContext ? "/workstation" : "/homework"}
-                    className={getLinkClassName(isWorkstationContext ? "/workstation" : "/homework")}
-                >
-                  {t(isWorkstationContext ? "navbar.workstation" : "navbar.homework")}
+            {/* Renderização Condicional Estrita */}
+            {showHomework && (
+                <Link href="/homework" className={getLinkClassName("/homework")}>
+                  {t("navbar.homework")}
+                </Link>
+            )}
+
+            {showWorkstation && (
+                <Link href="/workstation" className={getLinkClassName("/workstation")}>
+                  {t("navbar.workstation")}
                 </Link>
             )}
           </nav>
@@ -99,7 +108,7 @@ const NavbarComponent = () => {
           </div>
         </div>
 
-        {/* MENU MOBILE (Sincronizado com Admin) */}
+        {/* MENU MOBILE */}
         {isMobileMenuOpen && (
             <div className="pointer-events-auto absolute top-[85px] w-[90%] max-w-[400px] rounded-2xl bg-background/95 border border-foreground/10 backdrop-blur-xl p-6 flex flex-col items-center text-foreground shadow-2xl animate-in slide-in-from-top-5">
               <Link href="/#about-us" className="py-3 w-full text-center hover:bg-foreground/5 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
@@ -109,22 +118,15 @@ const NavbarComponent = () => {
                 {t("navbar.study_rooms")}
               </Link>
 
-              {isAdmin ? (
-                  <>
-                    <Link href="/homework" className={`py-3 w-full text-center rounded-lg ${isActive("/homework") ? "text-cyan-500 font-bold" : ""}`} onClick={() => setIsMobileMenuOpen(false)}>
-                      {t("navbar.homework")}
-                    </Link>
-                    <Link href="/workstation" className={`py-3 w-full text-center rounded-lg ${isActive("/workstation") ? "text-cyan-500 font-bold" : ""}`} onClick={() => setIsMobileMenuOpen(false)}>
-                      {t("navbar.workstation")}
-                    </Link>
-                  </>
-              ) : (
-                  <Link
-                      href={isWorkstationContext ? "/workstation" : "/homework"}
-                      className={`py-3 w-full text-center hover:bg-foreground/5 rounded-lg ${isActive(isWorkstationContext ? "/workstation" : "/homework") ? "text-cyan-500 font-bold" : ""}`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {t(isWorkstationContext ? "navbar.workstation" : "navbar.homework")}
+              {showHomework && (
+                  <Link href="/homework" className={`py-3 w-full text-center rounded-lg ${isActive("/homework") ? "text-cyan-500 font-bold" : ""}`} onClick={() => setIsMobileMenuOpen(false)}>
+                    {t("navbar.homework")}
+                  </Link>
+              )}
+
+              {showWorkstation && (
+                  <Link href="/workstation" className={`py-3 w-full text-center rounded-lg ${isActive("/workstation") ? "text-cyan-500 font-bold" : ""}`} onClick={() => setIsMobileMenuOpen(false)}>
+                    {t("navbar.workstation")}
                   </Link>
               )}
             </div>

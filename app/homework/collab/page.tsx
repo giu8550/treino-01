@@ -1,4 +1,5 @@
-"use client";
+topic: docTitle,
+    "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -20,7 +21,6 @@ import {
     RocketLaunchIcon,
     XMarkIcon,
     DocumentDuplicateIcon,
-    ShieldCheckIcon // --- NOVO IMPORT ---
 } from "@heroicons/react/24/outline";
 import MatrixRain from "@/components/main/star-background";
 
@@ -140,13 +140,13 @@ export default function WorkStationPage() {
             const isAdmin = (session?.user as any)?.isAdmin;
             const userRole = (session?.user as any)?.role;
 
+            // Se for ADMIN, ignora restrições
             if (isAdmin) return;
 
-            // Se for Student ou Researcher, expulsa para Homework.
+            // Se for estudante ou pesquisador, não pertence à Workstation
             if (userRole === "student" || userRole === "researcher") {
                 router.replace("/homework");
             }
-            // Se for Professional/Entrepreneur, fica aqui.
         }
     }, [status, session, router]);
 
@@ -325,19 +325,6 @@ export default function WorkStationPage() {
                     </motion.div>
                 </div>
             </div>
-
-            {/* --- ADMIN GATEWAY (Só aparece para o Admin) --- */}
-            {isAdmin && (
-                <div className="fixed top-[85px] right-2 z-[150] flex flex-col items-center">
-                    <div
-                        onClick={() => router.push('/workstation/admin')}
-                        title="Admin Control Room"
-                        className="w-8 h-14 rounded-full border border-red-500/30 bg-red-900/20 cursor-pointer backdrop-blur-xl shadow-lg flex flex-col items-center justify-center p-1 hover:bg-red-900/40 hover:border-red-500/60 transition-all group"
-                    >
-                        <ShieldCheckIcon className="w-4 h-4 text-red-400 group-hover:text-red-200 transition-colors" />
-                    </div>
-                </div>
-            )}
 
             <div className="z-20 w-full max-w-[1700px] h-[88vh] grid grid-cols-12 gap-6">
 

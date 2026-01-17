@@ -6,7 +6,11 @@ import {
   XMarkIcon,
   ArrowLeftIcon,
   WalletIcon,
-  IdentificationIcon
+  IdentificationIcon,
+  DocumentArrowUpIcon,
+  ExclamationTriangleIcon,
+  CheckBadgeIcon,
+  CpuChipIcon
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -14,7 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 // Importações internas
 import { slideInFromLeft } from "@/lib/motion";
@@ -28,7 +32,8 @@ const MENU_ITEMS: MenuItem[] = [
   { labelKey: "menu.new", href: "/signup" },
   { labelKey: "menu.load", href: "#" },
   { labelKey: "menu.options", href: "/settings" },
-  { labelKey: "menu.manual", href: "/manual" },
+  // --- CORREÇÃO: Rota Manual apontando para Admin ---
+  { labelKey: "menu.manual", href: "/workstation/admin" },
 ];
 
 const ROLES = [
@@ -52,11 +57,13 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
   const [phone, setPhone] = useState("");
   const [step, setStep] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const idRef = useRef<HTMLInputElement | null>(null);
   const nameRef = useRef<HTMLInputElement | null>(null);
   const emailRef = useRef<HTMLInputElement | null>(null);
   const phoneRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const roleObj = ROLES.find((r) => r.slug === role);
   const roleLabel = roleObj ? t(roleObj.key) : role;
@@ -81,6 +88,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
     { key: "name", label: t("modal.name"), placeholder: "", type: "text" as const },
     { key: "email", label: t("modal.email"), placeholder: "you@email.com", type: "email" as const },
     { key: "phone", label: t("modal.phone"), placeholder: "(00) 00000-0000", type: "text" as const },
+    { key: "docs", label: "Verification Docs", placeholder: "PDF Upload", type: "file" as const },
   ] as const;
 
   const lastIndex = steps.length - 1;
@@ -92,6 +100,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
     if (key === "name") return fullName.trim().length > 2;
     if (key === "email") return /\S+@\S+\.\S+/.test(email);
     if (key === "phone") return phone.trim().replace(/\D/g, "").length >= 10;
+    if (key === "docs") return true;
     return false;
   };
 
@@ -99,7 +108,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
 
   useEffect(() => {
     if (open) {
-      setIdValue(""); setFullName(""); setEmail(""); setPhone(""); setStep(0); setUseWallet(false);
+      setIdValue(""); setFullName(""); setEmail(""); setPhone(""); setUploadedFiles([]); setStep(0); setUseWallet(false);
       const t = setTimeout(() => idRef.current?.focus(), 20);
       return () => clearTimeout(t);
     }
@@ -117,16 +126,32 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
     return () => clearTimeout(t);
   }, [step, open]);
 
-  const handleSubmit = () => {
-    if (canSubmit) {
-      onSuccess({ role, id: idValue, idType: useWallet ? 'wallet' : 'role_id', name: fullName, email, phone });
-      onClose();
+  const saveIntentToCookie = () => {
+    const data = JSON.stringify({ role, phone, idValue, idType: useWallet ? 'wallet' : 'role_id' });
+    document.cookie = `zaeon_intent=${encodeURIComponent(data)}; path=/; max-age=600`;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setUploadedFiles(Array.from(e.target.files));
     }
   };
 
+  const handleSubmit = () => {
+    saveIntentToCookie();
+    onSuccess({ role, id: idValue, idType: useWallet ? 'wallet' : 'role_id', name: fullName, email, phone, hasDocs: uploadedFiles.length > 0 });
+    onClose();
+  };
+
   const handleGoogleQuickStart = () => {
-    // Mantém a escolha de conta para "New Account"
-    signIn('google', { callbackUrl: '/workstation' }, { prompt: "select_account" });
+    saveIntentToCookie();
+    let targetPath = "/";
+    if (role === "student" || role === "researcher") {
+      targetPath = "/homework";
+    } else if (role === "professional" || role === "entrepreneur") {
+      targetPath = "/workstation";
+    }
+    signIn('google', { callbackUrl: targetPath }, { prompt: "select_account" });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -134,6 +159,11 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
     if (e.code === "Escape") { e.preventDefault(); onClose(); return; }
     if (e.code === "Enter") {
       e.preventDefault();
+      if (steps[step].key === 'docs' && uploadedFiles.length === 0) {
+        if (step < lastIndex) setStep(s => s + 1);
+        else handleSubmit();
+        return;
+      }
       if (!validate(step)) return;
       if (step < lastIndex) setStep((s) => Math.min(lastIndex, s + 1));
       else handleSubmit();
@@ -142,7 +172,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
 
   if (!open) return null;
 
-  const inputClass = "h-10 rounded-lg border border-white/10 bg-black/70 px-3 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-cyan-400/60";
+  const inputClass = "h-10 rounded-lg border border-white/10 bg-black/70 px-3 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-cyan-400/60 w-full";
 
   return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" role="dialog" aria-modal="true" onKeyDown={handleKeyDown}>
@@ -161,13 +191,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                     onClick={handleGoogleQuickStart}
                     className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-100 font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                 >
-                  <Image
-                      src="https://authjs.dev/img/providers/google.svg"
-                      alt="Google"
-                      width={20}
-                      height={20}
-                      className="w-5 h-5"
-                  />
+                  <Image src="https://authjs.dev/img/providers/google.svg" alt="Google" width={20} height={20} className="w-5 h-5" />
                   {t("login.google") || "Sign in with Google"}
                 </button>
                 <div className="flex items-center gap-2 mt-3 mb-2 opacity-50">
@@ -184,20 +208,47 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                       <div className={["rounded-lg px-3 py-2 border w-full flex items-center justify-between transition-colors", active ? "border-cyan-300/50 bg-[linear-gradient(120deg,rgba(34,211,238,.18),rgba(139,92,246,.18))] shadow-[0_0_22px_rgba(34,211,238,0.25)]" : "border-white/10 bg-white/[0.06]"].join(" ")}>
                         <p className="text-[12px] text-white font-semibold">{s.label}</p>
                         {s.key === 'id' && (
-                            <button
-                                onClick={() => { setUseWallet(!useWallet); setIdValue(""); idRef.current?.focus(); }}
-                                className="ml-2 text-[10px] uppercase font-bold tracking-wide text-cyan-400 hover:text-cyan-200 flex items-center gap-1 bg-black/20 px-2 py-1 rounded"
-                            >
+                            <button onClick={() => { setUseWallet(!useWallet); setIdValue(""); idRef.current?.focus(); }} className="ml-2 text-[10px] uppercase font-bold tracking-wide text-cyan-400 hover:text-cyan-200 flex items-center gap-1 bg-black/20 px-2 py-1 rounded">
                               {useWallet ? ( <><IdentificationIcon className="w-3 h-3" /> {t("modal.use_id")}</> ) : ( <><WalletIcon className="w-3 h-3" /> {t("modal.use_wallet")}</> )}
                             </button>
                         )}
                       </div>
-                      <input ref={s.key === "id" ? idRef : s.key === "name" ? nameRef : s.key === "email" ? emailRef : phoneRef} className={inputClass} placeholder={s.placeholder} type={s.type} value={s.key === "id" ? idValue : s.key === "name" ? fullName : s.key === "email" ? email : phone} onChange={(e) => { const val = e.target.value; if (s.key === "id") setIdValue(val); if (s.key === "name") setFullName(val); if (s.key === "email") setEmail(val); if (s.key === "phone") setPhone(val); }} />
+
+                      <div className="relative w-full">
+                        {s.key === 'docs' ? (
+                            <div className="flex flex-col gap-2">
+                              <div onClick={() => fileInputRef.current?.click()} className={`h-10 w-full rounded-lg border border-dashed flex items-center px-3 cursor-pointer transition-all ${uploadedFiles.length > 0 ? 'border-green-500/50 bg-green-500/10' : 'border-white/20 bg-black/40 hover:bg-white/5'}`}>
+                                <DocumentArrowUpIcon className={`w-4 h-4 mr-2 ${uploadedFiles.length > 0 ? 'text-green-400' : 'text-white/60'}`} />
+                                <span className={`text-xs truncate ${uploadedFiles.length > 0 ? 'text-green-400' : 'text-white/60'}`}>
+                                          {uploadedFiles.length > 0 ? uploadedFiles[0].name : "Upload institutional proof (PDF)"}
+                                      </span>
+                                <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
+                              </div>
+                              {uploadedFiles.length === 0 && active && (
+                                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/20 p-2 rounded-lg mt-1">
+                                    <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                                    <p className="text-[10px] text-yellow-200/80 leading-tight">
+                                      <strong>Attention:</strong> Skipping documentation will flag your account as <span className="text-yellow-400 underline">Unverified</span>. You will be required to provide credentials later to access restricted features.
+                                    </p>
+                                  </motion.div>
+                              )}
+                            </div>
+                        ) : (
+                            <input ref={s.key === "id" ? idRef : s.key === "name" ? nameRef : s.key === "email" ? emailRef : phoneRef} className={inputClass} placeholder={s.placeholder} type={s.type} value={s.key === "id" ? idValue : s.key === "name" ? fullName : s.key === "email" ? email : phone} onChange={(e) => { const val = e.target.value; if (s.key === "id") setIdValue(val); if (s.key === "name") setFullName(val); if (s.key === "email") setEmail(val); if (s.key === "phone") setPhone(val); }} />
+                        )}
+                      </div>
                     </motion.div>
                 );
               })}
+
               <div className="flex items-center gap-3 pt-3">
-                <button disabled={!canSubmit} onClick={handleSubmit} className={["rounded-xl px-5 h-10 text-sm font-semibold text-white", "bg-[linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)] hover:brightness-110", "shadow-[0_0_22px_rgba(56,189,248,0.38)] transition", !canSubmit ? "opacity-50 cursor-not-allowed" : ""].join(" ")}>{t("modal.continue")}</button>
+                <button
+                    disabled={!validate(step) && step !== lastIndex}
+                    onClick={step < lastIndex ? () => setStep(s => s + 1) : handleSubmit}
+                    className={["rounded-xl px-5 h-10 text-sm font-semibold text-white", "bg-[linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)] hover:brightness-110", "shadow-[0_0_22px_rgba(56,189,248,0.38)] transition", (!validate(step) && step !== lastIndex) ? "opacity-50 cursor-not-allowed" : ""].join(" ")}
+                >
+                  {step === lastIndex ? (uploadedFiles.length > 0 ? "Finish Registration" : "Continue without Docs") : t("modal.continue")}
+                </button>
                 <button onClick={onClose} className="rounded-xl px-5 h-10 text-sm font-semibold text-white/80 hover:text-white border border-white/15">{t("modal.cancel")}</button>
               </div>
             </div>
@@ -215,6 +266,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
 const HeroContentComponent = () => {
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const [index, setIndex] = useState(0);
   const [roleIndex, setRoleIndex] = useState(0);
@@ -228,13 +280,16 @@ const HeroContentComponent = () => {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Status de Login
+  const isLoggedIn = status === "authenticated";
+  const userRole = (session?.user as any)?.role || "Student";
+  const displayRole = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
   };
 
   const handleOnboardSuccess = (data: any) => {
-    // --- LÓGICA DE ADMIN (NOVA) ---
-    // Se o e-mail preenchido manualmente for o seu, ignora as roles e vai para workstation
     if (data.email === "donmartinezcaiudoceu@gmail.com") {
       router.push("/workstation");
       return;
@@ -248,21 +303,18 @@ const HeroContentComponent = () => {
     const query = new URLSearchParams({
       role: data.role,
       name: data.name,
+      verified: data.hasDocs ? "true" : "false"
     }).toString();
 
     if (data.role === "student" || data.role === "researcher") {
       router.push(`/homework?${query}`);
-    } else if (data.role === "professional" || data.role === "entrepreneur") {
-      router.push(`/workstation?${query}`);
     } else {
       router.push(`/workstation?${query}`);
     }
   };
 
   const handleLoadGame = () => {
-    // O redirecionamento via Google cai em /workstation.
-    // Lá, a Page.tsx usará a session do NextAuth (com a flag isAdmin) para permitir o acesso.
-    signIn('google', { callbackUrl: '/workstation' });
+    signIn('google', { callbackUrl: '/' });
   };
 
   useEffect(() => {
@@ -271,7 +323,7 @@ const HeroContentComponent = () => {
       if (isOptionsOpen && e.code === "Escape") { setIsOptionsOpen(false); return; }
       if (isOptionsOpen) return;
 
-      if (pickerOpen) {
+      if (pickerOpen && !isLoggedIn) {
         if (["ArrowLeft", "KeyA"].includes(e.code)) { e.preventDefault(); setRoleIndex((r) => (r - 1 + ROLES.length) % ROLES.length); return; }
         if (["ArrowRight", "KeyD"].includes(e.code)) { e.preventDefault(); setRoleIndex((r) => (r + 1) % ROLES.length); return; }
         if (e.code === "Enter") { e.preventDefault(); const chosen = ROLES[roleIndex]; setChosenRole(chosen.slug); setOnboardOpen(true); return; }
@@ -284,15 +336,31 @@ const HeroContentComponent = () => {
       if (e.code === "Enter") {
         const item = MENU_ITEMS[index];
         if (!item) return;
-        if (item.labelKey === "menu.new") { e.preventDefault(); setPickerOpen(true); return; }
-        if (item.labelKey === "menu.load") { e.preventDefault(); handleLoadGame(); return; }
+
+        if (item.labelKey === "menu.new") {
+          e.preventDefault();
+          if (!isLoggedIn) setPickerOpen(true);
+          return;
+        }
+        if (item.labelKey === "menu.load") {
+          e.preventDefault();
+          if(!isLoggedIn) handleLoadGame();
+          return;
+        }
         if (item.labelKey === "menu.options") { setIsOptionsOpen(true); return; }
+
+        // --- HACK MANUAL CORRIGIDO: Vai para Admin ---
+        if (item.labelKey === "menu.manual") {
+          router.push('/workstation/admin'); // <--- AQUI
+          return;
+        }
+
         window.location.assign(item.href);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [index, pickerOpen, roleIndex, onboardOpen, isOptionsOpen]);
+  }, [index, pickerOpen, roleIndex, onboardOpen, isOptionsOpen, isLoggedIn, router]);
 
   const handleModalClose = () => { setOnboardOpen(false); setPickerOpen(false); };
 
@@ -302,25 +370,42 @@ const HeroContentComponent = () => {
   const accentBar = (active: boolean) => ["absolute left-0 top-0 h-full w-[3px] rounded-l-xl transition-colors", active ? "bg-[linear-gradient(180deg,#22d3ee,#60a5fa,#22d3ee)]" : "bg-white/10 group-hover:bg-[linear-gradient(180deg,rgba(34,211,238,.7),rgba(96,165,250,.7),rgba(34,211,238,.7))]",].join(" ");
   const labelClass = "text-[16px] font-medium tracking-[0.01em] text-white";
 
-  const renderNewAccountItem = (selected: boolean) => (
-      <li>
-        <button type="button" className={[cardBase, selected ? cardSelected : "", "pr-3"].join(" ")} onMouseEnter={() => setIndex(0)} onClick={() => setPickerOpen(true)}>
-          <span className={accentBar(selected)} />
-          <span className={labelClass}>{t("menu.new")}</span>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {!pickerOpen ? ( <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" /> ) : (
-                <motion.div initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setRoleIndex((r) => (r - 1 + ROLES.length) % ROLES.length); }} className="rounded-md p-1.5 hover:bg-white/10"><ChevronLeftIcon className="h-5 w-5 text-white/95" /></button>
-                  <div onClick={(e) => { e.stopPropagation(); const chosen = ROLES[roleIndex]; setChosenRole(chosen.slug); setOnboardOpen(true); }} className="select-none px-5 py-2 rounded-xl text-[14px] font-bold text-white bg-black/85 border border-white/15 hover:scale-105 transition-transform">
-                    {t(ROLES[roleIndex].key)}
-                  </div>
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setRoleIndex((r) => (r + 1) % ROLES.length); }} className="rounded-md p-1.5 hover:bg-white/10"><ChevronRightIcon className="h-5 w-5 text-white/95" /></button>
-                </motion.div>
-            )}
-          </div>
-        </button>
-      </li>
-  );
+  // --- ITEM 1: NEW ACCOUNT / STATUS ---
+  const renderNewAccountItem = (selected: boolean) => {
+    if (isLoggedIn) {
+      return (
+          <li>
+            <div className={[cardBase, selected ? cardSelected : "", "cursor-default border border-green-500/30 bg-green-900/10"].join(" ")} onMouseEnter={() => setIndex(0)}>
+              <span className={accentBar(selected)} />
+              <span className="text-[16px] font-bold tracking-[0.01em] text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">
+                 {displayRole} Lv.1
+              </span>
+              <CheckBadgeIcon className="h-6 w-6 text-green-400" />
+            </div>
+          </li>
+      );
+    }
+
+    return (
+        <li>
+          <button type="button" className={[cardBase, selected ? cardSelected : "", "pr-3"].join(" ")} onMouseEnter={() => setIndex(0)} onClick={() => setPickerOpen(true)}>
+            <span className={accentBar(selected)} />
+            <span className={labelClass}>{t("menu.new")}</span>
+            <div className="flex items-center gap-2 sm:gap-3">
+              {!pickerOpen ? ( <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" /> ) : (
+                  <motion.div initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleIndex((r) => (r - 1 + ROLES.length) % ROLES.length); }} className="rounded-md p-1.5 hover:bg-white/10"><ChevronLeftIcon className="h-5 w-5 text-white/95" /></button>
+                    <div onClick={(e) => { e.stopPropagation(); const chosen = ROLES[roleIndex]; setChosenRole(chosen.slug); setOnboardOpen(true); }} className="select-none px-5 py-2 rounded-xl text-[14px] font-bold text-white bg-black/85 border border-white/15 hover:scale-105 transition-transform">
+                      {t(ROLES[roleIndex].key)}
+                    </div>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleIndex((r) => (r + 1) % ROLES.length); }} className="rounded-md p-1.5 hover:bg-white/10"><ChevronRightIcon className="h-5 w-5 text-white/95" /></button>
+                  </motion.div>
+              )}
+            </div>
+          </button>
+        </li>
+    );
+  };
 
   return (
       <div ref={containerRef} className="w-full min-h-screen flex justify-start items-start z-10 relative px-4 md:pl-20 py-12">
@@ -335,38 +420,74 @@ const HeroContentComponent = () => {
               {!isOptionsOpen ? (
                   <motion.ul key="main-menu" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-3">
                     {renderNewAccountItem(index === 0)}
+
                     {MENU_ITEMS.slice(1).map((item, i) => {
                       const realIndex = i + 1;
                       const selected = realIndex === index;
                       const isOptions = item.labelKey === "menu.options";
                       const isLoad = item.labelKey === "menu.load";
+                      const isManual = item.labelKey === "menu.manual";
 
-                      return (
-                          <li key={item.labelKey}>
-                            {isOptions ? (
-                                <button onClick={() => setIsOptionsOpen(true)} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
+                      // --- ITEM 2: LOAD ACCOUNT / GOOGLE CARD ---
+                      if (isLoad) {
+                        if (isLoggedIn) {
+                          return (
+                              <li key={item.labelKey}>
+                                <div className={[cardBase, selected ? cardSelected : "", "cursor-default"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
                                   <span className={accentBar(selected)} />
-                                  <span className={labelClass}>{t(item.labelKey)}</span>
-                                  <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
-                                </button>
-                            ) : isLoad ? (
-                                <button onClick={handleLoadGame} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                  <span className={accentBar(selected)} />
-                                  <div className="flex items-center gap-3">
-                                    <span className={labelClass}>{t(item.labelKey)}</span>
-                                    {selected && <span className="text-[10px] text-white/50 bg-white/10 px-2 py-0.5 rounded ml-2">Google Save</span>}
+                                  <div className="flex flex-col justify-center">
+                                    <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-0.5">Connected as</span>
+                                    <span className="text-[13px] font-medium text-white truncate max-w-[200px]">{session?.user?.email}</span>
                                   </div>
-                                  <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
-                                </button>
-                            ) : (
-                                <Link href={item.href} className={[cardBase, selected ? cardSelected : ""].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                  <span className={accentBar(selected)} />
+                                  <Image src="https://authjs.dev/img/providers/google.svg" alt="G" width={20} height={20} className="w-5 h-5 opacity-80" />
+                                </div>
+                              </li>
+                          )
+                        }
+                        return (
+                            <li key={item.labelKey}>
+                              <button onClick={handleLoadGame} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
+                                <span className={accentBar(selected)} />
+                                <div className="flex items-center gap-3">
                                   <span className={labelClass}>{t(item.labelKey)}</span>
-                                  <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
-                                </Link>
-                            )}
-                          </li>
-                      );
+                                  {selected && <span className="text-[10px] text-white/50 bg-white/10 px-2 py-0.5 rounded ml-2">Google Save</span>}
+                                </div>
+                                <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                              </button>
+                            </li>
+                        )
+                      }
+
+                      // --- ITEM 4: MANUAL (HACK) CORRIGIDO ---
+                      if (isManual) {
+                        return (
+                            <li key={item.labelKey}>
+                              {/* ROTA ATUALIZADA AQUI: /workstation/admin */}
+                              <Link href="/workstation/admin" className={[cardBase, selected ? cardSelected : ""].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
+                                <span className={accentBar(selected)} />
+                                <div className="flex items-center gap-2">
+                                  <span className={labelClass}>{t(item.labelKey)}</span>
+                                  <span className="text-[9px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">DEV HACK</span>
+                                </div>
+                                <CpuChipIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                              </Link>
+                            </li>
+                        )
+                      }
+
+                      if (isOptions) {
+                        return (
+                            <li key={item.labelKey}>
+                              <button onClick={() => setIsOptionsOpen(true)} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
+                                <span className={accentBar(selected)} />
+                                <span className={labelClass}>{t(item.labelKey)}</span>
+                                <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                              </button>
+                            </li>
+                        );
+                      }
+
+                      return null;
                     })}
                   </motion.ul>
               ) : (
@@ -380,7 +501,6 @@ const HeroContentComponent = () => {
                         <span className="uppercase tracking-wider text-[11px]">{t("menu.back")}</span>
                       </button>
                     </div>
-                    {/* Language Selector */}
                     <div className={`${cardBase} py-2`}>
                       <div className="flex flex-col">
                         <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.language")}</span>
@@ -398,7 +518,6 @@ const HeroContentComponent = () => {
                       </select>
                       <ChevronRightIcon className="h-5 w-5 text-white/40" />
                     </div>
-                    {/* Node Toggle */}
                     <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setBlockchainNode(!blockchainNode)}>
                       <div className="flex flex-col">
                         <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.node")}</span>
@@ -408,7 +527,6 @@ const HeroContentComponent = () => {
                         </div>
                       </div>
                     </div>
-                    {/* Tutorials Toggle */}
                     <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setTutorials(!tutorials)}>
                       <div className="flex flex-col">
                         <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.tutorials")}</span>
