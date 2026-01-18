@@ -9,8 +9,6 @@ import { siteConfig } from "@/config";
 import { cn } from "@/lib/utils";
 
 // --- PROVIDERS ---
-// 1. Privy Provider (Conexão EVM para o Hackathon)
-import { PrivyWalletProvider } from "@/components/providers/PrivyWalletProvider";
 // 2. Auth Provider (Sessão Google)
 import AuthProvider from "@/src/providers/SessionProvider";
 // 3. Theme Provider (Dark/Light Mode)
@@ -59,8 +57,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             enableSystem
             disableTransitionOnChange
         >
-            {/* 2. Privy Wallet Provider (Substituindo o antigo MovementWalletProvider) */}
-            <PrivyWalletProvider>
                 {/* 3. Session Auth Provider */}
                 <AuthProvider>
                     <StarsCanvas />
@@ -68,7 +64,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     {children}
                     <Footer />
                 </AuthProvider>
-            </PrivyWalletProvider>
         </ThemeProvider>
         </body>
         </html>

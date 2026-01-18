@@ -53,7 +53,7 @@
     "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.1.1",
-    "@privy-io/react-auth": "^3.10.0",
+    "@prisma/config": "^7.2.0",
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
     "@react-three/drei": "^9.122.0",
@@ -67,6 +67,7 @@
     "axios": "^1.13.2",
     "clsx": "^2.1.0",
     "crypto-js": "^4.2.0",
+    "dotenv": "^17.2.3",
     "encoding": "^0.1.13",
     "ethers": "^6.16.0",
     "express": "^5.2.1",
@@ -95,6 +96,7 @@
     "viem": "^2.43.5"
   },
   "devDependencies": {
+    "@prisma/client": "^6.19.2",
     "@types/crypto-js": "^4.2.2",
     "@types/express": "^5.0.6",
     "@types/node": "^20.19.24",
@@ -105,6 +107,7 @@
     "eslint-config-next": "14.0.4",
     "nodemon": "^3.1.11",
     "postcss": "^8",
+    "prisma": "^6.19.2",
     "tailwindcss": "^3.3.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
