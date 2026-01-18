@@ -7,20 +7,98 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// --- MODELO DE USUÁRIO (O CORAÇÃO DO SISTEMA) ---
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?   // Aqui será salva a foto em Base64 ou URL
+
+  // --- DADOS DO MENU "OPTIONS" (PERFIL CUSTOM) ---
+  course        String?   // Ex: "Computer Science"
+  bio           String?   // Biografia curta
+
+  // --- DADOS DO MODAL DE "ONBOARDING" ---
+  role          String?   // "student", "researcher", "entrepreneur", etc.
+  phone         String?   // "(00) 00000-0000"
+  identityId    String?   // O ID digitado (CPF, Matrícula, etc.)
+  idType        String?   // "wallet" ou "role_id"
+  walletAddress String?   // Caso o usuário conecte via Wallet no futuro
+
+  // --- DADOS DE COMPROVAÇÃO E ADMIN ---
+  kycStatus     String    @default("pending") // "pending", "approved", "rejected"
+  documents     Json?     // Para salvar metadados dos PDFs enviados (ex: { nome: "comprovante.pdf", date: "..." })
+  institution   String?   // Caso seja professor ou pesquisador
+
+  // Datas de controle
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relacionamentos para o NextAuth (Obrigatório para Login funcionar com Banco)
+  accounts      Account[]
+  sessions      Session[]
+
+  // Relacionamento com o Feed (Opcional por enquanto, mas recomendado para o futuro)
+  posts         Post[]
+  comments      Comment[]
+}
+
+// --- MODELOS DE FEED (ATUALIZADOS PARA RELAÇÃO) ---
 model Post {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  user      String
   content   String
-  likes     String[]  @default([]) // Array com emails de quem curtiu
+  likes     String[]  @default([])
   createdAt DateTime  @default(now())
+
+  // Linkando o Post ao Usuário Real (Opcional: mantive user String para compatibilidade antiga)
+  user      String    // Nome de exibição (Snapshotted)
+
+  // Relação real (Para quando quisermos puxar a foto atualizada)
+  userId    String?   @db.ObjectId
+  author    User?     @relation(fields: [userId], references: [id])
+
   comments  Comment[]
 }
 
 model Comment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
-  user      String
+  user      String   // Nome de exibição
+  createdAt DateTime @default(now())
+
   postId    String   @db.ObjectId
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+
+  // Relação real com Usuário
+  userId    String?  @db.ObjectId
+  author    User?    @relation(fields: [userId], references: [id])
+}
+
+// --- MODELOS PADRÃO DO NEXTAUTH (NECESSÁRIOS PARA ADAPTER) ---
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

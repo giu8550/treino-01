@@ -10,7 +10,11 @@ import {
   DocumentArrowUpIcon,
   ExclamationTriangleIcon,
   CheckBadgeIcon,
-  CpuChipIcon
+  CpuChipIcon,
+  UserCircleIcon,
+  CameraIcon,
+  AcademicCapIcon,
+  ArrowUpTrayIcon
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -20,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
 import { signIn, useSession } from "next-auth/react";
 
-// Importações internas
+// Importações internas (Ajuste se necessário para o seu caminho real)
 import { slideInFromLeft } from "@/lib/motion";
 import onboardPng from "@/app/onboard.png";
 
@@ -32,7 +36,6 @@ const MENU_ITEMS: MenuItem[] = [
   { labelKey: "menu.new", href: "/signup" },
   { labelKey: "menu.load", href: "#" },
   { labelKey: "menu.options", href: "/settings" },
-  // --- CORREÇÃO: Rota Manual apontando para Admin ---
   { labelKey: "menu.manual", href: "/workstation/admin" },
 ];
 
@@ -50,7 +53,6 @@ type Role = typeof ROLES[number]["slug"];
 
 function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClose: () => void; role: Role; onSuccess: (data: any) => void }) {
   const { t } = useTranslation();
-
   const [idValue, setIdValue] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -83,12 +85,13 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
 
   const req = getRequirements();
 
+  // Definindo steps dentro do componente para usar o 't'
   const steps = [
     { key: "id", label: req.label, placeholder: req.placeholder, type: "text" as const },
     { key: "name", label: t("modal.name"), placeholder: "", type: "text" as const },
     { key: "email", label: t("modal.email"), placeholder: "you@email.com", type: "email" as const },
     { key: "phone", label: t("modal.phone"), placeholder: "(00) 00000-0000", type: "text" as const },
-    { key: "docs", label: "Verification Docs", placeholder: "PDF Upload", type: "file" as const },
+    { key: "docs", label: t("modal.docs_label"), placeholder: t("modal.pdf_placeholder"), type: "file" as const },
   ] as const;
 
   const lastIndex = steps.length - 1;
@@ -137,7 +140,22 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // 1. Upload lógico (simulação para futura API)
+    if (uploadedFiles.length > 0) {
+      const file = uploadedFiles[0];
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("userId", idValue);
+
+      try {
+        // Exemplo de chamada de API: await fetch("/api/upload", { method: "POST", body: formData });
+        console.log("Arquivo preparado para envio:", file.name);
+      } catch (error) {
+        console.error("Erro upload:", error);
+      }
+    }
+
     saveIntentToCookie();
     onSuccess({ role, id: idValue, idType: useWallet ? 'wallet' : 'role_id', name: fullName, email, phone, hasDocs: uploadedFiles.length > 0 });
     onClose();
@@ -196,7 +214,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                 </button>
                 <div className="flex items-center gap-2 mt-3 mb-2 opacity-50">
                   <div className="h-px bg-white/30 flex-1"></div>
-                  <span className="text-[10px] uppercase text-white">OU Manualmente</span>
+                  <span className="text-[10px] uppercase text-white">{t("modal.or_manual")}</span>
                   <div className="h-px bg-white/30 flex-1"></div>
                 </div>
               </div>
@@ -220,7 +238,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                               <div onClick={() => fileInputRef.current?.click()} className={`h-10 w-full rounded-lg border border-dashed flex items-center px-3 cursor-pointer transition-all ${uploadedFiles.length > 0 ? 'border-green-500/50 bg-green-500/10' : 'border-white/20 bg-black/40 hover:bg-white/5'}`}>
                                 <DocumentArrowUpIcon className={`w-4 h-4 mr-2 ${uploadedFiles.length > 0 ? 'text-green-400' : 'text-white/60'}`} />
                                 <span className={`text-xs truncate ${uploadedFiles.length > 0 ? 'text-green-400' : 'text-white/60'}`}>
-                                          {uploadedFiles.length > 0 ? uploadedFiles[0].name : "Upload institutional proof (PDF)"}
+                                          {uploadedFiles.length > 0 ? uploadedFiles[0].name : t("modal.upload_placeholder")}
                                       </span>
                                 <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
                               </div>
@@ -228,7 +246,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/20 p-2 rounded-lg mt-1">
                                     <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
                                     <p className="text-[10px] text-yellow-200/80 leading-tight">
-                                      <strong>Attention:</strong> Skipping documentation will flag your account as <span className="text-yellow-400 underline">Unverified</span>. You will be required to provide credentials later to access restricted features.
+                                      <strong>{t("modal.attention_title")}</strong> {t("modal.attention_desc")}
                                     </p>
                                   </motion.div>
                               )}
@@ -247,7 +265,7 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
                     onClick={step < lastIndex ? () => setStep(s => s + 1) : handleSubmit}
                     className={["rounded-xl px-5 h-10 text-sm font-semibold text-white", "bg-[linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)] hover:brightness-110", "shadow-[0_0_22px_rgba(56,189,248,0.38)] transition", (!validate(step) && step !== lastIndex) ? "opacity-50 cursor-not-allowed" : ""].join(" ")}
                 >
-                  {step === lastIndex ? (uploadedFiles.length > 0 ? "Finish Registration" : "Continue without Docs") : t("modal.continue")}
+                  {step === lastIndex ? (uploadedFiles.length > 0 ? t("modal.finish") : t("modal.skip")) : t("modal.continue")}
                 </button>
                 <button onClick={onClose} className="rounded-xl px-5 h-10 text-sm font-semibold text-white/80 hover:text-white border border-white/15">{t("modal.cancel")}</button>
               </div>
@@ -274,19 +292,71 @@ const HeroContentComponent = () => {
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [chosenRole, setChosenRole] = useState<Role>("student");
 
+  // Estados de Menu
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-  const [blockchainNode, setBlockchainNode] = useState(true);
+  const [isProfileOpen, setIsProfileOpen] = useState(false); // NOVO ESTADO
   const [tutorials, setTutorials] = useState(true);
+
+  // Estados do Perfil Custom
+  const [customName, setCustomName] = useState(session?.user?.name || "");
+  const [customCourse, setCustomCourse] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState(session?.user?.image || "");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Status de Login
   const isLoggedIn = status === "authenticated";
   const userRole = (session?.user as any)?.role || "Student";
   const displayRole = userRole.charAt(0).toUpperCase() + userRole.slice(1);
 
+  // Sincroniza o nome se a sessão mudar
+  useEffect(() => {
+    if (session?.user?.name) setCustomName(session.user.name);
+    if (session?.user?.image) setAvatarPreview(session.user.image);
+  }, [session]);
+
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!customName.trim()) return;
+    setIsSavingProfile(true);
+
+    const formData = new FormData();
+    formData.append("name", customName);
+    formData.append("course", customCourse);
+    if (avatarFile) {
+      formData.append("image", avatarFile);
+    }
+
+    try {
+      // AQUI VAI SUA CHAMADA PARA A API QUE CRIAREMOS DEPOIS
+      const res = await fetch("/api/user/update", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        // Sucesso visual
+        alert(t("profile.success"));
+        setIsProfileOpen(false);
+      }
+    } catch (error) {
+      console.error("Erro ao salvar perfil:", error);
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleOnboardSuccess = (data: any) => {
@@ -294,18 +364,15 @@ const HeroContentComponent = () => {
       router.push("/workstation");
       return;
     }
-
     if (data.role === "cyber_hall") {
       router.push("/study-rooms/tech");
       return;
     }
-
     const query = new URLSearchParams({
       role: data.role,
       name: data.name,
       verified: data.hasDocs ? "true" : "false"
     }).toString();
-
     if (data.role === "student" || data.role === "researcher") {
       router.push(`/homework?${query}`);
     } else {
@@ -319,7 +386,7 @@ const HeroContentComponent = () => {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (onboardOpen) return;
+      if (onboardOpen || isProfileOpen) return; // Bloqueia navegação se perfil estiver aberto
       if (isOptionsOpen && e.code === "Escape") { setIsOptionsOpen(false); return; }
       if (isOptionsOpen) return;
 
@@ -348,19 +415,16 @@ const HeroContentComponent = () => {
           return;
         }
         if (item.labelKey === "menu.options") { setIsOptionsOpen(true); return; }
-
-        // --- HACK MANUAL CORRIGIDO: Vai para Admin ---
         if (item.labelKey === "menu.manual") {
-          router.push('/workstation/admin'); // <--- AQUI
+          router.push('/workstation/admin');
           return;
         }
-
         window.location.assign(item.href);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [index, pickerOpen, roleIndex, onboardOpen, isOptionsOpen, isLoggedIn, router]);
+  }, [index, pickerOpen, roleIndex, onboardOpen, isOptionsOpen, isProfileOpen, isLoggedIn, router]);
 
   const handleModalClose = () => { setOnboardOpen(false); setPickerOpen(false); };
 
@@ -370,7 +434,7 @@ const HeroContentComponent = () => {
   const accentBar = (active: boolean) => ["absolute left-0 top-0 h-full w-[3px] rounded-l-xl transition-colors", active ? "bg-[linear-gradient(180deg,#22d3ee,#60a5fa,#22d3ee)]" : "bg-white/10 group-hover:bg-[linear-gradient(180deg,rgba(34,211,238,.7),rgba(96,165,250,.7),rgba(34,211,238,.7))]",].join(" ");
   const labelClass = "text-[16px] font-medium tracking-[0.01em] text-white";
 
-  // --- ITEM 1: NEW ACCOUNT / STATUS ---
+  // Render New Account Item (Mantido igual)
   const renderNewAccountItem = (selected: boolean) => {
     if (isLoggedIn) {
       return (
@@ -385,7 +449,6 @@ const HeroContentComponent = () => {
           </li>
       );
     }
-
     return (
         <li>
           <button type="button" className={[cardBase, selected ? cardSelected : "", "pr-3"].join(" ")} onMouseEnter={() => setIndex(0)} onClick={() => setPickerOpen(true)}>
@@ -417,6 +480,8 @@ const HeroContentComponent = () => {
 
           <nav className="px-4 sm:px-6 pb-6 relative min-h-[300px]">
             <AnimatePresence mode="wait" initial={false}>
+
+              {/* --- MENU PRINCIPAL --- */}
               {!isOptionsOpen ? (
                   <motion.ul key="main-menu" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-3">
                     {renderNewAccountItem(index === 0)}
@@ -428,7 +493,6 @@ const HeroContentComponent = () => {
                       const isLoad = item.labelKey === "menu.load";
                       const isManual = item.labelKey === "menu.manual";
 
-                      // --- ITEM 2: LOAD ACCOUNT / GOOGLE CARD ---
                       if (isLoad) {
                         if (isLoggedIn) {
                           return (
@@ -436,7 +500,7 @@ const HeroContentComponent = () => {
                                 <div className={[cardBase, selected ? cardSelected : "", "cursor-default"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
                                   <span className={accentBar(selected)} />
                                   <div className="flex flex-col justify-center">
-                                    <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-0.5">Connected as</span>
+                                    <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-0.5">{t("menu.connected_as")}</span>
                                     <span className="text-[13px] font-medium text-white truncate max-w-[200px]">{session?.user?.email}</span>
                                   </div>
                                   <Image src="https://authjs.dev/img/providers/google.svg" alt="G" width={20} height={20} className="w-5 h-5 opacity-80" />
@@ -450,7 +514,7 @@ const HeroContentComponent = () => {
                                 <span className={accentBar(selected)} />
                                 <div className="flex items-center gap-3">
                                   <span className={labelClass}>{t(item.labelKey)}</span>
-                                  {selected && <span className="text-[10px] text-white/50 bg-white/10 px-2 py-0.5 rounded ml-2">Google Save</span>}
+                                  {selected && <span className="text-[10px] text-white/50 bg-white/10 px-2 py-0.5 rounded ml-2">{t("menu.google_save")}</span>}
                                 </div>
                                 <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
                               </button>
@@ -458,16 +522,14 @@ const HeroContentComponent = () => {
                         )
                       }
 
-                      // --- ITEM 4: MANUAL (HACK) CORRIGIDO ---
                       if (isManual) {
                         return (
                             <li key={item.labelKey}>
-                              {/* ROTA ATUALIZADA AQUI: /workstation/admin */}
                               <Link href="/workstation/admin" className={[cardBase, selected ? cardSelected : ""].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
                                 <span className={accentBar(selected)} />
                                 <div className="flex items-center gap-2">
                                   <span className={labelClass}>{t(item.labelKey)}</span>
-                                  <span className="text-[9px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">DEV HACK</span>
+                                  <span className="text-[9px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">{t("menu.dev_hack")}</span>
                                 </div>
                                 <CpuChipIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
                               </Link>
@@ -486,11 +548,11 @@ const HeroContentComponent = () => {
                             </li>
                         );
                       }
-
                       return null;
                     })}
                   </motion.ul>
-              ) : (
+              ) : !isProfileOpen ? (
+                  // --- MENU DE OPÇÕES (NÍVEL 1) ---
                   <motion.div key="options-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
                     <div className="flex items-center mb-1">
                       <button
@@ -501,6 +563,7 @@ const HeroContentComponent = () => {
                         <span className="uppercase tracking-wider text-[11px]">{t("menu.back")}</span>
                       </button>
                     </div>
+
                     <div className={`${cardBase} py-2`}>
                       <div className="flex flex-col">
                         <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.language")}</span>
@@ -510,29 +573,127 @@ const HeroContentComponent = () => {
                       </div>
                       <select className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" value={i18n.language} onChange={handleLanguageChange}>
                         <option className="bg-slate-900 text-white" value="en">English</option>
-                        <option className="bg-slate-900 text-white" value="zh">中文 (Mandarin)</option>
-                        <option className="bg-slate-900 text-white" value="ko">한국어 (Korean)</option>
-                        <option className="bg-slate-900 text-white" value="fr">Français</option>
                         <option className="bg-slate-900 text-white" value="pt">Português (Brasil)</option>
-                        <option className="bg-slate-900 text-white" value="es">Español (Spanish)</option>
+                        <option className="bg-slate-900 text-white" value="es">Español</option>
+                        <option className="bg-slate-900 text-white" value="fr">Français</option>
+                        <option className="bg-slate-900 text-white" value="zh">中文</option>
+                        <option className="bg-slate-900 text-white" value="ko">한국어 (Korean)</option>
+
                       </select>
                       <ChevronRightIcon className="h-5 w-5 text-white/40" />
                     </div>
-                    <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setBlockchainNode(!blockchainNode)}>
+
+                    {/* --- SUBSTITUIÇÃO: NODE -> CUSTOM PROFILE --- */}
+                    <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setIsProfileOpen(true)}>
                       <div className="flex flex-col">
-                        <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.node")}</span>
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${blockchainNode ? "bg-cyan-400 shadow-[0_0_8px_cyan]" : "bg-red-500/50"}`} />
-                          <span className="text-[15px] font-semibold text-white">{blockchainNode ? t("options.on") : t("options.off")}</span>
-                        </div>
+                        <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("menu.identity")}</span>
+                        <span className="text-[15px] font-semibold text-white">{t("menu.custom_profile")}</span>
                       </div>
+                      <UserCircleIcon className="h-6 w-6 text-white/40" />
                     </div>
+
                     <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setTutorials(!tutorials)}>
                       <div className="flex flex-col">
                         <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.tutorials")}</span>
                         <span className="text-[15px] font-semibold text-white">{tutorials ? t("options.on") : t("options.off")}</span>
                       </div>
                     </div>
+                  </motion.div>
+              ) : (
+                  // --- MENU DE PERFIL CUSTOMIZADO (NÍVEL 2) ---
+                  <motion.div key="profile-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
+                    <div className="flex items-center mb-1">
+                      <button
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-2 text-sm font-bold transition-colors text-blue-600 hover:text-blue-500 dark:text-cyan-400 dark:hover:text-cyan-300"
+                      >
+                        <ArrowLeftIcon className="w-4 h-4" />
+                        <span className="uppercase tracking-wider text-[11px]">{t("profile.back_options")}</span>
+                      </button>
+                    </div>
+
+                    {/* ÁREA DA FOTO DE PERFIL */}
+                    <div className="flex flex-col items-center justify-center py-4 border-b border-white/10 mb-2">
+                      <div
+                          className="relative group cursor-pointer"
+                          onClick={() => avatarInputRef.current?.click()}
+                      >
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-cyan-500/50 shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+                          {avatarPreview ? (
+                              <img src={avatarPreview} alt="Profile" className="w-full h-full object-cover" />
+                          ) : (
+                              <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                                <UserCircleIcon className="w-12 h-12 text-white/20" />
+                              </div>
+                          )}
+                        </div>
+                        <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <CameraIcon className="w-8 h-8 text-white" />
+                        </div>
+                        <input
+                            type="file"
+                            ref={avatarInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                        />
+                      </div>
+                      <p className="text-[10px] text-white/40 mt-3 uppercase tracking-widest">{t("profile.tap_avatar")}</p>
+                    </div>
+
+                    {/* INPUT: USER NAME */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-white/60 uppercase tracking-wider pl-1">{t("profile.display_name")}</label>
+                      <div className="relative">
+                        <input
+                            type="text"
+                            value={customName}
+                            onChange={(e) => setCustomName(e.target.value)}
+                            className="w-full h-10 bg-black/40 border border-white/10 rounded-xl px-4 text-sm text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all"
+                            placeholder={t("profile.name_placeholder")}
+                        />
+                      </div>
+                    </div>
+
+                    {/* INPUT: COURSE */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-white/60 uppercase tracking-wider pl-1">{t("profile.course_label")}</label>
+                      <div className="relative">
+                        <AcademicCapIcon className="absolute left-3 top-2.5 w-5 h-5 text-white/30" />
+                        <input
+                            type="text"
+                            value={customCourse}
+                            onChange={(e) => setCustomCourse(e.target.value)}
+                            className="w-full h-10 bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 text-sm text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all"
+                            placeholder={t("profile.course_placeholder")}
+                        />
+                      </div>
+                    </div>
+
+                    {/* CARD DE AVISO */}
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex gap-3 items-start">
+                      <ExclamationTriangleIcon className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-amber-200/80 leading-relaxed">
+                        <strong>{t("profile.verification_title")}</strong> {t("profile.verification_desc", { course: customCourse || t("profile.default_course") })}
+                      </p>
+                    </div>
+
+                    {/* BOTÃO SALVAR */}
+                    <button
+                        onClick={handleSaveProfile}
+                        disabled={isSavingProfile}
+                        className="w-full mt-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSavingProfile ? (
+                          <span className="animate-pulse">{t("profile.saving")}</span>
+                      ) : (
+                          <>
+                            <ArrowUpTrayIcon className="w-4 h-4" />
+                            <span>{t("profile.save")}</span>
+                          </>
+                      )}
+                    </button>
+
                   </motion.div>
               )}
             </AnimatePresence>

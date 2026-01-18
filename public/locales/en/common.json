@@ -10,7 +10,12 @@
     "load": "Load Account",
     "options": "Options",
     "manual": "Manual",
-    "back": "Back"
+    "back": "Back",
+    "identity": "Identity",
+    "custom_profile": "Custom Profile",
+    "connected_as": "Connected as",
+    "google_save": "Google Save",
+    "dev_hack": "DEV HACK"
   },
   "roles": {
     "student": "Student",
@@ -50,7 +55,15 @@
     "ph_entrepreneur": "...",
     "name_ph": "John Doe",
     "email_ph": "you@email.com",
-    "phone_ph": "(00) 00000-0000"
+    "phone_ph": "(00) 00000-0000",
+    "docs_label": "Verification Docs",
+    "pdf_placeholder": "PDF Upload",
+    "upload_placeholder": "Upload institutional proof (PDF)",
+    "or_manual": "OR Manually",
+    "attention_title": "Attention:",
+    "attention_desc": "Skipping documentation will flag your account as Unverified. You will be required to provide credentials later.",
+    "finish": "Finish Registration",
+    "skip": "Continue without Docs"
   },
   "homework": {
     "mode_study": "Study Mode",
@@ -213,5 +226,19 @@
       "bigdata": "Big Data Analytics",
       "mba": "MBA IT Project Mgmt"
     }
+  },
+  "profile": {
+    "back_options": "Back to Options",
+    "tap_avatar": "Tap to change avatar",
+    "display_name": "Display Name",
+    "name_placeholder": "Enter your alias...",
+    "course_label": "Academic Course",
+    "course_placeholder": "Ex: Computer Science",
+    "verification_title": "Verification Required:",
+    "verification_desc": "You will be asked to provide proof of enrollment for {{course}} later to unlock academic features.",
+    "default_course": "this course",
+    "saving": "Saving...",
+    "save": "Save Changes",
+    "success": "Profile saved!"
   }
 }

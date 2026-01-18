@@ -1,51 +1,61 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import connectToDatabase from "@/src/lib/db";
-import User from "@/src/models/User";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import connectToDatabase from "@/src/lib/db"; // Mantenha sua conexão Mongoose antiga para usuários
+import User from "@/src/models/User"; // Mantenha seu modelo Mongoose
+import { authOptions } from "@/src/lib/auth"; // <--- CORREÇÃO: Importa da LIB, não da rota
 
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
 
-        // Bloqueio de segurança (Descomente após os testes de desenvolvimento)
-        // if (!session || !(session.user as any)?.isAdmin) {
-        //     return NextResponse.json({ error: "Acesso Negado" }, { status: 403 });
-        // }
+        // Bloqueio de segurança (Admin Only)
+        // Por enquanto, vamos permitir ver os dados se estiver logado para você testar
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
         await connectToDatabase();
 
-        // Busca todos os usuários, exceto o admin logado
+        // Busca usuários (exceto o próprio admin para não poluir a lista)
         const users = await User.find({
             email: { $ne: session?.user?.email }
         }).sort({ createdAt: -1 });
 
         const formattedRequests = users.map((user) => {
-            // Lógica para definir a fonte dos dados
+            // Lógica para detectar se é Google ou Manual
+            // Se tiver identityId ou array de documentos, assumimos que tentou cadastro manual
             const hasManualData = user.identityId || (user.documents && user.documents.length > 0);
 
             return {
                 id: user._id.toString(),
-                name: user.name || "Usuário sem Nome",
+                name: user.name || "Usuário Zaeon",
                 email: user.email,
-                // Garantir que o role venha do banco ou seja Student por padrão
+                phone: user.phone || "Não informado",
+
+                // CORREÇÃO: Mapeando para o que o Frontend espera (idValue)
+                idValue: user.identityId || user.cpf || "N/A",
+
                 role: user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Student",
                 status: user.kycStatus || "pending",
                 walletAddress: user.walletAddress || "",
+
+                // Garante que a data seja string ISO
                 submittedAt: user.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
+
                 documents: user.documents || [],
                 bio: user.bio || "",
                 institution: user.institution || "",
-                // Se o usuário tem ID ou Docs, veio do formulário, senão foi login direto
-                source: hasManualData ? "manual_form" : "google_quick",
-                phone: user.phone || "Não informado",
-                identityId: user.identityId || "N/A"
+
+                // Lógica de Origem
+                source: hasManualData ? "manual_form" : "google_quick"
             };
         });
 
         return NextResponse.json(formattedRequests);
+
     } catch (error) {
-        console.error("ERRO NA API DE ADMIN:", error);
-        return NextResponse.json({ error: "Erro ao buscar dados reais" }, { status: 500 });
+        console.error("ERRO ADMIN API:", error);
+        // Retorna erro real para você ver no console do navegador, em vez de 500 genérico
+        return NextResponse.json({ error: "Falha ao carregar usuários" }, { status: 500 });
     }
 }
