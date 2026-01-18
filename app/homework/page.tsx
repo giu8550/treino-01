@@ -9,7 +9,6 @@ import Image from "next/image";
 import "@/src/i18n";
 
 // --- IMPORTS DA WORKSTATION (INTEGRAÇÃO) ---
-import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { uploadToPinata } from "@/src/utils/ipfs";
 import zoxImage from "@/app/workstation/zox.png";
 import ethernautImage from "@/app/workstation/ethernaut.png";
