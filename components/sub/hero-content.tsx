@@ -14,7 +14,8 @@ import {
   UserCircleIcon,
   CameraIcon,
   AcademicCapIcon,
-  ArrowUpTrayIcon
+  ArrowUpTrayIcon,
+  CheckIcon // Adicionado para a animação de sucesso
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -284,7 +285,8 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
 const HeroContentComponent = () => {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { data: session, status } = useSession();
+  // ATUALIZAÇÃO: Extraindo 'update' do hook useSession para refresh instantâneo
+  const { data: session, status, update } = useSession();
 
   const [index, setIndex] = useState(0);
   const [roleIndex, setRoleIndex] = useState(0);
@@ -294,7 +296,7 @@ const HeroContentComponent = () => {
 
   // Estados de Menu
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false); // NOVO ESTADO
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [tutorials, setTutorials] = useState(true);
 
   // Estados do Perfil Custom
@@ -303,6 +305,7 @@ const HeroContentComponent = () => {
   const [avatarPreview, setAvatarPreview] = useState(session?.user?.image || "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSaved, setIsSaved] = useState(false); // NOVO ESTADO: Controle da animação de sucesso
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -311,7 +314,6 @@ const HeroContentComponent = () => {
   const userRole = (session?.user as any)?.role || "Student";
   const displayRole = userRole.charAt(0).toUpperCase() + userRole.slice(1);
 
-  // Sincroniza o nome se a sessão mudar
   useEffect(() => {
     if (session?.user?.name) setCustomName(session.user.name);
     if (session?.user?.image) setAvatarPreview(session.user.image);
@@ -341,16 +343,32 @@ const HeroContentComponent = () => {
     }
 
     try {
-      // AQUI VAI SUA CHAMADA PARA A API QUE CRIAREMOS DEPOIS
       const res = await fetch("/api/user/update", {
         method: "POST",
         body: formData,
       });
 
       if (res.ok) {
-        // Sucesso visual
-        alert(t("profile.success"));
-        setIsProfileOpen(false);
+        // --- 1. REFRESH INSTANTÂNEO (Atualiza sessão do lado do cliente) ---
+        // Se a API retornou o user atualizado, poderíamos usar os dados de lá,
+        // mas para simplificar e ser rápido, usamos o que temos no estado local.
+        // O importante é disparar o update() para que o NextAuth atualize o token.
+        await update({
+          name: customName,
+          // Mantém a imagem atual se não trocou, ou espera o F5 se trocou (pois é base64 grande)
+          // ou se sua API retornar o base64, melhor ainda.
+          // Para simplicidade visual imediata:
+          course: customCourse
+        });
+
+        // --- 2. ANIMAÇÃO DE SUCESSO ---
+        setIsSaved(true);
+
+        // Fecha o modal automaticamente após 1.5s
+        setTimeout(() => {
+          setIsSaved(false);
+          setIsProfileOpen(false);
+        }, 1500);
       }
     } catch (error) {
       console.error("Erro ao salvar perfil:", error);
@@ -386,7 +404,7 @@ const HeroContentComponent = () => {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (onboardOpen || isProfileOpen) return; // Bloqueia navegação se perfil estiver aberto
+      if (onboardOpen || isProfileOpen) return;
       if (isOptionsOpen && e.code === "Escape") { setIsOptionsOpen(false); return; }
       if (isOptionsOpen) return;
 
@@ -578,7 +596,6 @@ const HeroContentComponent = () => {
                         <option className="bg-slate-900 text-white" value="fr">Français</option>
                         <option className="bg-slate-900 text-white" value="zh">中文</option>
                         <option className="bg-slate-900 text-white" value="ko">한국어 (Korean)</option>
-
                       </select>
                       <ChevronRightIcon className="h-5 w-5 text-white/40" />
                     </div>
@@ -678,21 +695,40 @@ const HeroContentComponent = () => {
                       </p>
                     </div>
 
-                    {/* BOTÃO SALVAR */}
-                    <button
-                        onClick={handleSaveProfile}
-                        disabled={isSavingProfile}
-                        className="w-full mt-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSavingProfile ? (
-                          <span className="animate-pulse">{t("profile.saving")}</span>
+                    {/* BOTÃO SALVAR COM ANIMAÇÃO DE CHECK */}
+                    <AnimatePresence mode="wait">
+                      {!isSaved ? (
+                          <motion.button
+                              key="save-btn"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              onClick={handleSaveProfile}
+                              disabled={isSavingProfile}
+                              className="w-full mt-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSavingProfile ? (
+                                <span className="animate-pulse">{t("profile.saving")}</span>
+                            ) : (
+                                <>
+                                  <ArrowUpTrayIcon className="w-4 h-4" />
+                                  <span>{t("profile.save")}</span>
+                                </>
+                            )}
+                          </motion.button>
                       ) : (
-                          <>
-                            <ArrowUpTrayIcon className="w-4 h-4" />
-                            <span>{t("profile.save")}</span>
-                          </>
+                          <motion.div
+                              key="success-btn"
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.9, opacity: 0 }}
+                              className="w-full mt-2 bg-green-500/20 border border-green-500/50 text-green-300 font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.3)] flex items-center justify-center gap-2"
+                          >
+                            <CheckIcon className="w-5 h-5 text-green-400" />
+                            <span>Credentials Updated</span>
+                          </motion.div>
                       )}
-                    </button>
+                    </AnimatePresence>
 
                   </motion.div>
               )}

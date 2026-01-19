@@ -18,7 +18,6 @@ zaeon-contracts/keys/
 secret_key.pem
 
 # --- AMBIENTE E SEGURANÇA ---
-.env
 .env.local
 .env.development.local
 .env.test.local

@@ -116,10 +116,8 @@ export default function HomeworkPage() {
     const router = useRouter();
     const { data: session, status } = useSession();
 
-    // Workstation Hooks
-    const { login: connectWallet, authenticated: privyAuthenticated, ready: privyReady, logout: disconnectWallet } = usePrivy();
-    const { wallets } = useWallets();
-    const wallet = wallets[0];
+    // REMOVIDO: Workstation Hooks (usePrivy, useWallets)
+    // O sistema agora confia puramente na sessão do NextAuth (session)
 
     const [mounted, setMounted] = useState(false);
     const [isFocusMode, setIsFocusMode] = useState(false);
@@ -150,8 +148,7 @@ export default function HomeworkPage() {
     const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
     const [isImageLoading, setIsImageLoading] = useState(false);
     const [isBoosterOpen, setIsBoosterOpen] = useState(false);
-    const [isBlockchainProcessing, setIsBlockchainProcessing] = useState(false);
-    const [copied, setCopied] = useState(false);
+    const [isSystemProcessing, setIsSystemProcessing] = useState(false); // Renomeado de isBlockchainProcessing
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -162,11 +159,7 @@ export default function HomeworkPage() {
     const terminalRef = useRef<HTMLDivElement>(null);
 
     // --- BLINDAGEM DA PÁGINA ---
-    // ... imports
-
-    // --- BLINDAGEM DA PÁGINA ---
     useEffect(() => {
-        // Se ainda está carregando a sessão, não faça nada. Evita bugs de redirecionamento prematuro.
         if (status === "loading") return;
 
         if (status === "unauthenticated") {
@@ -178,18 +171,13 @@ export default function HomeworkPage() {
             const isAdmin = (session?.user as any)?.isAdmin;
             const userRole = (session?.user as any)?.role;
 
-            // Se for Admin, libera.
             if (isAdmin) return;
 
-            // Se for Professional ou Entrepreneur, expulsa para Workstation.
             if (userRole === "professional" || userRole === "entrepreneur") {
                 router.replace("/workstation");
             }
-            // Se for Student/Researcher, fica aqui (implícito).
         }
     }, [status, session, router]);
-
-    // ... resto do componente
 
     useEffect(() => { setMounted(true); }, []);
 
@@ -278,7 +266,7 @@ export default function HomeworkPage() {
 
     const handleSpecialistChat = (specialistId: number) => { window.open('https://chat.google.com', '_blank'); };
 
-    // --- LÓGICA WORK MODE ---
+    // --- LÓGICA WORK MODE (SEM WEB3/WALLET) ---
     const handleAgentSwitch = (key: AgentKey) => {
         if (key === selectedAgent) return;
         setIsAgentMenuOpen(false);
@@ -289,32 +277,46 @@ export default function HomeworkPage() {
     };
 
     const handleBoostAndSave = async () => {
-        if (!privyAuthenticated || !wallet) { connectWallet(); return; }
-        setIsBlockchainProcessing(true);
-        addLog("🚀 Initiating Smart Contract handshake...");
+        // NÃO requer mais wallet, apenas sessão do usuário
+        setIsSystemProcessing(true);
+        addLog("🚀 Initiating System Synchronization...");
+
         try {
-            const provider = await wallet.getEthereumProvider();
-            const txHash = await provider.request({ method: 'eth_sendTransaction', params: [{ from: wallet.address, to: '0x0000000000000000000000000000000000000000', data: '0x', value: '0x0' }] });
-            addLog(`Tx Sent: ${String(txHash).slice(0, 10)}... Awaiting EVM...`);
-            await new Promise(r => setTimeout(r, 2000));
-            addLog("✅ Badge Minted. Persistence Authorized.");
-            const userId = session?.user?.email || wallet?.address;
-            const res = await fetch('/api/workspace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, title: docTitle, content: docContent, agent: selectedAgent, chatHistory, terminalLogs }) });
-            if (res.ok) { addLog("✅ Session saved."); setIsBoosterOpen(false); }
-        } catch (error: any) { addLog(`❌ Error: ${error.message || "Denied"}`); } finally { setIsBlockchainProcessing(false); }
+            // Simulando um delay de processamento para UX
+            await new Promise(r => setTimeout(r, 1500));
+            addLog("✅ Data Integrity Verified.");
+
+            const userId = session?.user?.email || "anonymous_user";
+            const res = await fetch('/api/workspace', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, title: docTitle, content: docContent, agent: selectedAgent, chatHistory, terminalLogs })
+            });
+
+            if (res.ok) {
+                addLog("✅ Session saved successfully.");
+                setIsBoosterOpen(false);
+            } else {
+                throw new Error("Failed to save to database");
+            }
+        } catch (error: any) {
+            addLog(`❌ Error: ${error.message || "Save Failed"}`);
+        } finally {
+            setIsSystemProcessing(false);
+        }
     };
 
     const handleGenerateProtocol = async () => {
-        if (!privyAuthenticated || !wallet) { alert(t("workstation.no_wallet")); connectWallet(); return; }
+        // Removida verificação de wallet
         const agent = AGENTS[selectedAgent];
-        setIsBlockchainProcessing(true);
+        setIsSystemProcessing(true);
         addLog(t("workstation.logs.gen_protocol", { name: agent.name }));
-        const generatedText = `RESEARCH: ${docTitle}\nAUTHOR: ${agent.name}\nDATE: ${new Date().toISOString()}\n\nANALYSIS: Verified on Mantle via Zaeon.`;
+        const generatedText = `RESEARCH: ${docTitle}\nAUTHOR: ${agent.name}\nDATE: ${new Date().toISOString()}\n\nANALYSIS: Verified by Zaeon Core.`;
         setDocContent(generatedText);
         try {
             const ipfsHash = await uploadToPinata({ title: docTitle, topic: docTitle, agent: agent.name, content: generatedText });
             if (ipfsHash) addLog(t("workstation.logs.ipfs_success", { hash: ipfsHash }));
-        } catch (e) { addLog("❌ IPFS Failed."); } finally { setIsBlockchainProcessing(false); }
+        } catch (e) { addLog("❌ IPFS Failed."); } finally { setIsSystemProcessing(false); }
     };
 
     // --- RENDERIZAÇÃO CONDICIONAL ---
@@ -368,21 +370,18 @@ export default function HomeworkPage() {
 
                     <main ref={mainScrollRef} onClick={() => setActiveSection(null)} className={`relative z-20 flex-1 h-full overflow-y-auto pb-40 custom-scrollbar pr-[460px] space-y-12 transition-all duration-700 ${isFocusMode ? 'pt-10' : 'pt-[120px]'} ${isProcessing ? 'blur-[4px] opacity-40' : ''}`}>
 
-                        {/* 1. STUDY FILES (COM BOTÃO DE TOGGLE CORRIGIDO) */}
+                        {/* 1. STUDY FILES */}
                         <section onClick={(e) => { e.stopPropagation(); setActiveSection('study'); }} className={`relative rounded-[41px] p-[1px] transition-all ${activeSection === 'study' ? 'z-[30]' : 'z-[10]'}`}>
                             <div className={`relative p-6 rounded-[40px] border transition-all ${activeSection === 'study' ? 'border-cyan-500 shadow-2xl bg-white' : 'border-slate-200 bg-slate-100/95 dark:bg-[#0f172a]/90'}`}>
                                 <div className="flex items-center gap-4 mb-6">
-                                    {/* BOTÃO DE AÇÃO */}
                                     <button onClick={handleToggleMode} className="bg-cyan-500 hover:bg-cyan-400 text-white text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
                                         <ArrowPathIcon className="w-3 h-3" />
                                         {t("homework.study_title")}
                                     </button>
-                                    {/* TEXTO DINÂMICO CORRIGIDO */}
                                     <span className="text-[10px] text-slate-400 uppercase tracking-widest">
                                     {t("homework.switch_hint", { mode: t("homework.mode_work") })}
                                 </span>
                                     <div className="ml-auto">
-                                        {/* AQUI ESTÁ A CORREÇÃO: colorClass condicional */}
                                         <ActionButton
                                             icon={PlusIcon}
                                             label={t("homework.add_files")}
@@ -590,8 +589,8 @@ export default function HomeworkPage() {
                                 <button onClick={() => setIsBoosterOpen(true)} className="px-4 py-2 rounded-xl text-[11px] font-bold border transition flex items-center gap-2 bg-blue-100 text-blue-700 border-blue-400 hover:bg-blue-200 uppercase tracking-wider">
                                     <ArrowDownTrayIcon className="w-4 h-4" /> {t("workstation.session_save")}
                                 </button>
-                                <button onClick={handleGenerateProtocol} disabled={isBlockchainProcessing} className={`px-4 py-2 rounded-xl text-[11px] font-bold border transition flex items-center gap-2 uppercase tracking-wider ${isBlockchainProcessing ? 'bg-yellow-100 text-yellow-700 border-yellow-400' : 'bg-green-100 text-green-700 border-green-400 hover:bg-green-200'}`}>
-                                    <PlayIcon className="w-4 h-4" /> {isBlockchainProcessing ? t("workstation.processing") : t("workstation.generate")}
+                                <button onClick={handleGenerateProtocol} disabled={isSystemProcessing} className={`px-4 py-2 rounded-xl text-[11px] font-bold border transition flex items-center gap-2 uppercase tracking-wider ${isSystemProcessing ? 'bg-yellow-100 text-yellow-700 border-yellow-400' : 'bg-green-100 text-green-700 border-green-400 hover:bg-green-200'}`}>
+                                    <PlayIcon className="w-4 h-4" /> {isSystemProcessing ? t("workstation.processing") : t("workstation.generate")}
                                 </button>
                             </div>
                         </div>
@@ -599,18 +598,8 @@ export default function HomeworkPage() {
                             <div onClick={() => setActiveWorkSection('terminal')} className={`${panelStyle} h-[28%] flex flex-col shrink-0`}>
                                 <div className="h-9 bg-[#0a0a0a] border-b border-white/5 flex items-center px-4 shrink-0 justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${privyAuthenticated && wallet ? 'bg-emerald-500 text-emerald-500' : 'bg-red-600 text-red-600 animate-pulse'}`} />
-                                        {privyReady && privyAuthenticated && wallet ? (
-                                            <div className="flex items-center gap-2">
-                                                <button onClick={() => { navigator.clipboard.writeText(wallet.address); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-2 py-0.5 rounded hover:bg-emerald-500/10 group transition-all">
-                                                    <span className="text-[9px] font-mono text-emerald-400">{copied ? "COPIED!" : `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}</span>
-                                                    <DocumentDuplicateIcon className="w-3 h-3 text-emerald-600 group-hover:text-emerald-400" />
-                                                </button>
-                                                <PowerIcon onClick={disconnectWallet} className="w-3 h-3 text-emerald-800 hover:text-red-500 cursor-pointer transition-colors" />
-                                            </div>
-                                        ) : (
-                                            <button onClick={connectWallet} className="text-[9px] font-bold text-red-500 uppercase tracking-widest hover:text-red-400 transition-colors">{t("workstation.no_wallet")}</button>
-                                        )}
+                                        <div className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] bg-emerald-500 text-emerald-500" />
+                                        <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">SYSTEM ONLINE</span>
                                     </div>
                                     <span className="text-[8px] text-white/20 font-mono tracking-[0.2em] uppercase">Zaeon Neural Node v2.0.26</span>
                                 </div>
@@ -624,7 +613,7 @@ export default function HomeworkPage() {
                 </div>
             )}
 
-            {/* --- SESSION BOOSTER MODAL --- */}
+            {/* --- SESSION BOOSTER MODAL (DATABASE ONLY) --- */}
             <AnimatePresence>
                 {isBoosterOpen && (
                     <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
@@ -638,12 +627,12 @@ export default function HomeworkPage() {
                                 </motion.div>
                             </div>
                             <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-6"><RocketLaunchIcon className="w-3 h-3" /> Movement EVM Upgrade</div>
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-6"><RocketLaunchIcon className="w-3 h-3" /> System Uplink</div>
                                 <h2 className="text-4xl font-bold text-white mb-6 leading-tight">Sync {activeConfig.name}'s <span className="text-cyan-400">Memory Core</span></h2>
-                                <p className="text-slate-400 text-sm leading-relaxed mb-10">Sign the Badge Sync transaction to persist research.</p>
+                                <p className="text-slate-400 text-sm leading-relaxed mb-10">Securely persist your research session to the database.</p>
                                 <div className="flex flex-col gap-4">
-                                    <button onClick={handleBoostAndSave} disabled={isBlockchainProcessing} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] flex items-center justify-center gap-3 uppercase tracking-widest text-xs group disabled:opacity-50">
-                                        {isBlockchainProcessing ? <div className="animate-spin border-t-black border-2 w-5 h-5 rounded-full" /> : <><RocketLaunchIcon className="w-5 h-5 group-hover:scale-110 transition-transform" /> Confirm Transaction & Save</>}
+                                    <button onClick={handleBoostAndSave} disabled={isSystemProcessing} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] flex items-center justify-center gap-3 uppercase tracking-widest text-xs group disabled:opacity-50">
+                                        {isSystemProcessing ? <div className="animate-spin border-t-black border-2 w-5 h-5 rounded-full" /> : <><RocketLaunchIcon className="w-5 h-5 group-hover:scale-110 transition-transform" /> Save Session Data</>}
                                     </button>
                                     <button onClick={() => setIsBoosterOpen(false)} className="w-full py-2 text-white/30 text-[10px] uppercase font-bold tracking-widest hover:text-white transition-colors">Back to Station</button>
                                 </div>

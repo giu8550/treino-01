@@ -1,10 +1,9 @@
-topic: docTitle,
-    "use client";
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useRouter } from "next/navigation"; // Importado para proteção
+import { useRouter } from "next/navigation";
 import {
     PaperAirplaneIcon,
     TrashIcon,
@@ -31,8 +30,8 @@ import "../../src/i18n";
 // --- 1. NEXT AUTH ---
 import { useSession, signIn } from "next-auth/react";
 
-// --- 2. PRIVY & WEB3 ---
-import { usePrivy, useWallets } from "@privy-io/react-auth";
+// --- 2. UTILS ---
+// Removido Privy/Web3
 import { uploadToPinata } from "@/src/utils/ipfs";
 
 // --- IMAGE IMPORTS ---
@@ -103,9 +102,7 @@ const IosLoader = ({ status }: { status: string }) => (
 export default function WorkStationPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const { login: connectWallet, authenticated: privyAuthenticated, ready: privyReady, logout: disconnectWallet } = usePrivy();
-    const { wallets } = useWallets();
-    const wallet = wallets[0];
+    // Removido hooks do Privy (usePrivy, useWallets)
     const { t } = useTranslation();
 
     const [mounted, setMounted] = useState(false);
@@ -114,8 +111,7 @@ export default function WorkStationPage() {
     const [docTitle, setDocTitle] = useState("Untitled_Research_Paper.txt");
     const [docContent, setDocContent] = useState("");
     const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
-    const [isBlockchainProcessing, setIsBlockchainProcessing] = useState(false);
-    const [copied, setCopied] = useState(false);
+    const [isSystemProcessing, setIsSystemProcessing] = useState(false); // Renomeado para refletir o processo de sistema
     const [selectedAgent, setSelectedAgent] = useState<AgentKey>("zenita");
     const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
     const [isImageLoading, setIsImageLoading] = useState(false);
@@ -127,7 +123,7 @@ export default function WorkStationPage() {
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
 
-    // --- BLINDAGEM DA PÁGINA COM PODER DE ADMIN ---
+    // --- BLINDAGEM DA PÁGINA ---
     useEffect(() => {
         if (status === "loading") return;
 
@@ -140,10 +136,8 @@ export default function WorkStationPage() {
             const isAdmin = (session?.user as any)?.isAdmin;
             const userRole = (session?.user as any)?.role;
 
-            // Se for ADMIN, ignora restrições
             if (isAdmin) return;
 
-            // Se for estudante ou pesquisador, não pertence à Workstation
             if (userRole === "student" || userRole === "researcher") {
                 router.replace("/homework");
             }
@@ -168,11 +162,12 @@ export default function WorkStationPage() {
         }
     };
 
+    // Load Session (Baseado apenas no Session Email agora)
     useEffect(() => {
         const loadSession = async () => {
-            const userId = session?.user?.email || wallet?.address;
+            const userId = session?.user?.email;
             if (userId) {
-                addLog(`Loading workspace for ${String(userId).slice(0,15)}...`);
+                addLog(`Loading workspace for ${userId}...`);
                 try {
                     const res = await fetch(`/api/workspace?userId=${userId}`);
                     const json = await res.json();
@@ -180,13 +175,13 @@ export default function WorkStationPage() {
                         if (json.data.title) setDocTitle(json.data.title);
                         if (json.data.content) setDocContent(json.data.content);
                         if (json.data.chatHistory) setChatHistory(json.data.chatHistory);
-                        addLog("Session restored successfully.");
+                        addLog("Session restored successfully from Neural Cloud.");
                     }
                 } catch (e) { console.error(e); }
             }
         };
-        if (mounted && (session || wallet)) loadSession();
-    }, [mounted, session, wallet]);
+        if (mounted && session) loadSession();
+    }, [mounted, session]);
 
     useEffect(() => { if (mounted) scrollToBottom(); }, [chatHistory, terminalLogs, mounted, isTyping, selectedAgent]);
 
@@ -219,69 +214,61 @@ export default function WorkStationPage() {
     };
 
     const handleBoostAndSave = async () => {
-        if (!privyAuthenticated || !wallet) {
-            connectWallet();
-            return;
-        }
-
-        setIsBlockchainProcessing(true);
-        addLog("🚀 Initiating Smart Contract handshake...");
+        // Removida verificação de carteira
+        setIsSystemProcessing(true);
+        addLog("🚀 Initiating System Synchronization...");
 
         try {
-            const provider = await wallet.getEthereumProvider();
+            // Simulação de delay para feedback visual
+            await new Promise(r => setTimeout(r, 1500));
+            addLog("✅ Data Integrity Verified.");
 
-            const txHash = await provider.request({
-                method: 'eth_sendTransaction',
-                params: [{
-                    from: wallet.address,
-                    to: '0x0000000000000000000000000000000000000000',
-                    data: '0x',
-                    value: '0x0',
-                }],
-            });
+            const userId = session?.user?.email;
 
-            addLog(`Tx Sent: ${String(txHash).slice(0, 10)}... Awaiting EVM...`);
-            await new Promise(r => setTimeout(r, 2000));
-            addLog("✅ Badge Minted. Memory Persistence Authorized.");
+            if (!userId) {
+                throw new Error("User session invalid.");
+            }
 
-            const userId = session?.user?.email || wallet?.address;
             const res = await fetch('/api/workspace', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userId, title: docTitle, content: docContent,
-                    agent: selectedAgent, chatHistory, terminalLogs
+                    userId,
+                    title: docTitle,
+                    content: docContent,
+                    agent: selectedAgent,
+                    chatHistory,
+                    terminalLogs
                 })
             });
 
             if (res.ok) {
                 addLog("✅ Session saved to Neural Cloud.");
                 setIsBoosterOpen(false);
+            } else {
+                throw new Error("API Response not OK");
             }
         } catch (error: any) {
-            addLog(`❌ Transaction Error: ${error.message || "User denied"}`);
+            addLog(`❌ Save Error: ${error.message || "Unknown error"}`);
         } finally {
-            setIsBlockchainProcessing(false);
+            setIsSystemProcessing(false);
         }
     };
 
     const handleGenerateProtocol = async () => {
-        if (!privyAuthenticated || !wallet) {
-            alert(t("workstation.no_wallet"));
-            connectWallet();
-            return;
-        }
+        // Removida verificação de carteira
         const agent = AGENTS[selectedAgent];
-        setIsBlockchainProcessing(true);
+        setIsSystemProcessing(true);
         addLog(t("workstation.logs.gen_protocol", { name: agent.name }));
 
-        const generatedText = `RESEARCH PAPER: ${docTitle}\n\nAUTHOR: ${agent.name} (AI Agent)\nDATE: ${new Date().toISOString()}\n\nANALYSIS: Verified on Movement EVM Blockchain via Zaeon Protocol.`;
+        const generatedText = `RESEARCH PAPER: ${docTitle}\n\nAUTHOR: ${agent.name} (AI Agent)\nDATE: ${new Date().toISOString()}\n\nANALYSIS: Verified via Zaeon Protocol.`;
         setDocContent(generatedText);
 
         try {
+            // Correção de inconsistência: Garante que 'topic' e 'title' usem docTitle atualizado
             const ipfsHash = await uploadToPinata({
                 title: docTitle,
-                topic: docTitle,
+                topic: docTitle, // Uso explícito do docTitle como tópico
                 agent: agent.name,
                 content: generatedText
             });
@@ -289,11 +276,11 @@ export default function WorkStationPage() {
         } catch (e) {
             addLog("❌ IPFS Upload failed.");
         } finally {
-            setIsBlockchainProcessing(false);
+            setIsSystemProcessing(false);
         }
     };
 
-    // --- RENDERIZAÇÃO CONDICIONAL (LOADING / AUTH) ---
+    // --- RENDERIZAÇÃO CONDICIONAL ---
     if (!mounted || status === "loading") {
         return (
             <div className="w-full h-screen bg-[#030014] flex items-center justify-center z-[999]">
@@ -342,6 +329,7 @@ export default function WorkStationPage() {
                                 </div>
                             </div>
                         ) : (
+                            // Botão de login genérico se a sessão cair
                             <button onClick={() => signIn('google')} className="flex items-center gap-2 bg-white/5 border border-white/20 px-4 py-2 rounded-2xl hover:bg-white/10 transition-all backdrop-blur-md">
                                 <UserCircleIcon className="w-5 h-5 text-white/70" />
                                 <span className="text-[10px] text-white font-bold">{t("workstation.login")}</span>
@@ -426,8 +414,8 @@ export default function WorkStationPage() {
                             <button onClick={() => setIsBoosterOpen(true)} className="px-4 py-2 rounded-xl text-[11px] font-bold border transition flex items-center gap-2 bg-blue-100 text-blue-700 border-blue-400 hover:bg-blue-200 uppercase tracking-wider">
                                 <ArrowDownTrayIcon className="w-4 h-4" /> Save Session
                             </button>
-                            <button onClick={handleGenerateProtocol} disabled={isBlockchainProcessing} className={`px-4 py-2 rounded-xl text-[11px] font-bold border transition flex items-center gap-2 uppercase tracking-wider ${isBlockchainProcessing ? 'bg-yellow-100 text-yellow-700 border-yellow-400' : 'bg-green-100 text-green-700 border-green-400 hover:bg-green-200'}`}>
-                                <PlayIcon className="w-4 h-4" /> {isBlockchainProcessing ? "Processing..." : "Generate"}
+                            <button onClick={handleGenerateProtocol} disabled={isSystemProcessing} className={`px-4 py-2 rounded-xl text-[11px] font-bold border transition flex items-center gap-2 uppercase tracking-wider ${isSystemProcessing ? 'bg-yellow-100 text-yellow-700 border-yellow-400' : 'bg-green-100 text-green-700 border-green-400 hover:bg-green-200'}`}>
+                                <PlayIcon className="w-4 h-4" /> {isSystemProcessing ? "Processing..." : "Generate"}
                             </button>
                         </div>
                     </div>
@@ -436,25 +424,8 @@ export default function WorkStationPage() {
                         <div onClick={() => setActiveSection('terminal')} className={`${panelStyle} h-[28%] flex flex-col shrink-0`}>
                             <div className="h-9 bg-[#0a0a0a] border-b border-white/5 flex items-center px-4 shrink-0 justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${privyAuthenticated && wallet ? 'bg-emerald-500 text-emerald-500' : 'bg-red-600 text-red-600 animate-pulse'}`} />
-                                    {privyReady && privyAuthenticated && wallet ? (
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(wallet.address);
-                                                    setCopied(true);
-                                                    setTimeout(() => setCopied(false), 2000);
-                                                }}
-                                                className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-2 py-0.5 rounded hover:bg-emerald-500/10 group transition-all"
-                                            >
-                                                <span className="text-[9px] font-mono text-emerald-400">{copied ? "COPIED!" : `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}</span>
-                                                <DocumentDuplicateIcon className="w-3 h-3 text-emerald-600 group-hover:text-emerald-400" />
-                                            </button>
-                                            <PowerIcon onClick={disconnectWallet} className="w-3 h-3 text-emerald-800 hover:text-red-500 cursor-pointer transition-colors" />
-                                        </div>
-                                    ) : (
-                                        <button onClick={connectWallet} className="text-[9px] font-bold text-red-500 uppercase tracking-widest hover:text-red-400 transition-colors">Connect Wallet</button>
-                                    )}
+                                    <div className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] bg-emerald-500 text-emerald-500" />
+                                    <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">SYSTEM ONLINE</span>
                                 </div>
                                 <span className="text-[8px] text-white/20 font-mono tracking-[0.2em] uppercase">Zaeon Neural Node v2.0.26</span>
                             </div>
@@ -468,7 +439,7 @@ export default function WorkStationPage() {
                 </div>
             </div>
 
-            {/* --- SESSION BOOSTER MODAL --- */}
+            {/* --- SESSION BOOSTER MODAL (DATABASE ONLY) --- */}
             <AnimatePresence>
                 {isBoosterOpen && (
                     <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
@@ -490,27 +461,27 @@ export default function WorkStationPage() {
 
                             <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
-                                    <RocketLaunchIcon className="w-3 h-3" /> Movement EVM Upgrade
+                                    <RocketLaunchIcon className="w-3 h-3" /> System Uplink
                                 </div>
                                 <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
                                     Sync {activeConfig.name}'s <span className="text-cyan-400">Memory Core</span>
                                 </h2>
                                 <p className="text-slate-400 text-sm leading-relaxed mb-10">
-                                    Seu agente atingiu o limite de buffers neurais temporários. Assine a transação de **Badge Sync** na blockchain para persistir esta pesquisa no MongoDB e habilitar o aprendizado contextual do agente.
+                                    Seu agente atingiu o limite de buffers neurais. Sincronize os dados desta sessão com o banco de dados central para garantir a persistência e o aprendizado contínuo.
                                 </p>
 
                                 <div className="flex flex-col gap-4">
                                     <button
                                         onClick={handleBoostAndSave}
-                                        disabled={isBlockchainProcessing}
+                                        disabled={isSystemProcessing}
                                         className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] flex items-center justify-center gap-3 uppercase tracking-widest text-xs group disabled:opacity-50"
                                     >
-                                        {isBlockchainProcessing ? (
+                                        {isSystemProcessing ? (
                                             <div className="animate-spin border-t-black border-2 w-5 h-5 rounded-full" />
                                         ) : (
                                             <>
                                                 <RocketLaunchIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                                Confirm Transaction & Save
+                                                Save Session Data
                                             </>
                                         )}
                                     </button>
