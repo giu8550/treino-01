@@ -628,7 +628,7 @@ export default function HomeworkPage() {
                             </div>
                             <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-6"><RocketLaunchIcon className="w-3 h-3" /> System Uplink</div>
-                                <h2 className="text-4xl font-bold text-white mb-6 leading-tight">Sync {activeConfig.name}'s <span className="text-cyan-400">Memory Core</span></h2>
+                                <h2 className="text-4xl font-bold text-white mb-6 leading-tight">Sync {activeConfig.name}&apos;s <span className="text-cyan-400">Memory Core</span></h2>
                                 <p className="text-slate-400 text-sm leading-relaxed mb-10">Securely persist your research session to the database.</p>
                                 <div className="flex flex-col gap-4">
                                     <button onClick={handleBoostAndSave} disabled={isSystemProcessing} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] flex items-center justify-center gap-3 uppercase tracking-widest text-xs group disabled:opacity-50">

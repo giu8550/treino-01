@@ -68,7 +68,7 @@
     "suggest": "Sugerir"
   },
   "encryption": {
-    "title": "Agentes de IA de Outra Dimensão.",
+    "title": "Agentes de IA para universitários.",
     "subtitle": "Eles vieram para mudar sua vida.",
     "button": "Saiba mais"
   },
@@ -145,8 +145,8 @@
     },
     "mission": {
       "title": "Nossa Missão",
-      "p1": "Capacitar a próxima geração de estudantes, pesquisadores e professores, oferecendo ferramentas de alto impacto para o dia-a-dia de quem busca conhecimento e educação.",
-      "p2": "Usamos a tecnologia Movement para gravar sua evolução de um jeito que ninguém pode apagar ou alterar. Aqui, sua pesquisa não é um texto copiado e colado, é um registro digital eterno e seguro, que prova para o mundo tudo o que você aprendeu e está desenvolvendo.",
+      "p1": "Capacitar a próxima geração de estudantes, pesquisadores e professores, oferecendo ferramentas de alto nivel para o dia-a-dia de quem busca produtividade, tecnologia e inovação.",
+      "p2": "Usamos a tecnologia da Cronos para gravar sua evolução de um jeito que ninguém pode apagar ou alterar. Aqui, sua pesquisa não é um texto copiado e colado, é um registro digital eterno e seguro, que prova para o mundo tudo o que você aprendeu e está desenvolvendo.",
       "quote": "O conhecimento não deve apenas ser adquirido, deve ser preservado e assegurado."
     },
     "architecture": {
@@ -155,7 +155,7 @@
       "card1_t": "Agentes Inteligentes",
       "card1_d": "Oferecemos mentores especialistas com conhecimento refinado de acordo com cada país, estado, instituição e área do conhecimento. tudo personalizável e específico, feito para você.",
       "card2_t": "Blockchain confiável",
-      "card2_d": "A Movement atua como banco de dados de alta performance, garantindo que cada documento gerado seja sua propriedade intelectual, além de atuar como validador de credenciais escolares.",
+      "card2_d": "A cronos como banco de dados de alta performance, garantindo que cada documento gerado seja sua propriedade intelectual, além de atuar como validador de credenciais escolares.",
       "card3_t": "Estudo Híbrido",
       "card3_d": "Agentes incentivam grupos de estudo regionais, ao mesmo tempo que controlam ambientes digitais onde a colaboração acontece em tempo real, com estudantes do mundo todo, sem barreiras de linguagem."
     },

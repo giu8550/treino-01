@@ -33,11 +33,12 @@ interface Comment {
 interface Post {
     id: string;
     user: string;
+    userImage?: string; // Adicionado para suportar fotos de perfil
     content: string;
     time: string;
     likes: number;
     isLiked: boolean;
-    commentsList: Comment[];
+    comments: Comment[]; // CORRIGIDO: de commentsList para comments
 }
 
 // --- CONFIGURAÇÃO DO GLOBO ---
@@ -99,7 +100,6 @@ const CyberGlobe = ({ onSelectRegion, onHoverRegion }: any) => {
                 <Sphere args={[0.775, 32, 32]}>
                     <meshBasicMaterial color={COLOR_WIRE_BLUE} wireframe transparent opacity={0.2} toneMapped={false} />
                 </Sphere>
-                {/* Nomes atualizados para inglês com Z como pedido */}
                 <LocationMarker lat={39.8} lon={-98.6} code="USA" onHover={onHoverRegion} onClick={onSelectRegion} />
                 <LocationMarker lat={-14.2} lon={-51.9} code="BRAZIL" onHover={onHoverRegion} onClick={onSelectRegion} />
                 <LocationMarker lat={35.8} lon={104.1} code="CHINA" onHover={onHoverRegion} onClick={onSelectRegion} />
@@ -234,7 +234,7 @@ export default function ZaeonLobby() {
         } else {
             setAccessError(null);
             setSelectedRegion(code);
-            setIsLiveFeedActive(false); // Começa mostrando as regras
+            setIsLiveFeedActive(false);
         }
     };
 
@@ -247,15 +247,15 @@ export default function ZaeonLobby() {
     return (
         <div className="fixed inset-0 w-full h-full bg-[#010409] flex items-center justify-center p-6 lg:p-12 overflow-hidden font-sans">
 
-            {/* SIDEBAR (Estática Esquerda) */}
+            {/* SIDEBAR */}
             <div className="h-[80vh] w-16 border-l border-y border-white/10 bg-black/40 backdrop-blur-2xl rounded-l-[40px] flex flex-col items-center py-10 z-[100] shadow-2xl">
                 <div className={`w-3 h-3 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_15px_#10b981] animate-pulse" : "bg-red-500 shadow-[0_0_15px_#ef4444]"}`} />
             </div>
 
-            {/* MAIN CARD (Container Principal) */}
+            {/* MAIN CARD */}
             <div className="h-[80vh] flex-1 max-w-5xl bg-white/5 backdrop-blur-md border border-white/10 rounded-r-[40px] flex flex-col relative overflow-hidden shadow-2xl">
 
-                {/* HEADER (Título Fixo) */}
+                {/* HEADER */}
                 <div className="w-full pt-10 pb-4 flex flex-col items-center z-[60] pointer-events-none">
                     <h1 className="text-[10px] font-black uppercase tracking-[1em] text-white/40 flex items-center gap-4">
                         <span className="w-8 h-[1px] bg-white/10" />
@@ -264,38 +264,37 @@ export default function ZaeonLobby() {
                     </h1>
                 </div>
 
-                {/* TOOLTIP DE HOVER (CORRIGIDO) */}
-                {/* Agora aparece sempre que hoveredCluster existir e não tiver post aberto */}<AnimatePresence>
-                {(hoveredCluster || (selectedRegion && !isLiveFeedActive)) && (
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className="absolute top-10 right-10 z-[70] bg-white/5 border border-white/10 backdrop-blur-xl p-4 rounded-2xl w-48 shadow-2xl pointer-events-none"
-                    >
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                                <CpuChipIcon className="w-4 h-4 text-cyan-400" />
-                                <span className="text-[9px] font-black text-white uppercase tracking-widest">
+                {/* TOOLTIP */}
+                <AnimatePresence>
+                    {(hoveredCluster || (selectedRegion && !isLiveFeedActive)) && (
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="absolute top-10 right-10 z-[70] bg-white/5 border border-white/10 backdrop-blur-xl p-4 rounded-2xl w-48 shadow-2xl pointer-events-none"
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                    <CpuChipIcon className="w-4 h-4 text-cyan-400" />
+                                    <span className="text-[9px] font-black text-white uppercase tracking-widest">
                         {selectedRegion ? selectedRegion : hoveredCluster}
                     </span>
-                            </div>
+                                </div>
 
-                            {/* A LUZ VERDE DE STATUS ONLINE */}
-                            <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full border border-white/5">
-                                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse" : "bg-red-500"}`} />
-                                <span className="text-[7px] font-bold text-white/50 uppercase">
+                                <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full border border-white/5">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse" : "bg-red-500"}`} />
+                                    <span className="text-[7px] font-bold text-white/50 uppercase">
                         {isConnected ? "ONLINE" : "OFFLINE"}
                     </span>
+                                </div>
                             </div>
-                        </div>
 
-                        <p className="text-[8px] text-white/40 uppercase font-bold tracking-tighter">
-                            {selectedRegion ? "Uplink: Synchronizing..." : "System: Ready for Uplink"}
-                        </p>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            <p className="text-[8px] text-white/40 uppercase font-bold tracking-tighter">
+                                {selectedRegion ? "Uplink: Synchronizing..." : "System: Ready for Uplink"}
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* GLOBO 3D */}
                 <div className="absolute inset-0 z-0 pt-10">
@@ -307,8 +306,7 @@ export default function ZaeonLobby() {
                     </Canvas>
                 </div>
 
-                {/* GAVETA INFERIOR (FEED & REGRAS) */}
-                {/* Usamos a mesma estrutura para ambos os estados para manter a consistência visual */}
+                {/* GAVETA INFERIOR */}
                 <AnimatePresence>
                     {selectedRegion && (
                         <motion.div
@@ -318,83 +316,41 @@ export default function ZaeonLobby() {
                             transition={{ type: "spring", damping: 25, stiffness: 120 }}
                             className="absolute inset-x-0 bottom-0 z-50 h-[80%] bg-black/80 backdrop-blur-3xl border-t border-white/10 rounded-t-[40px] shadow-[0_-50px_100px_rgba(0,0,0,0.8)] flex flex-col"
                         >
-                            {/* Barra de Fechar */}
-                            <div
-                                onClick={closeAll}
-                                className="w-20 h-1.5 bg-white/20 rounded-full mx-auto mt-4 mb-2 cursor-pointer hover:bg-red-500 transition-colors"
-                            />
+                            <div onClick={closeAll} className="w-20 h-1.5 bg-white/20 rounded-full mx-auto mt-4 mb-2 cursor-pointer hover:bg-red-500 transition-colors" />
 
-                            {/* Conteúdo da Gaveta */}
                             <div className="flex-1 overflow-hidden relative">
                                 <AnimatePresence mode="wait">
 
-                                    {/* ESTADO 1: GATEWAY (REGRAS) */}
                                     {!isLiveFeedActive ? (
-                                        <motion.div
-                                            key="gateway"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="h-full flex flex-col px-10 pt-4 pb-20"
-                                        >
-                                            {/* BOTÃO DE ACESSO NO TOPO */}
+                                        <motion.div key="gateway" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col px-10 pt-4 pb-20" >
                                             <div className="mb-8">
-                                                <button
-                                                    onClick={() => setIsLiveFeedActive(true)}
-                                                    className="w-full group relative px-8 py-5 bg-white/5 border border-white/10 hover:border-cyan-500/50 rounded-2xl overflow-hidden transition-all hover:scale-[1.01] shadow-lg"
-                                                >
+                                                <button onClick={() => setIsLiveFeedActive(true)} className="w-full group relative px-8 py-5 bg-white/5 border border-white/10 hover:border-cyan-500/50 rounded-2xl overflow-hidden transition-all hover:scale-[1.01] shadow-lg" >
                                                     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                                                     <span className="relative flex items-center justify-center gap-3 text-xs font-black uppercase tracking-[0.2em] text-white group-hover:text-cyan-400 transition-colors">
-                    <SignalIcon className="w-4 h-4 animate-pulse" />
-                    COMUNIDADE ZAEON [ BRASIL ]
-                </span>
+                                                        <SignalIcon className="w-4 h-4 animate-pulse" />
+                                                        COMUNIDADE ZAEON [ BRASIL ]
+                                                    </span>
                                                 </button>
                                             </div>
 
-                                            {/* REGRAS E BOAS-VINDAS (CORES RESTAURADAS) */}
                                             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 mb-6">
-                                                <StaticPost
-                                                    isSystem
-                                                    user="Zaeon Protocol"
-                                                    time="Required Reading"
-                                                    content="⚠️ Regras: A Zaeon é um ambiente de colaboração acadêmica de alto nível. Respeite os outros estudantes, pesquisadores e a hierarquia dos Agentes. Postagens desrespeitosas, spam ou conteúdo fora de contexto resultarão em banimento permanente da rede neural."
-                                                />
-                                                <StaticPost
-                                                    user="Agente Alpha"
-                                                    time="Welcome Note"
-                                                    content="Iniciando monitoramento do Cluster Brasil. Bem-vindos, exploradores e cientistas. Usem este canal para compartilhar insights, dúvidas sobre os projetos e avanços em suas pesquisas."
-                                                />
+                                                <StaticPost isSystem user="Zaeon Protocol" time="Required Reading" content="⚠️ Regras: A Zaeon é um ambiente de colaboração acadêmica de alto nível. Respeite os outros estudantes, pesquisadores e a hierarquia dos Agentes. Postagens desrespeitosas, spam ou conteúdo fora de contexto resultarão em banimento permanente da rede neural." />
+                                                <StaticPost user="Agente Alpha" time="Welcome Note" content="Iniciando monitoramento do Cluster Brasil. Bem-vindos, exploradores e cientistas. Usem este canal para compartilhar insights, dúvidas sobre os projetos e avanços em suas pesquisas." />
                                             </div>
                                         </motion.div>
                                     ) : (
-                                        /* ESTADO 2: FEED REAL (MONGODB) */
-                                        /* (Este bloco só aparece após clicar no botão) */
                                         <div className="h-full flex flex-col">
                                             {!selectedPost ? (
-                                                <motion.div
-                                                    key="list"
-                                                    initial={{ opacity: 0, x: 20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    exit={{ opacity: 0, x: 20 }}
-                                                    className="h-full flex flex-col"
-                                                >
-                                                    {/* Input Area */}
+                                                <motion.div key="list" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex flex-col" >
                                                     <div className="px-10 mt-4 mb-6">
                                                         <form onSubmit={handlePost} className="relative group">
-                                                            <input
-                                                                type="text"
-                                                                value={newPost}
-                                                                onChange={(e) => setNewPost(e.target.value)}
-                                                                placeholder="Transmitir mensagem..."
-                                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-6 pr-14 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all"
-                                                            />
+                                                            <input type="text" value={newPost} onChange={(e) => setNewPost(e.target.value)} placeholder="Transmitir mensagem..." className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-6 pr-14 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all" />
                                                             <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-cyan-500 hover:text-cyan-300 transition-colors">
                                                                 <PaperAirplaneIcon className="w-5 h-5" />
                                                             </button>
                                                         </form>
                                                     </div>
 
-                                                    {/* Lista Real */}
                                                     <div className="flex-1 overflow-y-auto custom-scrollbar px-10 pb-20 space-y-4">
                                                         <div className="flex items-center justify-between mb-4 px-2 border-b border-white/5 pb-2">
                                                             <div className="flex items-center gap-3 text-emerald-400">
@@ -415,14 +371,7 @@ export default function ZaeonLobby() {
                                                     </div>
                                                 </motion.div>
                                             ) : (
-                                                /* MODO DETALHE (THREAD) */
-                                                <motion.div
-                                                    key="detail"
-                                                    initial={{ opacity: 0, x: 20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    exit={{ opacity: 0, x: 20 }}
-                                                    className="h-full flex flex-col"
-                                                >
+                                                <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex flex-col" >
                                                     <div className="px-10 pt-2 pb-4 border-b border-white/5 flex items-center gap-4">
                                                         <button onClick={() => setSelectedPost(null)} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors">
                                                             <ArrowLeftIcon className="w-5 h-5" />
@@ -436,9 +385,11 @@ export default function ZaeonLobby() {
                                                         </div>
                                                         <div className="py-6 space-y-6">
                                                             <h3 className="text-[9px] font-black uppercase tracking-widest text-cyan-500/50 mb-4 pl-2">
-                                                                Respostas ({selectedPost.commentsList.length})
+                                                                {/* CORRIGIDO: de commentsList para comments */}
+                                                                Respostas ({selectedPost.comments?.length || 0})
                                                             </h3>
-                                                            {selectedPost.commentsList.map((comment) => (
+                                                            {/* CORRIGIDO: de commentsList para comments */}
+                                                            {selectedPost.comments?.map((comment) => (
                                                                 <div key={comment.id} className="flex gap-4 pl-4 border-l border-white/5">
                                                                     <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
                                                                         <UserCircleIcon className="w-5 h-5 text-white/30" />
@@ -473,7 +424,6 @@ export default function ZaeonLobby() {
                     )}
                 </AnimatePresence>
 
-                {/* ERROR TOAST */}
                 <AnimatePresence>
                     {accessError && !selectedRegion && (
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[65] flex flex-col items-center gap-3 bg-red-500/10 border border-red-500/20 p-6 rounded-[30px] backdrop-blur-md">
@@ -494,12 +444,17 @@ export default function ZaeonLobby() {
     );
 }
 
-// --- SUBCOMPONENTE DE POST REAL (Mantido) ---
+// --- SUBCOMPONENTE DE POST REAL ATUALIZADO ---
 function FeedPost({ post, onLike, onClick, isDetailView = false }: any) {
     return (
         <div onClick={!isDetailView ? onClick : undefined} className={`bg-white/[0.03] border border-white/5 p-5 rounded-3xl transition-all group flex gap-5 ${!isDetailView ? 'hover:bg-white/[0.06] cursor-pointer' : ''} ${isDetailView ? 'bg-white/[0.05] border-cyan-500/20' : ''}`}>
-            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 flex items-center justify-center shrink-0 border border-white/10 shadow-lg">
-                <UserCircleIcon className="w-6 h-6 text-cyan-400/50" />
+            {/* AVATAR DINÂMICO ADICIONADO */}
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 overflow-hidden flex items-center justify-center shrink-0 border border-white/10 shadow-lg">
+                {post.userImage ? (
+                    <img src={post.userImage} alt="" className="w-full h-full object-cover" />
+                ) : (
+                    <UserCircleIcon className="w-6 h-6 text-cyan-400/50" />
+                )}
             </div>
             <div className="flex-1">
                 <div className="flex items-center justify-between mb-1.5">
@@ -516,7 +471,8 @@ function FeedPost({ post, onLike, onClick, isDetailView = false }: any) {
                     </button>
                     <button className="flex items-center gap-1.5 text-white/20 hover:text-cyan-400 transition-colors">
                         <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                        <span className="text-[10px] font-mono">{post.commentsList.length}</span>
+                        {/* CORRIGIDO: de commentsList para comments */}
+                        <span className="text-[10px] font-mono">{post.comments?.length || 0}</span>
                     </button>
                 </div>
             </div>

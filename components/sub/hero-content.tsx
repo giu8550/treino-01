@@ -15,7 +15,8 @@ import {
   CameraIcon,
   AcademicCapIcon,
   ArrowUpTrayIcon,
-  CheckIcon // Adicionado para a animação de sucesso
+  CheckIcon,
+  ArrowRightStartOnRectangleIcon // Ícone de Logout
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -23,7 +24,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react"; // Adicionado signOut
 
 // Importações internas (Ajuste se necessário para o seu caminho real)
 import { slideInFromLeft } from "@/lib/motion";
@@ -142,7 +143,6 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
   };
 
   const handleSubmit = async () => {
-    // 1. Upload lógico (simulação para futura API)
     if (uploadedFiles.length > 0) {
       const file = uploadedFiles[0];
       const formData = new FormData();
@@ -150,7 +150,6 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
       formData.append("userId", idValue);
 
       try {
-        // Exemplo de chamada de API: await fetch("/api/upload", { method: "POST", body: formData });
         console.log("Arquivo preparado para envio:", file.name);
       } catch (error) {
         console.error("Erro upload:", error);
@@ -285,7 +284,6 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
 const HeroContentComponent = () => {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  // ATUALIZAÇÃO: Extraindo 'update' do hook useSession para refresh instantâneo
   const { data: session, status, update } = useSession();
 
   const [index, setIndex] = useState(0);
@@ -305,7 +303,7 @@ const HeroContentComponent = () => {
   const [avatarPreview, setAvatarPreview] = useState(session?.user?.image || "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [isSaved, setIsSaved] = useState(false); // NOVO ESTADO: Controle da animação de sucesso
+  const [isSaved, setIsSaved] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -349,22 +347,14 @@ const HeroContentComponent = () => {
       });
 
       if (res.ok) {
-        // --- 1. REFRESH INSTANTÂNEO (Atualiza sessão do lado do cliente) ---
-        // Se a API retornou o user atualizado, poderíamos usar os dados de lá,
-        // mas para simplificar e ser rápido, usamos o que temos no estado local.
-        // O importante é disparar o update() para que o NextAuth atualize o token.
         await update({
           name: customName,
-          // Mantém a imagem atual se não trocou, ou espera o F5 se trocou (pois é base64 grande)
-          // ou se sua API retornar o base64, melhor ainda.
-          // Para simplicidade visual imediata:
+          image: avatarPreview,
           course: customCourse
         });
 
-        // --- 2. ANIMAÇÃO DE SUCESSO ---
         setIsSaved(true);
 
-        // Fecha o modal automaticamente após 1.5s
         setTimeout(() => {
           setIsSaved(false);
           setIsProfileOpen(false);
@@ -609,12 +599,25 @@ const HeroContentComponent = () => {
                       <UserCircleIcon className="h-6 w-6 text-white/40" />
                     </div>
 
-                    <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setTutorials(!tutorials)}>
+                    {/* --- SUBSTITUIÇÃO: TUTORIALS -> LOGOUT --- */}
+                    <div
+                        className={`${cardBase} py-2 cursor-pointer group hover:bg-red-500/10 hover:border-red-500/30 transition-all`}
+                        onClick={() => signOut({ callbackUrl: "/" })}
+                    >
                       <div className="flex flex-col">
-                        <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.tutorials")}</span>
-                        <span className="text-[15px] font-semibold text-white">{tutorials ? t("options.on") : t("options.off")}</span>
+                        <span className="text-[13px] text-white/50 group-hover:text-red-300/70 font-medium uppercase tracking-wider mb-1">
+                            Session Control
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_red]" />
+                          <span className="text-[15px] font-semibold text-white group-hover:text-red-400">
+                              Disconnect (Logout)
+                          </span>
+                        </div>
                       </div>
+                      <ArrowRightStartOnRectangleIcon className="h-5 w-5 text-white/40 group-hover:text-red-400 transition-transform" />
                     </div>
+
                   </motion.div>
               ) : (
                   // --- MENU DE PERFIL CUSTOMIZADO (NÍVEL 2) ---

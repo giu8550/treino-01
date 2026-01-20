@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
-// Ajuste os imports conforme a sua estrutura de pastas real
-// Se der erro, tente "../../../src/lib/prisma"
-import { prisma } from "@/src/lib/prisma";
+import { prisma } from "@/src/lib/prisma"; // Verifique se o caminho do prisma está correto
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/src/lib/auth";
+import { authOptions } from "@/src/lib/auth"; // Verifique se o caminho do authOptions está correto
 
-export async function GET(req: Request) {
-    console.log("--- GET FEED REQUEST ---");
-
+export async function GET() {
     const session = await getServerSession(authOptions);
     const currentUserEmail = session?.user?.email || "";
 
@@ -15,21 +11,20 @@ export async function GET(req: Request) {
         const posts = await prisma.post.findMany({
             orderBy: { createdAt: 'desc' },
             include: {
-                comments: {
-                    orderBy: { createdAt: 'asc' }
-                }
+                comments: { orderBy: { createdAt: 'asc' } },
+                author: true // <--- Busca a imagem e dados do autor no banco
             }
         });
 
-        // Mapeamento dos dados (O erro de sintaxe costuma estar aqui)
         const formattedPosts = posts.map((post: any) => ({
             id: post.id,
             user: post.user,
+            userImage: post.author?.image || null, // <--- Foto dinâmica para o frontend
             content: post.content,
             time: new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            likes: post.likes.length,
-            isLiked: post.likes.includes(currentUserEmail),
-            commentsList: post.comments.map((c: any) => ({
+            likes: post.likes || [],
+            isLiked: (post.likes || []).includes(currentUserEmail),
+            comments: post.comments.map((c: any) => ({
                 id: c.id,
                 user: c.user,
                 content: c.content,
@@ -39,34 +34,61 @@ export async function GET(req: Request) {
 
         return NextResponse.json(formattedPosts);
     } catch (error) {
-        console.error("Erro no Prisma:", error);
+        console.error("Erro no GET Feed:", error);
         return NextResponse.json({ error: "Erro ao carregar feed" }, { status: 500 });
     }
 }
 
 export async function POST(req: Request) {
-    console.log("--- POST NEW MESSAGE ---");
     const session = await getServerSession(authOptions);
-
-    // Modo Debug: Se não tiver sessão, usa "Agente Convidado" para não travar o teste
-    // Depois voltamos para o bloqueio de segurança
-    const userName = session?.user?.name || "Agente Convidado";
+    if (!session?.user?.email) {
+        return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
 
     try {
         const { content } = await req.json();
 
+        // Buscamos o ID do usuário para criar o vínculo (relação)
+        const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email }
+        });
+
         const newPost = await prisma.post.create({
             data: {
-                user: userName,
+                user: session.user.name || "Agente",
                 content: content,
+                userId: dbUser?.id, // <--- Vincula o post ao perfil para puxar a foto depois
                 likes: []
             }
         });
 
-        console.log("✅ Post salvo:", newPost.id);
         return NextResponse.json(newPost);
     } catch (error) {
-        console.error("Erro ao criar post:", error);
+        console.error("Erro no POST Feed:", error);
         return NextResponse.json({ error: "Erro ao postar" }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+
+    try {
+        const post = await prisma.post.findUnique({ where: { id } });
+
+        // Só permite deletar se o nome do usuário bater com o autor
+        if (post?.user !== session.user?.name) {
+            return NextResponse.json({ error: "Proibido" }, { status: 403 });
+        }
+
+        await prisma.post.delete({ where: { id } });
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        return NextResponse.json({ error: "Erro ao deletar" }, { status: 500 });
     }
 }

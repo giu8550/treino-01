@@ -358,8 +358,8 @@ const ArchitectureSection = ({ t }: any) => {
                             <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">{t('about.architecture.card_title')}</h3>
                             <p className="text-slate-300 font-light leading-relaxed text-sm md:text-base">{t('about.architecture.card_desc')}</p>
                             <div className="flex flex-wrap gap-2 mt-6">
-                                <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-cyan-400 uppercase tracking-widest">Mantle Network</span>
-                                <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-purple-400 uppercase tracking-widest">RWA Engine</span>
+                                <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-cyan-400 uppercase tracking-widest">Zaeon é inteligente</span>
+                                <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-purple-400 uppercase tracking-widest">Feito para pessoas inteligentes.</span>
                             </div>
                         </div>
                         <div className="absolute top-10 left-[-2px] bottom-10 w-[2px] bg-cyan-500/50 shadow-[0_0_15px_cyan]" />

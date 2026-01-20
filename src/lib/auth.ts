@@ -18,7 +18,7 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user, trigger, session }) {
             if (user) {
                 token.id = user.id;
-                token.mail = user.email;
+                token.email = user.email;
                 // @ts-ignore
                 token.role = user.role || "student";
             }
@@ -29,7 +29,7 @@ export const authOptions: NextAuthOptions = {
             if (session?.user && token.email) {
                 const client = (await clientPromise) as MongoClient;
                 const db = client.db();
-                const dbUser = await db.collection("users").findOne({ email: token.email });
+                const dbUser = await db.collection("User").findOne({ email: token.email });
                 if (dbUser) {
                     session.user.name = dbUser.name || session.user.name;
                     session.user.image = dbUser.image || session.user.image;

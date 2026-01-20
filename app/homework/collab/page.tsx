@@ -6,80 +6,28 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
     PaperAirplaneIcon,
-    TrashIcon,
-    CpuChipIcon,
     PlayIcon,
     ArrowDownTrayIcon,
     CommandLineIcon,
-    HeartIcon,
-    CalculatorIcon,
-    ChevronUpIcon,
     EyeIcon,
     PowerIcon,
     UserCircleIcon,
     RocketLaunchIcon,
     XMarkIcon,
-    DocumentDuplicateIcon,
 } from "@heroicons/react/24/outline";
 import MatrixRain from "@/components/main/star-background";
 
-// --- I18N ---
-import { useTranslation } from "react-i18next";
-import "../../src/i18n";
-
-// --- 1. NEXT AUTH ---
+// --- NEXT AUTH & TRANSLATION ---
 import { useSession, signIn } from "next-auth/react";
+import { useTranslation } from "react-i18next";
 
-// --- 2. UTILS ---
-// Removido Privy/Web3
+// --- UTILS ---
+// Se não tiver o arquivo ipfs, comente ou crie um mock
 import { uploadToPinata } from "@/src/utils/ipfs";
 
-// --- IMAGE IMPORTS ---
-import zoxImage from "./zox.png";
-import ethernautImage from "./ethernaut.png";
-import ballenaImage from "./ballena.png";
-
-// --- AGENT CONFIGURATION ---
-const AGENTS = {
-    zenita: {
-        name: "Zenita",
-        roleKey: "agents.zenita.role",
-        icon: CommandLineIcon,
-        color: "text-cyan-400",
-        bg: "bg-cyan-500/20",
-        border: "border-cyan-500/50",
-        image: zoxImage,
-        boosterImage: "/assets/zenitta-booster.png",
-        widthClass: "w-64",
-        contentPadding: "pl-[290px]"
-    },
-    ballena: {
-        name: "Ballena",
-        roleKey: "agents.ballena.role",
-        icon: HeartIcon,
-        color: "text-red-400",
-        bg: "bg-red-500/20",
-        border: "border-red-500/50",
-        image: ballenaImage,
-        boosterImage: "/assets/ballena-booster.png",
-        widthClass: "w-[260px]",
-        contentPadding: "pl-[290px]"
-    },
-    ethernaut: {
-        name: "Ethernaut",
-        roleKey: "agents.ethernaut.role",
-        icon: CalculatorIcon,
-        color: "text-purple-400",
-        bg: "bg-purple-500/20",
-        border: "border-purple-500/50",
-        image: ethernautImage,
-        boosterImage: "/assets/ethernaut-booster.png",
-        widthClass: "w-[260px]",
-        contentPadding: "pl-[290px]"
-    },
-};
-
-type AgentKey = keyof typeof AGENTS;
+// --- ASSETS ---
+const ZENITA_IMAGE = "/assets/zenitta.png";
+const ZENITA_BOOSTER = "/assets/zenitta-booster.png";
 
 // --- COMPONENTES AUXILIARES ---
 const IosLoader = ({ status }: { status: string }) => (
@@ -102,7 +50,6 @@ const IosLoader = ({ status }: { status: string }) => (
 export default function WorkStationPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    // Removido hooks do Privy (usePrivy, useWallets)
     const { t } = useTranslation();
 
     const [mounted, setMounted] = useState(false);
@@ -111,11 +58,23 @@ export default function WorkStationPage() {
     const [docTitle, setDocTitle] = useState("Untitled_Research_Paper.txt");
     const [docContent, setDocContent] = useState("");
     const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
-    const [isSystemProcessing, setIsSystemProcessing] = useState(false); // Renomeado para refletir o processo de sistema
-    const [selectedAgent, setSelectedAgent] = useState<AgentKey>("zenita");
-    const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
+    const [isSystemProcessing, setIsSystemProcessing] = useState(false);
+
+    // Agente Único: Zenita
+    const activeConfig = {
+        name: "Zenita",
+        role: "Technology & AI",
+        icon: CommandLineIcon,
+        color: "text-cyan-400",
+        bg: "bg-cyan-500/20",
+        border: "border-cyan-500/50",
+        image: ZENITA_IMAGE,
+        boosterImage: ZENITA_BOOSTER,
+        contentPadding: "pl-[290px]"
+    };
+
     const [isImageLoading, setIsImageLoading] = useState(false);
-    const [chatHistory, setChatHistory] = useState<{role: 'user' | 'ai', text: string}[]>([]);
+    const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isBoosterOpen, setIsBoosterOpen] = useState(false);
@@ -146,7 +105,7 @@ export default function WorkStationPage() {
 
     useEffect(() => {
         setMounted(true);
-        setTimeout(() => addLog(t("workstation.system_init")), 100);
+        setTimeout(() => addLog("System initialized. Zenita Agent ready."), 100);
     }, []);
 
     const addLog = (msg: string) => {
@@ -158,13 +117,14 @@ export default function WorkStationPage() {
             chatContainerRef.current.scrollTo({ top: chatContainerRef.current.scrollHeight, behavior: "smooth" });
         }
         if (terminalRef.current) {
-            terminalRef.current.scrollTo({ top: terminalRef.current.scrollHeight, behavior: "smooth"});
+            terminalRef.current.scrollTo({ top: terminalRef.current.scrollHeight, behavior: "smooth" });
         }
     };
 
-    // Load Session (Baseado apenas no Session Email agora)
+    // Load Session
     useEffect(() => {
         const loadSession = async () => {
+            // CORREÇÃO TS: Optional chaining
             const userId = session?.user?.email;
             if (userId) {
                 addLog(`Loading workspace for ${userId}...`);
@@ -183,19 +143,10 @@ export default function WorkStationPage() {
         if (mounted && session) loadSession();
     }, [mounted, session]);
 
-    useEffect(() => { if (mounted) scrollToBottom(); }, [chatHistory, terminalLogs, mounted, isTyping, selectedAgent]);
-
-    const handleAgentSwitch = (key: AgentKey) => {
-        if (key === selectedAgent) return;
-        setIsAgentMenuOpen(false);
-        setIsImageLoading(true);
-        setSelectedAgent(key);
-        addLog(t("workstation.logs.switched", { name: AGENTS[key].name }));
-        setTimeout(() => { setIsImageLoading(false); }, 600);
-    };
+    useEffect(() => { if (mounted) scrollToBottom(); }, [chatHistory, terminalLogs, mounted, isTyping]);
 
     const handleSend = async () => {
-        if(!prompt.trim()) return;
+        if (!prompt.trim()) return;
         const currentPrompt = prompt;
         setChatHistory(prev => [...prev, { role: 'user', text: currentPrompt }]);
         setPrompt("");
@@ -204,7 +155,7 @@ export default function WorkStationPage() {
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: currentPrompt, agent: selectedAgent })
+                body: JSON.stringify({ prompt: currentPrompt, agent: "zenita" })
             });
             const data = await response.json();
             setChatHistory(prev => [...prev, { role: 'ai', text: data.text }]);
@@ -214,15 +165,14 @@ export default function WorkStationPage() {
     };
 
     const handleBoostAndSave = async () => {
-        // Removida verificação de carteira
         setIsSystemProcessing(true);
         addLog("🚀 Initiating System Synchronization...");
 
         try {
-            // Simulação de delay para feedback visual
             await new Promise(r => setTimeout(r, 1500));
             addLog("✅ Data Integrity Verified.");
 
+            // CORREÇÃO TS: Optional chaining
             const userId = session?.user?.email;
 
             if (!userId) {
@@ -236,7 +186,7 @@ export default function WorkStationPage() {
                     userId,
                     title: docTitle,
                     content: docContent,
-                    agent: selectedAgent,
+                    agent: "zenita",
                     chatHistory,
                     terminalLogs
                 })
@@ -256,23 +206,20 @@ export default function WorkStationPage() {
     };
 
     const handleGenerateProtocol = async () => {
-        // Removida verificação de carteira
-        const agent = AGENTS[selectedAgent];
         setIsSystemProcessing(true);
-        addLog(t("workstation.logs.gen_protocol", { name: agent.name }));
+        addLog(`Generating protocol via ${activeConfig.name}...`);
 
-        const generatedText = `RESEARCH PAPER: ${docTitle}\n\nAUTHOR: ${agent.name} (AI Agent)\nDATE: ${new Date().toISOString()}\n\nANALYSIS: Verified via Zaeon Protocol.`;
+        const generatedText = `RESEARCH PAPER: ${docTitle}\n\nAUTHOR: ${activeConfig.name} (AI Agent)\nDATE: ${new Date().toISOString()}\n\nANALYSIS: Verified via Zaeon Protocol.`;
         setDocContent(generatedText);
 
         try {
-            // Correção de inconsistência: Garante que 'topic' e 'title' usem docTitle atualizado
             const ipfsHash = await uploadToPinata({
                 title: docTitle,
-                topic: docTitle, // Uso explícito do docTitle como tópico
-                agent: agent.name,
+                topic: docTitle,
+                agent: activeConfig.name,
                 content: generatedText
             });
-            if (ipfsHash) addLog(t("workstation.logs.ipfs_success", { hash: ipfsHash }));
+            if (ipfsHash) addLog(`IPFS Success: ${ipfsHash}`);
         } catch (e) {
             addLog("❌ IPFS Upload failed.");
         } finally {
@@ -294,7 +241,6 @@ export default function WorkStationPage() {
 
     if (status === "unauthenticated" || !isAuthorized) return null;
 
-    const activeConfig = AGENTS[selectedAgent];
     const panelStyle = "relative overflow-hidden backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.12)] bg-[linear-gradient(135deg,rgba(7,38,77,0.4),rgba(11,58,164,0.3),rgba(7,38,77,0.4))] rounded-[24px] transition-all duration-300";
 
     return (
@@ -306,7 +252,7 @@ export default function WorkStationPage() {
 
             {/* --- FOCUS MODE BAR --- */}
             <div className="fixed top-[18px] right-2 z-[150] flex flex-col items-center">
-                <div onClick={() => setIsFocusMode(!isFocusMode)} title={t("workstation.focus_mode")} className={`w-8 h-14 rounded-full border transition-all duration-300 cursor-pointer backdrop-blur-xl shadow-lg flex flex-col items-center p-1 ${isFocusMode ? "bg-cyan-900/80 border-cyan-500/50 shadow-[0_0_15px_rgba(8,145,178,0.4)]" : "bg-white/80 border-slate-300 dark:bg-white/10 dark:border-white/20"}`}>
+                <div onClick={() => setIsFocusMode(!isFocusMode)} className={`w-8 h-14 rounded-full border transition-all duration-300 cursor-pointer backdrop-blur-xl shadow-lg flex flex-col items-center p-1 ${isFocusMode ? "bg-cyan-900/80 border-cyan-500/50 shadow-[0_0_15px_rgba(8,145,178,0.4)]" : "bg-white/80 border-slate-300 dark:bg-white/10 dark:border-white/20"}`}>
                     <motion.div className={`w-5 h-5 rounded-full shadow-sm flex items-center justify-center ${isFocusMode ? "bg-cyan-400 text-black" : "bg-slate-400 dark:bg-white/40 text-white"}`} animate={{ y: isFocusMode ? 0 : 26 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
                         {isFocusMode ? <EyeIcon className="w-3 h-3" /> : <PowerIcon className="w-3 h-3" />}
                     </motion.div>
@@ -320,61 +266,36 @@ export default function WorkStationPage() {
 
                     {/* AUTH HEADER */}
                     <div className="absolute top-4 left-4 z-40 flex gap-3">
-                        {session ? (
-                            <div className="flex items-center gap-3 bg-cyan-950/30 border border-cyan-500/20 px-4 py-2 rounded-2xl backdrop-blur-md shadow-lg">
-                                {session.user?.image && <Image src={session.user.image} alt="User" width={32} height={32} className="w-8 h-8 rounded-full border border-cyan-400/50" />}
-                                <div className="flex flex-col">
-                                    <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest leading-none mb-1">{t("workstation.connected")}</span>
-                                    <span className="text-[11px] text-white font-mono leading-none truncate max-w-[120px]">{session.user?.name}</span>
-                                </div>
+                        {/* CORREÇÃO TS: session?.user */}
+                        <div className="flex items-center gap-3 bg-cyan-950/30 border border-cyan-500/20 px-4 py-2 rounded-2xl backdrop-blur-md shadow-lg">
+                            {session?.user?.image && <Image src={session.user.image} alt="User" width={32} height={32} className="w-8 h-8 rounded-full border border-cyan-400/50" />}
+                            <div className="flex flex-col">
+                                <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest leading-none mb-1">CONNECTED</span>
+                                <span className="text-[11px] text-white font-mono leading-none truncate max-w-[120px]">{session?.user?.name}</span>
                             </div>
-                        ) : (
-                            // Botão de login genérico se a sessão cair
-                            <button onClick={() => signIn('google')} className="flex items-center gap-2 bg-white/5 border border-white/20 px-4 py-2 rounded-2xl hover:bg-white/10 transition-all backdrop-blur-md">
-                                <UserCircleIcon className="w-5 h-5 text-white/70" />
-                                <span className="text-[10px] text-white font-bold">{t("workstation.login")}</span>
-                            </button>
-                        )}
+                        </div>
                     </div>
 
-                    {/* AGENT RENDER */}
+                    {/* AGENT RENDER (ZENITA ONLY) */}
                     <div className="absolute bottom-6 left-6 z-30 flex flex-col items-center">
-                        <div className={`relative transition-all duration-500 flex justify-center items-end ${activeConfig.widthClass} h-auto`}>
+                        <div className="relative transition-all duration-500 flex justify-center items-end w-64 h-auto">
                             <AnimatePresence mode="wait">
                                 {isImageLoading ? (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-48 w-full flex items-center justify-center">
                                         <div className="animate-spin text-white/50 w-8 h-8 rounded-full border-2 border-white/20 border-t-cyan-500"></div>
                                     </motion.div>
                                 ) : (
-                                    <motion.div key={selectedAgent} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full flex justify-center">
-                                        <Image src={activeConfig.image} alt={activeConfig.name} className="w-full h-auto object-contain object-bottom drop-shadow-[0_0_35px_rgba(34,211,238,0.25)] max-h-[550px]" />
+                                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full flex justify-center">
+                                        <Image src={activeConfig.image} alt={activeConfig.name} width={400} height={600} className="w-full h-auto object-contain object-bottom drop-shadow-[0_0_35px_rgba(34,211,238,0.25)] max-h-[550px]" />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
 
-                        {/* AGENT MENU */}
-                        <div className="relative mt-2">
-                            <AnimatePresence>
-                                {isAgentMenuOpen && (
-                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full left-0 mb-3 flex flex-col gap-2 bg-[#0a0a0a]/95 border border-white/10 rounded-xl p-2 backdrop-blur-xl shadow-2xl min-w-[160px] z-50">
-                                        {Object.keys(AGENTS).map((key) => {
-                                            const ag = AGENTS[key as AgentKey];
-                                            return (
-                                                <button key={key} onClick={() => handleAgentSwitch(key as AgentKey)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-all text-left">
-                                                    <div className={`p-1.5 rounded ${ag.bg} ${ag.color}`}><ag.icon className="w-4 h-4" /></div>
-                                                    <div className="flex flex-col"><span className="text-[12px] font-bold text-white">{ag.name}</span></div>
-                                                </button>
-                                            );
-                                        })}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                            <button onClick={() => setIsAgentMenuOpen(!isAgentMenuOpen)} className="flex items-center gap-3 bg-[#0a0a0a]/60 border border-white/10 hover:border-white/20 backdrop-blur-md rounded-full pl-2 pr-4 py-2 transition-all shadow-lg group">
-                                <div className={`p-1.5 rounded-full ${activeConfig.bg} ${activeConfig.color} border ${activeConfig.border}`}><activeConfig.icon className="w-4 h-4" /></div>
-                                <span className="text-xs font-bold text-white tracking-wide">{activeConfig.name}</span>
-                                <ChevronUpIcon className={`w-3 h-3 text-white/30 ml-2 transition-transform duration-300 ${isAgentMenuOpen ? 'rotate-180' : ''}`} />
-                            </button>
+                        {/* Agent Label */}
+                        <div className="mt-2 flex items-center gap-3 bg-[#0a0a0a]/60 border border-white/10 backdrop-blur-md rounded-full pl-2 pr-4 py-2 shadow-lg">
+                            <div className={`p-1.5 rounded-full ${activeConfig.bg} ${activeConfig.color} border ${activeConfig.border}`}><activeConfig.icon className="w-4 h-4" /></div>
+                            <span className="text-xs font-bold text-white tracking-wide">{activeConfig.name}</span>
                         </div>
                     </div>
 
@@ -396,7 +317,7 @@ export default function WorkStationPage() {
 
                     <div className="p-5 bg-black/60 border-t border-white/10 flex flex-col gap-3 shrink-0 backdrop-blur-xl z-20 relative rounded-b-[24px]">
                         <div className={`flex gap-3 items-center transition-all duration-300 ${activeConfig.contentPadding}`}>
-                            <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t("workstation.chat_placeholder", { role: t(activeConfig.roleKey).toLowerCase() })} className="flex-1 bg-black/50 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/40 focus:outline-none font-mono text-sm" />
+                            <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={`Ask ${activeConfig.name}...`} className="flex-1 bg-black/50 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/40 focus:outline-none font-mono text-sm" />
                             <button onClick={handleSend} className="bg-cyan-500 text-black px-6 rounded-xl font-bold text-xs uppercase hover:bg-cyan-400 active:scale-95 transition-all h-11">Send</button>
                         </div>
                     </div>
@@ -439,7 +360,7 @@ export default function WorkStationPage() {
                 </div>
             </div>
 
-            {/* --- SESSION BOOSTER MODAL (DATABASE ONLY) --- */}
+            {/* --- SESSION BOOSTER MODAL --- */}
             <AnimatePresence>
                 {isBoosterOpen && (
                     <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
@@ -464,7 +385,8 @@ export default function WorkStationPage() {
                                     <RocketLaunchIcon className="w-3 h-3" /> System Uplink
                                 </div>
                                 <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
-                                    Sync {activeConfig.name}'s <span className="text-cyan-400">Memory Core</span>
+                                    {/* CORREÇÃO ESLINT: Escaped single quote */}
+                                    Sync {activeConfig.name}&apos;s <span className="text-cyan-400">Memory Core</span>
                                 </h2>
                                 <p className="text-slate-400 text-sm leading-relaxed mb-10">
                                     Seu agente atingiu o limite de buffers neurais. Sincronize os dados desta sessão com o banco de dados central para garantir a persistência e o aprendizado contínuo.
