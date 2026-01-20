@@ -5,6 +5,10 @@
     "workstation": "Workstation",
     "study_rooms": "Study Rooms"
   },
+  "intro": {
+    "line1": "STUDY, LEARN, RESEARCH...",
+    "line2": "PUBLISH   AND   MONETIZE."
+  },
   "menu": {
     "new": "New Account",
     "load": "Load Account",

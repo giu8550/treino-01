@@ -25,7 +25,7 @@ export default function Encryption() {
 
     if (!mounted) return null;
 
-    // --- ANIMAÇÃO DE COLETA DE TEXTO ---
+    // --- ANIMAÇÃO DE TEXTO (SLOT MACHINE) ---
     const SlotMachineText = ({ text, className, delay = 0 }: { text: string, className: string, delay?: number }) => {
         const characters = Array.from(text);
         const containerVariants: Variants = {
@@ -50,7 +50,8 @@ export default function Encryption() {
                 className={className}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, margin: "-50px" }}
+                // Ajustado para disparar apenas quando estiver 20% visível na tela
+                viewport={{ once: true, margin: "-20%" }} 
                 variants={containerVariants}
                 style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", columnGap: "0.02em" }}
             >
@@ -64,7 +65,15 @@ export default function Encryption() {
     };
 
     return (
-        <section className="relative flex flex-col items-center justify-center min-h-screen w-full bg-transparent py-20 overflow-hidden">
+        // AJUSTE PRINCIPAL: motion.section com fade-in global e delay
+        <motion.section 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            // O delay de 0.8s garante que o Hero já terminou sua animação inicial
+            transition={{ duration: 1, delay: 0.8 }} 
+            className="relative flex flex-col items-center justify-center min-h-screen w-full bg-transparent py-20 overflow-hidden"
+        >
             <div className="absolute top-0 w-full h-[1px] bg-cyan-500/20" />
             <div className="absolute bottom-0 w-full h-[1px] bg-cyan-500/20" />
 
@@ -78,26 +87,22 @@ export default function Encryption() {
                     />
                 </div>
 
-                {/* 2. NAVE (PNG) - AGORA REALMENTE FLUTUANDO */}
+                {/* 2. IMAGEM (PNG) */}
                 <div className="flex items-center justify-center mb-0 w-full px-4">
                     <motion.div
-                        // Entrada na tela
-                        initial={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: false }}
-
-                        // FLUTUAÇÃO ESPACIAL REAL
+                        viewport={{ once: true }}
                         animate={reduced ? {} : {
-                            y: [0, -30, 0],          // Sobe e desce
-                            rotate: [0, -1.5, 1.5, 0], // Balanço lateral (Pitch/Roll)
-                            x: [0, 5, -5, 0]         // Deriva lateral sutil
+                            y: [0, -30, 0],
+                            rotate: [0, -1.5, 1.5, 0],
+                            x: [0, 5, -5, 0]
                         }}
                         transition={{
-                            // Tempo longo e tempos diferentes para cada eixo cria um loop menos "robótico"
                             y: { duration: 7, ease: "easeInOut", repeat: Infinity },
                             rotate: { duration: 9, ease: "easeInOut", repeat: Infinity },
                             x: { duration: 11, ease: "easeInOut", repeat: Infinity },
-                            initial: { duration: 1.2 }
+                            initial: { duration: 1.2, delay: 0.2 }
                         }}
                         whileHover={{ scale: 1.05, transition: { duration: 0.4 } }}
                         className="relative drop-shadow-[0_0_50px_rgba(34,211,238,0.2)] dark:drop-shadow-[0_0_100px_rgba(34,211,238,0.3)]"
@@ -111,22 +116,22 @@ export default function Encryption() {
                     </motion.div>
                 </div>
 
-                {/* 3. SUBTÍTULO HIGHLIGHT (MAIOR) */}
+                {/* 3. SUBTÍTULO */}
                 <div className="mb-8 px-6 max-w-5xl text-center">
                     <SlotMachineText
                         text={t("encryption.subtitle")}
-                        delay={0.4}
+                        delay={0.6}
                         className="select-none text-slate-800 dark:text-slate-100 text-[24px] sm:text-[36px] font-light tracking-tight leading-snug"
                     />
                 </div>
 
-                {/* 4. BOTÃO LEARN MORE (ZAEON MINIMAL) */}
+                {/* 4. BOTÃO LEARN MORE */}
                 <div className="z-20">
                     <motion.button
                         onClick={() => window.location.assign("/about")}
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: false }}
+                        viewport={{ once: true }}
                         whileHover={{
                             scale: 1.05,
                             boxShadow: "0 0 30px rgba(34,211,238,0.5)",
@@ -143,6 +148,6 @@ export default function Encryption() {
                     </motion.button>
                 </div>
             </div>
-        </section>
+        </motion.section>
     );
 }

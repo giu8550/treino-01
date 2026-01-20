@@ -5,6 +5,10 @@
     "workstation": "Estaçãp de Trabalho",
     "study_rooms": "Salas de Estudo"
   },
+  "intro": {
+    "line1": "ESTUDE, APRENDA, PESQUISE...",
+    "line2": "PUBLIQUE E MONETIZE."
+  },
   "menu": {
     "new": "Nova Conta",
     "load": "Carregar Conta",

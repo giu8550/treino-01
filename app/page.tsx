@@ -1,62 +1,84 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, Suspense } from "react";
-import { useTranslation } from "react-i18next"; // Importe o hook
+import { useTranslation } from "react-i18next";
+import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
+
+// Componentes da Home
 import Hero from "@/components/main/hero";
 import Encryption from "@/components/main/encryption";
 import StudyRoomsPage from "@/app/study-rooms/page";
-import MacSplash from "@/components/ui/MacSplash";
+import IntroOverlay from "@/src/components/main/intro-overlay"; 
+import { Navbar } from "@/components/main/navbar";
+import { Footer } from "@/components/main/footer";
+
+// Carregamento dinâmico do background para não pesar na tela branca inicial
+const StarsCanvas = dynamic(
+    () => import("@/components/main/star-background"),
+    { ssr: false }
+);
 
 export default function Home() {
-    const { i18n } = useTranslation(); // Acesse a instância
-    const [isLoading, setIsLoading] = useState(true);
+    const { i18n } = useTranslation();
+    const [showIntro, setShowIntro] = useState(true);
+    const [startContent, setStartContent] = useState(false);
 
     const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
+    // Bloqueia scroll durante a intro
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            window.history.scrollRestoration = "manual";
+        if (showIntro) {
             document.body.style.overflow = "hidden";
             window.scrollTo(0, 0);
+        } else {
+            const t = setTimeout(() => { document.body.style.overflow = ""; }, 100);
+            return () => clearTimeout(t);
         }
-
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 2000);
-
-        return () => clearTimeout(timer);
-    }, []);
+    }, [showIntro]);
 
     useIsomorphicLayoutEffect(() => {
-        if (!isLoading) {
-            window.scrollTo(0, 0);
-            const unlockTimer = setTimeout(() => {
-                document.body.style.overflow = "";
-            }, 10);
-            return () => clearTimeout(unlockTimer);
-        }
-    }, [isLoading]);
+        window.history.scrollRestoration = "manual";
+    }, []);
 
-    // PULO DO GATO: Se o carregamento terminou MAS o i18n ainda não inicializou,
-    // continuamos mostrando o Splash para evitar erro de instância nos componentes filhos.
-    const showSplash = isLoading || !i18n.isInitialized;
+    const handleIntroComplete = () => {
+        setShowIntro(false);
+        // Pequeno delay para sincronizar com o fim do fade-out da intro
+        setTimeout(() => {
+            setStartContent(true);
+        }, 400); 
+    };
 
     return (
         <main className="h-full w-full">
-            {showSplash ? (
-                <div className="fixed inset-0 z-[99999] bg-[#030014] overflow-hidden">
-                    <MacSplash minDurationMs={2000} />
-                </div>
-            ) : (
-                <div className="flex flex-col gap-20">
-                    <Hero />
-                    <Encryption />
-                    <div id="study-rooms" className="w-full">
-                        <Suspense fallback={null}>
-                            <StudyRoomsPage />
-                        </Suspense>
+            <AnimatePresence mode="wait">
+                {showIntro && (
+                    <IntroOverlay key="intro-overlay" onComplete={handleIntroComplete} />
+                )}
+            </AnimatePresence>
+
+            {/* O conteúdo "Zaeon" só existe após a intro */}
+            {startContent && (
+                <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    transition={{ duration: 1.5 }}
+                >
+                    {/* Background e Navbar aparecem agora */}
+                    <StarsCanvas />
+                    <Navbar />
+                    
+                    <div className="flex flex-col gap-20">
+                        <Hero />
+                        <Encryption />
+                        <div id="study-rooms" className="w-full">
+                            <Suspense fallback={null}>
+                                <StudyRoomsPage />
+                            </Suspense>
+                        </div>
                     </div>
-                </div>
+                    <Footer />
+                </motion.div>
             )}
         </main>
     );
