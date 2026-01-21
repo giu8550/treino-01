@@ -291,6 +291,26 @@ const HeroContentComponent = () => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [chosenRole, setChosenRole] = useState<Role>("student");
+  const [showImage, setShowImage] = useState(true);
+const lastScrollY = useRef(0);
+
+useEffect(() => {
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+
+    if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+      // Rolando para baixo -> Esconde a imagem
+      setShowImage(false);
+    } else {
+      // Rolando para cima -> Mostra a imagem
+      setShowImage(true);
+    }
+    lastScrollY.current = currentScrollY;
+  };
+
+  window.addEventListener("scroll", handleScroll, { passive: true });
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
 
   // Estados de Menu
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
@@ -399,15 +419,15 @@ const HeroContentComponent = () => {
       if (isOptionsOpen) return;
 
       if (pickerOpen && !isLoggedIn) {
-        if (["ArrowLeft", "KeyA"].includes(e.code)) { e.preventDefault(); setRoleIndex((r) => (r - 1 + ROLES.length) % ROLES.length); return; }
-        if (["ArrowRight", "KeyD"].includes(e.code)) { e.preventDefault(); setRoleIndex((r) => (r + 1) % ROLES.length); return; }
+        if (["ArrowLeft", "KeyA"].includes(e.code)) { e.preventDefault(); setRoleIndex((r: number) => (r - 1 + ROLES.length) % ROLES.length); return; }
+        if (["ArrowRight", "KeyD"].includes(e.code)) { e.preventDefault(); setRoleIndex((r: number) => (r + 1) % ROLES.length); return; }
         if (e.code === "Enter") { e.preventDefault(); const chosen = ROLES[roleIndex]; setChosenRole(chosen.slug); setOnboardOpen(true); return; }
         if (e.code === "Escape") { e.preventDefault(); setPickerOpen(false); return; }
         return;
       }
 
-      if (["ArrowUp", "KeyW"].includes(e.code)) { e.preventDefault(); setIndex((i) => (i - 1 + MENU_ITEMS.length) % MENU_ITEMS.length); return; }
-      if (["ArrowDown", "KeyS"].includes(e.code)) { e.preventDefault(); setIndex((i) => (i + 1) % MENU_ITEMS.length); return; }
+      if (["ArrowUp", "KeyW"].includes(e.code)) { e.preventDefault(); setIndex((i: number) => (i - 1 + MENU_ITEMS.length) % MENU_ITEMS.length); return; }
+      if (["ArrowDown", "KeyS"].includes(e.code)) { e.preventDefault(); setIndex((i: number) => (i + 1) % MENU_ITEMS.length); return; }
       if (e.code === "Enter") {
         const item = MENU_ITEMS[index];
         if (!item) return;
@@ -436,7 +456,8 @@ const HeroContentComponent = () => {
 
   const handleModalClose = () => { setOnboardOpen(false); setPickerOpen(false); };
 
-  const panel = "relative w-full max-w-[480px] mt-24 rounded-2xl overflow-hidden backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.12)] bg-[linear-gradient(135deg,rgba(7,38,77,0.28),rgba(11,58,164,0.25),rgba(16,134,201,0.32),rgba(11,58,164,0.25),rgba(7,38,77,0.28))] bg-[length:400%_400%] animate-[gradientFlow_12s_ease-in-out_infinite] after:pointer-events-none after:absolute after:inset-0 after:bg-[repeating-linear-gradient(transparent_0px,transparent_8px,rgba(255,255,255,0.025)_9px,transparent_10px)] after:opacity-20";
+  // ALTERAÇÃO: Aumento da transparência no gradiente de fundo (alpha reduzido para 0.12/0.15)
+  const panel = "relative z-20 w-full max-w-[480px] mt-24 rounded-2xl overflow-hidden backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.12)] bg-[linear-gradient(135deg,rgba(7,38,77,0.12),rgba(11,58,164,0.10),rgba(16,134,201,0.15),rgba(11,58,164,0.10),rgba(7,38,77,0.12))] bg-[length:400%_400%] animate-[gradientFlow_12s_ease-in-out_infinite] after:pointer-events-none after:absolute after:inset-0 after:bg-[repeating-linear-gradient(transparent_0px,transparent_8px,rgba(255,255,255,0.025)_9px,transparent_10px)] after:opacity-20";
   const cardBase = "group relative overflow-hidden flex items-center justify-between rounded-xl px-5 min-h-[64px] ring-1 ring-white/10 text-white transition-all duration-300 ease-out bg-[linear-gradient(120deg,rgba(3,22,45,0.55),rgba(6,42,90,0.55),rgba(7,60,120,0.55))] hover:bg-[linear-gradient(120deg,rgba(6,50,100,0.65),rgba(8,60,130,0.65))] hover:scale-[1.02] focus-visible:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_12px_rgba(34,211,238,0.12)]";
   const cardSelected = "ring-cyan-300/45 shadow-[0_0_28px_rgba(34,211,238,0.25)]";
   const accentBar = (active: boolean) => ["absolute left-0 top-0 h-full w-[3px] rounded-l-xl transition-colors", active ? "bg-[linear-gradient(180deg,#22d3ee,#60a5fa,#22d3ee)]" : "bg-white/10 group-hover:bg-[linear-gradient(180deg,rgba(34,211,238,.7),rgba(96,165,250,.7),rgba(34,211,238,.7))]",].join(" ");
@@ -479,7 +500,31 @@ const HeroContentComponent = () => {
   };
 
   return (
-      <div ref={containerRef} className="w-full min-h-screen flex justify-start items-start z-10 relative px-4 md:pl-20 py-12">
+      <div ref={containerRef} className="w-full min-h-screen flex justify-start items-start z-10 relative px-4 md:pl-20 py-12 overflow-hidden">
+        
+        {/* NOVA IMAGEM: assets/computer.png no canto direito */}
+<motion.div 
+  initial={{ x: 0, opacity: 1 }}
+  animate={{ 
+    x: showImage ? 0 : "100%", 
+    opacity: showImage ? 1 : 0 
+  }}
+  transition={{ 
+    duration: 1.5, 
+    ease: [0.23, 1, 0.32, 1] 
+  }}
+  /* Aumentamos a largura para 85vw e ajustamos o top para evitar o corte */
+  className="absolute -right-80 top-20 bottom-0 w-[85vw] max-w-none pointer-events-none z-0 hidden lg:block overflow-hidden"
+>
+  <Image 
+    src="/assets/computer.png" 
+    alt="Workstation Image" 
+    fill
+    /* object-top garante que a parte de cima (cabeça) apareça primeiro */
+    className="object-right object-top object-contain opacity-95 transition-opacity duration-500"
+    priority
+  />
+</motion.div>
         <motion.aside variants={slideInFromLeft(0.12)} initial="hidden" animate="visible" className={panel}>
 
           <div className="flex items-center gap-3 px-6 pt-7 pb-4">
