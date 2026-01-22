@@ -19,7 +19,7 @@
     "custom_profile": "Custom Profile",
     "connected_as": "Connected as",
     "google_save": "Google Save",
-    "dev_hack": "DEV HACK"
+    "dev_hack": "CEO MODE"
   },
   "roles": {
     "student": "Student",
@@ -35,7 +35,7 @@
     "off": "OFF"
   },
   "footer": {
-    "powered": "Powered by Mantle",
+    "powered": "Powered by Cronos",
     "version": "Zaeon OS - v1.0"
   },
   "modal": {

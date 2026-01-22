@@ -57,11 +57,12 @@ export default function HyperText({
       {displayText.map((char, i) => (
         <motion.span
           key={i}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2 }} // Surgimento seco como uma tecla
-          className="inline-block text-inherit"
-        >
+  className={cn(
+    "inline-block",
+    // Se não for a letra final, fica um cinza suave, se for a final, herda a cor (text-inherit)
+    char !== text[i] ? "opacity-40" : "opacity-100"
+  )}
+>
           {char}
         </motion.span>
       ))}

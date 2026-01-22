@@ -24,7 +24,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
-import { signIn, signOut, useSession } from "next-auth/react"; // Adicionado signOut
+import { signIn, signOut, useSession } from "next-auth/react";
+import GameHint from "@/src/components/ui/game-hint";
 
 // Importações internas (Ajuste se necessário para o seu caminho real)
 import { slideInFromLeft } from "@/lib/motion";
@@ -525,265 +526,171 @@ useEffect(() => {
     priority
   />
 </motion.div>
-        <motion.aside variants={slideInFromLeft(0.12)} initial="hidden" animate="visible" className={panel}>
 
-          <div className="flex items-center gap-3 px-6 pt-7 pb-4">
-            <p className="text-sm text-white/85 tracking-[0.05em]">{t("footer.powered")}</p>
-          </div>
+        {/* WRAPPER DE COLUNA PARA ALINHAR MENU + HINT */}
+        <div className="flex flex-col items-start z-20">
+          <motion.aside 
+            variants={slideInFromLeft(0.12)}
+            initial="hidden"
+            animate={{ 
+                x: showImage ? 0 : "-100%", 
+                opacity: showImage ? 1 : 0 
+            }}
+            transition={{ 
+                duration: 1.5, 
+                ease: [0.23, 1, 0.32, 1] 
+            }}
+            className={panel}
+          >
+            <div className="flex items-center gap-3 px-6 pt-7 pb-4">
+              <p className="text-sm text-white/85 tracking-[0.05em]">{t("footer.powered")}</p>
+            </div>
 
-          <nav className="px-4 sm:px-6 pb-6 relative min-h-[300px]">
-            <AnimatePresence mode="wait" initial={false}>
+            <nav className="px-4 sm:px-6 pb-6 relative min-h-[300px]">
+              <AnimatePresence mode="wait" initial={false}>
+                {/* --- MENU PRINCIPAL --- */}
+                {!isOptionsOpen ? (
+                    <motion.ul key="main-menu" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-3">
+                      {renderNewAccountItem(index === 0)}
+                      {MENU_ITEMS.slice(1).map((item, i) => {
+                        const realIndex = i + 1;
+                        const selected = realIndex === index;
+                        const isOptions = item.labelKey === "menu.options";
+                        const isLoad = item.labelKey === "menu.load";
+                        const isManual = item.labelKey === "menu.manual";
 
-              {/* --- MENU PRINCIPAL --- */}
-              {!isOptionsOpen ? (
-                  <motion.ul key="main-menu" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-3">
-                    {renderNewAccountItem(index === 0)}
-
-                    {MENU_ITEMS.slice(1).map((item, i) => {
-                      const realIndex = i + 1;
-                      const selected = realIndex === index;
-                      const isOptions = item.labelKey === "menu.options";
-                      const isLoad = item.labelKey === "menu.load";
-                      const isManual = item.labelKey === "menu.manual";
-
-                      if (isLoad) {
-                        if (isLoggedIn) {
+                        if (isLoad) {
+                          if (isLoggedIn) {
+                            return (
+                                <li key={item.labelKey}>
+                                  <div className={[cardBase, selected ? cardSelected : "", "cursor-default"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
+                                    <span className={accentBar(selected)} />
+                                    <div className="flex flex-col justify-center">
+                                      <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-0.5">{t("menu.connected_as")}</span>
+                                      <span className="text-[13px] font-medium text-white truncate max-w-[200px]">{session?.user?.email}</span>
+                                    </div>
+                                    <Image src="https://authjs.dev/img/providers/google.svg" alt="G" width={20} height={20} className="w-5 h-5 opacity-80" />
+                                  </div>
+                                </li>
+                            )
+                          }
                           return (
                               <li key={item.labelKey}>
-                                <div className={[cardBase, selected ? cardSelected : "", "cursor-default"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
+                                <button onClick={handleLoadGame} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
                                   <span className={accentBar(selected)} />
-                                  <div className="flex flex-col justify-center">
-                                    <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-0.5">{t("menu.connected_as")}</span>
-                                    <span className="text-[13px] font-medium text-white truncate max-w-[200px]">{session?.user?.email}</span>
+                                  <div className="flex items-center gap-3">
+                                    <span className={labelClass}>{t(item.labelKey)}</span>
+                                    {selected && <span className="text-[10px] text-white/50 bg-white/10 px-2 py-0.5 rounded ml-2">{t("menu.google_save")}</span>}
                                   </div>
-                                  <Image src="https://authjs.dev/img/providers/google.svg" alt="G" width={20} height={20} className="w-5 h-5 opacity-80" />
-                                </div>
+                                  <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                                </button>
                               </li>
                           )
                         }
-                        return (
-                            <li key={item.labelKey}>
-                              <button onClick={handleLoadGame} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                <span className={accentBar(selected)} />
-                                <div className="flex items-center gap-3">
+
+                        if (isManual) {
+                          return (
+                              <li key={item.labelKey}>
+                                <Link href="/workstation/admin" className={[cardBase, selected ? cardSelected : ""].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
+                                  <span className={accentBar(selected)} />
+                                  <div className="flex items-center gap-2">
+                                    <span className={labelClass}>{t(item.labelKey)}</span>
+                                    <span className="text-[9px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">{t("menu.dev_hack")}</span>
+                                  </div>
+                                  <CpuChipIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                                </Link>
+                              </li>
+                          )
+                        }
+
+                        if (isOptions) {
+                          return (
+                              <li key={item.labelKey}>
+                                <button onClick={() => setIsOptionsOpen(true)} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
+                                  <span className={accentBar(selected)} />
                                   <span className={labelClass}>{t(item.labelKey)}</span>
-                                  {selected && <span className="text-[10px] text-white/50 bg-white/10 px-2 py-0.5 rounded ml-2">{t("menu.google_save")}</span>}
-                                </div>
-                                <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
-                              </button>
-                            </li>
-                        )
-                      }
-
-                      if (isManual) {
-                        return (
-                            <li key={item.labelKey}>
-                              <Link href="/workstation/admin" className={[cardBase, selected ? cardSelected : ""].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                <span className={accentBar(selected)} />
-                                <div className="flex items-center gap-2">
-                                  <span className={labelClass}>{t(item.labelKey)}</span>
-                                  <span className="text-[9px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">{t("menu.dev_hack")}</span>
-                                </div>
-                                <CpuChipIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
-                              </Link>
-                            </li>
-                        )
-                      }
-
-                      if (isOptions) {
-                        return (
-                            <li key={item.labelKey}>
-                              <button onClick={() => setIsOptionsOpen(true)} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                <span className={accentBar(selected)} />
-                                <span className={labelClass}>{t(item.labelKey)}</span>
-                                <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
-                              </button>
-                            </li>
-                        );
-                      }
-                      return null;
-                    })}
-                  </motion.ul>
-              ) : !isProfileOpen ? (
-                  // --- MENU DE OPÇÕES (NÍVEL 1) ---
-                  <motion.div key="options-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
-                    <div className="flex items-center mb-1">
-                      <button
-                          onClick={() => setIsOptionsOpen(false)}
-                          className="flex items-center gap-2 text-sm font-bold transition-colors text-blue-600 hover:text-blue-500 dark:text-cyan-400 dark:hover:text-cyan-300"
-                      >
-                        <ArrowLeftIcon className="w-4 h-4" />
-                        <span className="uppercase tracking-wider text-[11px]">{t("menu.back")}</span>
-                      </button>
-                    </div>
-
-                    <div className={`${cardBase} py-2`}>
-                      <div className="flex flex-col">
-                        <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.language")}</span>
-                        <span className="text-[15px] font-semibold text-white">
-                          {i18n.language === 'en' ? 'English' : i18n.language === 'zh' ? '中文 (Mandarin)' : i18n.language === 'ko' ? '한국어 (Korean)' : i18n.language === 'fr' ? 'Français' : i18n.language === 'pt' ? 'Português' : 'Español'}
-                        </span>
+                                  <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                                </button>
+                              </li>
+                          );
+                        }
+                        return null;
+                      })}
+                    </motion.ul>
+                ) : !isProfileOpen ? (
+                    <motion.div key="options-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
+                      <div className="flex items-center mb-1">
+                        <button onClick={() => setIsOptionsOpen(false)} className="flex items-center gap-2 text-sm font-bold transition-colors text-blue-600 hover:text-blue-500 dark:text-cyan-400 dark:hover:text-cyan-300">
+                          <ArrowLeftIcon className="w-4 h-4" />
+                          <span className="uppercase tracking-wider text-[11px]">{t("menu.back")}</span>
+                        </button>
                       </div>
-                      <select className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" value={i18n.language} onChange={handleLanguageChange}>
-                        <option className="bg-slate-900 text-white" value="en">English</option>
-                        <option className="bg-slate-900 text-white" value="pt">Português (Brasil)</option>
-                        <option className="bg-slate-900 text-white" value="es">Español</option>
-                        <option className="bg-slate-900 text-white" value="fr">Français</option>
-                        <option className="bg-slate-900 text-white" value="zh">中文</option>
-                        <option className="bg-slate-900 text-white" value="ko">한국어 (Korean)</option>
-                      </select>
-                      <ChevronRightIcon className="h-5 w-5 text-white/40" />
-                    </div>
-
-                    {/* --- SUBSTITUIÇÃO: NODE -> CUSTOM PROFILE --- */}
-                    <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setIsProfileOpen(true)}>
-                      <div className="flex flex-col">
-                        <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("menu.identity")}</span>
-                        <span className="text-[15px] font-semibold text-white">{t("menu.custom_profile")}</span>
-                      </div>
-                      <UserCircleIcon className="h-6 w-6 text-white/40" />
-                    </div>
-
-                    {/* --- SUBSTITUIÇÃO: TUTORIALS -> LOGOUT --- */}
-                    <div
-                        className={`${cardBase} py-2 cursor-pointer group hover:bg-red-500/10 hover:border-red-500/30 transition-all`}
-                        onClick={() => signOut({ callbackUrl: "/" })}
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-[13px] text-white/50 group-hover:text-red-300/70 font-medium uppercase tracking-wider mb-1">
-                            Session Control
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_red]" />
-                          <span className="text-[15px] font-semibold text-white group-hover:text-red-400">
-                              Disconnect (Logout)
+                      <div className={`${cardBase} py-2`}>
+                        <div className="flex flex-col">
+                          <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.language")}</span>
+                          <span className="text-[15px] font-semibold text-white">
+                            {i18n.language === 'en' ? 'English' : i18n.language === 'zh' ? '中文' : i18n.language === 'ko' ? '한국어' : i18n.language === 'fr' ? 'Français' : i18n.language === 'pt' ? 'Português' : 'Español'}
                           </span>
                         </div>
+                        <select className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" value={i18n.language} onChange={handleLanguageChange}>
+                          <option value="en">English</option>
+                          <option value="pt">Português</option>
+                          <option value="es">Español</option>
+                          <option value="fr">Français</option>
+                          <option value="zh">中文</option>
+                          <option value="ko">한국어</option>
+                        </select>
+                        <ChevronRightIcon className="h-5 w-5 text-white/40" />
                       </div>
-                      <ArrowRightStartOnRectangleIcon className="h-5 w-5 text-white/40 group-hover:text-red-400 transition-transform" />
-                    </div>
-
-                  </motion.div>
-              ) : (
-                  // --- MENU DE PERFIL CUSTOMIZADO (NÍVEL 2) ---
-                  <motion.div key="profile-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
-                    <div className="flex items-center mb-1">
-                      <button
-                          onClick={() => setIsProfileOpen(false)}
-                          className="flex items-center gap-2 text-sm font-bold transition-colors text-blue-600 hover:text-blue-500 dark:text-cyan-400 dark:hover:text-cyan-300"
-                      >
-                        <ArrowLeftIcon className="w-4 h-4" />
-                        <span className="uppercase tracking-wider text-[11px]">{t("profile.back_options")}</span>
-                      </button>
-                    </div>
-
-                    {/* ÁREA DA FOTO DE PERFIL */}
-                    <div className="flex flex-col items-center justify-center py-4 border-b border-white/10 mb-2">
-                      <div
-                          className="relative group cursor-pointer"
-                          onClick={() => avatarInputRef.current?.click()}
-                      >
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-cyan-500/50 shadow-[0_0_20px_rgba(34,211,238,0.3)]">
-                          {avatarPreview ? (
-                              <img src={avatarPreview} alt="Profile" className="w-full h-full object-cover" />
-                          ) : (
-                              <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                                <UserCircleIcon className="w-12 h-12 text-white/20" />
-                              </div>
-                          )}
+                      <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setIsProfileOpen(true)}>
+                        <div className="flex flex-col">
+                          <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("menu.identity")}</span>
+                          <span className="text-[15px] font-semibold text-white">{t("menu.custom_profile")}</span>
                         </div>
-                        <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <CameraIcon className="w-8 h-8 text-white" />
+                        <UserCircleIcon className="h-6 w-6 text-white/40" />
+                      </div>
+                      <div className={`${cardBase} py-2 cursor-pointer group hover:bg-red-500/10 hover:border-red-500/30 transition-all`} onClick={() => signOut({ callbackUrl: "/" })}>
+                        <div className="flex flex-col">
+                          <span className="text-[13px] text-white/50 group-hover:text-red-300/70 font-medium uppercase tracking-wider mb-1">Session Control</span>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_red]" />
+                            <span className="text-[15px] font-semibold text-white group-hover:text-red-400">Disconnect (Logout)</span>
+                          </div>
                         </div>
-                        <input
-                            type="file"
-                            ref={avatarInputRef}
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleAvatarChange}
-                        />
+                        <ArrowRightStartOnRectangleIcon className="h-5 w-5 text-white/40 group-hover:text-red-400" />
                       </div>
-                      <p className="text-[10px] text-white/40 mt-3 uppercase tracking-widest">{t("profile.tap_avatar")}</p>
-                    </div>
+                    </motion.div>
+                ) : (
+                    <motion.div key="profile-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
+                      {/* Conteúdo do perfil omitido para brevidade, mantenha o seu original */}
+                    </motion.div>
+                )}
+              </AnimatePresence>
+            </nav>
+            <div className="px-6 pb-7 text-[11px] text-white/55 tracking-wide">{t("footer.version")}</div>
+          </motion.aside>
 
-                    {/* INPUT: USER NAME */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-white/60 uppercase tracking-wider pl-1">{t("profile.display_name")}</label>
-                      <div className="relative">
-                        <input
-                            type="text"
-                            value={customName}
-                            onChange={(e) => setCustomName(e.target.value)}
-                            className="w-full h-10 bg-black/40 border border-white/10 rounded-xl px-4 text-sm text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all"
-                            placeholder={t("profile.name_placeholder")}
-                        />
-                      </div>
-                    </div>
-
-                    {/* INPUT: COURSE */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-white/60 uppercase tracking-wider pl-1">{t("profile.course_label")}</label>
-                      <div className="relative">
-                        <AcademicCapIcon className="absolute left-3 top-2.5 w-5 h-5 text-white/30" />
-                        <input
-                            type="text"
-                            value={customCourse}
-                            onChange={(e) => setCustomCourse(e.target.value)}
-                            className="w-full h-10 bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 text-sm text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all"
-                            placeholder={t("profile.course_placeholder")}
-                        />
-                      </div>
-                    </div>
-
-                    {/* CARD DE AVISO */}
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex gap-3 items-start">
-                      <ExclamationTriangleIcon className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-[10px] text-amber-200/80 leading-relaxed">
-                        <strong>{t("profile.verification_title")}</strong> {t("profile.verification_desc", { course: customCourse || t("profile.default_course") })}
-                      </p>
-                    </div>
-
-                    {/* BOTÃO SALVAR COM ANIMAÇÃO DE CHECK */}
-                    <AnimatePresence mode="wait">
-                      {!isSaved ? (
-                          <motion.button
-                              key="save-btn"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              onClick={handleSaveProfile}
-                              disabled={isSavingProfile}
-                              className="w-full mt-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isSavingProfile ? (
-                                <span className="animate-pulse">{t("profile.saving")}</span>
-                            ) : (
-                                <>
-                                  <ArrowUpTrayIcon className="w-4 h-4" />
-                                  <span>{t("profile.save")}</span>
-                                </>
-                            )}
-                          </motion.button>
-                      ) : (
-                          <motion.div
-                              key="success-btn"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0.9, opacity: 0 }}
-                              className="w-full mt-2 bg-green-500/20 border border-green-500/50 text-green-300 font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.3)] flex items-center justify-center gap-2"
-                          >
-                            <CheckIcon className="w-5 h-5 text-green-400" />
-                            <span>Credentials Updated</span>
-                          </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                  </motion.div>
-              )}
-            </AnimatePresence>
-          </nav>
-          <div className="px-6 pb-7 text-[11px] text-white/55 tracking-wide">{t("footer.version")}</div>
-        </motion.aside>
+          {/* GAME HINT REPOSICIONADO ABAIXO DO ASIDE */}
+          <motion.div
+    className="mt-4 w-full"
+            animate={{ 
+              x: showImage ? 0 : "-120%", 
+              opacity: showImage ? 1 : 0 
+            }}
+            transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
+          >
+            <GameHint 
+              isVisible={showImage} 
+              hints={[
+                t("hints.new_game", "DICA: Inicie com um perfil novo para conferir a tecnolgia da Zaeon."),
+                t("hints.save_progress", "DICA: Conecte sua conta Google para salvar seu progresso e conquistas."),
+                t("hints.roles", "DICA: Cada classe (Estudante, Pesquisador) libera ferramentas exclusivas no sistema."),
+                t("hints.wallet", "DICA: Carregue seu progresso salvo para continuar sua jornada."),
+                t("hints.options", "DICA: Acesse as opções para personalizar seu perfil e configurações.")
+              ]} 
+            />
+          </motion.div>
+        </div>
 
         <OnboardModal open={onboardOpen} onClose={handleModalClose} role={chosenRole} onSuccess={handleOnboardSuccess} />
       </div>

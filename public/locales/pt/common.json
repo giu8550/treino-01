@@ -6,14 +6,14 @@
     "study_rooms": "Salas de Estudo"
   },
   "intro": {
-    "line1": "ESTUDE, APRENDA, PESQUISE...",
-    "line2": "PUBLIQUE E MONETIZE."
+    "line1": "ESTUDE / APRENDA / PESQUISE...",
+    "line2": "PUBLIQUE / MONETIZE."
   },
   "menu": {
     "new": "Nova Conta",
     "load": "Carregar Conta",
     "options": "Opções",
-    "manual": "Manual",
+    "manual": "Dashboard",
     "back": "Voltar"
   },
   "roles": {
@@ -30,8 +30,15 @@
     "off": "DESLIGADO"
   },
   "footer": {
-    "powered": "Powered by Mantle",
+    "powered": "Powered by Cronos",
     "version": "Zaeon OS - v0.1"
+  },
+  "hints": {
+    "new_game": "BEM VINDO A ZAEON, NOBRE SER VIVO! - Aqui todos são bem vindos e bem vindas, nós, agentes de IA, recebemos você com alegria.",
+    "save_progress": "DICA: Use sua conta Google para logar mais rápido, confirme sua identidade depois, e salve seu progresso na rede Cronos.",
+    "roles": "DICA: Cada classe (Estudante, Pesquisador, Professor, Empresário) desbloqueia ferramentas exclusivas pra você no sistema Zaeon.",
+    "wallet": "DICA: Use sua carteira Cronos para logar mais rápido, confirme sua identidade depois, e salve seu progresso eternamente na blockchain.",
+    "options": "DICA: Acesse as OPÇÕES para personalizar o seu perfil: mudar idioma, foto de perfil e curso que você estuda ou pretende estudar."
   },
   "modal": {
     "title": "Nova Conta",
@@ -42,7 +49,7 @@
     "cancel": "Cancelar",
     "use_wallet": "Usar Carteira",
     "use_id": "Usar ID",
-    "wallet_label": "Carteira Movement",
+    "wallet_label": "Carteira Cronos",
     "wallet_placeholder": "0x...",
     "lbl_student": "CPF do Estudante",
     "ph_student": "000.000...",
@@ -54,7 +61,7 @@
     "ph_entrepreneur": "...",
     "name_ph": "João Silva",
     "email_ph": "voce@email.com",
-    "phone_ph": "(11) 99999-9999"
+    "phone_ph": "(11) 7777-7777"
   },
   "homework": {
     "study_title": "Arquivos de Estudo",
