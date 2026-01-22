@@ -6,8 +6,8 @@
     "study_rooms": "Study Rooms"
   },
   "intro": {
-    "line1": "STUDY, LEARN, RESEARCH...",
-    "line2": "PUBLISH   AND   MONETIZE."
+    "line1": "STUDY_LEARN_RESEARCH...",
+    "line2": "PUBLISH_AND_MONETIZE."
   },
   "menu": {
     "new": "New Account",

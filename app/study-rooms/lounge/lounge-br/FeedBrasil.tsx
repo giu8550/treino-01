@@ -10,7 +10,7 @@ import {
     HeartIcon,
     UserCircleIcon
 } from "@heroicons/react/24/outline";
-import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
+import { HeartIcon as HeaartSolidIcon } from "@heroicons/react/24/solid";
 import { useSession } from "next-auth/react";
 
 export default function FeedBrasil() {

@@ -6,8 +6,8 @@
     "study_rooms": "Salas de Estudo"
   },
   "intro": {
-    "line1": "ESTUDE / APRENDA / PESQUISE...",
-    "line2": "PUBLIQUE / MONETIZE."
+    "line1": "ESTUDE_APRENDA_PESQUISE...",
+    "line2": "PUBLIQUE_&_MONETIZE."
   },
   "menu": {
     "new": "Nova Conta",
