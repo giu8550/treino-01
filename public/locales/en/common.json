@@ -35,7 +35,7 @@
     "off": "OFF"
   },
   "footer": {
-    "powered": "Powered by Cronos",
+    "powered": "Help us go on chain! - Join our foundation",
     "version": "Zaeon OS - v1.0"
   },
   "modal": {
@@ -193,7 +193,7 @@
       }
     },
     "cta": {
-      "tour_title": "TAKE A TOUR TO MEET ALL FEATURES",
+      "tour_title": "READY TO GO DEEPER? WE GOT YOU.",
       "button_go": "GO !"
     }
   },

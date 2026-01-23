@@ -23,8 +23,9 @@ const NavbarComponent = () => {
     setMounted(true);
   }, []);
 
-  if (!mounted || !i18n.isInitialized) {
-    return <div className="w-full h-[90px] fixed top-0 z-50" />;
+  // Previne que a Navbar fique invisível caso o i18n demore a responder em rotas específicas
+  if (!mounted) {
+    return <div className="w-full h-[90px] fixed top-0 z-[100]" />;
   }
 
   // --- LÓGICA DE PERMISSÃO E VISIBILIDADE ---
@@ -32,23 +33,20 @@ const NavbarComponent = () => {
   const role = user?.role;
   const email = user?.email?.toLowerCase();
 
-  // 1. Definição de Permissões de Admin/Fundador
   const isFounder = email === "donmartinezcaiudoceu@gmail.com";
   const isSessionAdmin = user?.isAdmin === true;
   const isSuperUser = isFounder || isSessionAdmin;
 
-  // 2. Definição de Grupos
   const isStudentGroup = role === "student" || role === "researcher";
   const isProGroup = role === "professional" || role === "entrepreneur";
 
-  // 3. Regras de Exibição
-  // Se for SuperUser, vê tudo.
-  // Se for Pro, vê Workstation.
-  // Se for Student, vê Homework.
   const showHomework = isSuperUser || isStudentGroup;
   const showWorkstation = isSuperUser || isProGroup;
 
-  const isActive = (path: string) => pathname === path || pathname.startsWith(path);
+  const isActive = (path: string) => {
+    if (path === "/") return pathname === "/";
+    return pathname.startsWith(path);
+  };
 
   const baseLinkStyle = "transition-all duration-200 hover:scale-105 cursor-pointer";
   const inactiveStyle = "text-foreground/80 hover:text-cyan-500 dark:hover:text-[#5fb4ff]";
@@ -59,7 +57,7 @@ const NavbarComponent = () => {
   };
 
   return (
-      <div className="w-full h-[90px] fixed top-0 z-50 flex justify-center items-center pointer-events-none">
+      <div className="w-full h-[90px] fixed top-0 z-[100] flex justify-center items-center pointer-events-none">
         <div className="pointer-events-auto w-[96%] max-w-[1250px] h-[70px] rounded-3xl backdrop-blur-md
                         bg-background/80 border border-foreground/10 shadow-lg
                         flex items-center justify-between px-6 md:px-10 transition-all duration-300">
@@ -76,14 +74,14 @@ const NavbarComponent = () => {
           </Link>
 
           <nav className="hidden md:flex justify-center flex-1 gap-12 text-[14px] font-medium tracking-wide">
-            <Link href="/#about-us" className={getLinkClassName("/#about-us")}>
+            {/* Ajustado para o path /about conforme solicitado */}
+            <Link href="/about" className={getLinkClassName("/about")}>
               {t("navbar.about")}
             </Link>
             <Link href="/#study-rooms" className={getLinkClassName("/#study-rooms")}>
               {t("navbar.study_rooms")}
             </Link>
 
-            {/* Renderização Condicional Estrita */}
             {showHomework && (
                 <Link href="/homework" className={getLinkClassName("/homework")}>
                   {t("navbar.homework")}
@@ -111,7 +109,7 @@ const NavbarComponent = () => {
         {/* MENU MOBILE */}
         {isMobileMenuOpen && (
             <div className="pointer-events-auto absolute top-[85px] w-[90%] max-w-[400px] rounded-2xl bg-background/95 border border-foreground/10 backdrop-blur-xl p-6 flex flex-col items-center text-foreground shadow-2xl animate-in slide-in-from-top-5">
-              <Link href="/#about-us" className="py-3 w-full text-center hover:bg-foreground/5 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/about" className="py-3 w-full text-center hover:bg-foreground/5 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
                 {t("navbar.about")}
               </Link>
               <Link href="/#study-rooms" className="py-3 w-full text-center hover:bg-foreground/5 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
