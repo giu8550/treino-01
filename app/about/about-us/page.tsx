@@ -478,12 +478,12 @@ interface MechanicalArmProps {
 const MechanicalArmGadget = ({ data, isOpen, onToggle }: MechanicalArmProps) => {
     const tray1Variants = {
         closed: { x: 0, opacity: 0, scale: 0.8, pointerEvents: "none" as const },
-        open: { x: 210, opacity: 1, scale: 1, pointerEvents: "auto" as const, transition: { type: "spring", stiffness: 120, damping: 15 } }
+        open: { x: -230, opacity: 1, scale: 1, pointerEvents: "auto" as const, transition: { type: "spring", stiffness: 120, damping: 15 } }
     };
 
     const tray2Variants = {
         closed: { x: 0, y: 0, opacity: 0, scale: 0.8, pointerEvents: "none" as const },
-        open: { x: 210, y: 85, opacity: 1, scale: 1, pointerEvents: "auto" as const, transition: { type: "spring", stiffness: 120, damping: 15, delay: 0.1 } }
+        open: { x: -230, y: 85, opacity: 1, scale: 1, pointerEvents: "auto" as const, transition: { type: "spring", stiffness: 120, damping: 15, delay: 0.1 } }
     };
 
     const getBarColor = (type: string) => {

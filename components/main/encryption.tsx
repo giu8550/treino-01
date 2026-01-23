@@ -3,94 +3,90 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import React, { useRef, useState, useEffect } from "react";
 import { PlayIcon, XMarkIcon, CpuChipIcon, ShieldCheckIcon, GlobeAltIcon } from "@heroicons/react/24/solid";
+import { useTranslation } from "react-i18next";
 
-// --- NOVOS CARDS ANIMADOS ---
-const InfoCards = () => {
-    const cards = [
-        { 
-            title: "Edge Computing", 
-            desc: "Processamento de dados em tempo real com latência zero para agentes de IA.",
-            icon: <CpuChipIcon className="w-8 h-8 text-cyan-400" /> 
-        },
-        { 
-            title: "Encryption Layer", 
-            desc: "Segurança de nível militar (AES-256) protegendo cada descoberta científica.",
-            icon: <ShieldCheckIcon className="w-8 h-8 text-purple-400" /> 
-        },
-        { 
-            title: "Global Network", 
-            desc: "Infraestrutura descentralizada conectando laboratórios ao redor do mundo.",
-            icon: <GlobeAltIcon className="w-8 h-8 text-blue-400" /> 
-        }
-    ];
-
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl px-6 mt-24 mb-20 relative z-50">
-            {cards.map((card, i) => (
-                <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.2 }}
-                    viewport={{ once: true }}
-                    className="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-cyan-500/30 transition-all group"
-                >
-                    <div className="mb-4 group-hover:scale-110 transition-transform">{card.icon}</div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{card.title}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{card.desc}</p>
-                </motion.div>
-            ))}
-        </div>
-    );
-};
-
-// --- TICKER DE SPONSORS ---
 const SponsorsTicker = ({ opacity }: { opacity: any }) => {
-    const logos = [
-        { name: "Google", src: "https://authjs.dev/img/providers/google.svg" },
-        { name: "Google Cloud", src: "https://www.gstatic.com/images/branding/product/2x/google_cloud_64dp.png" },
-        { name: "x402", src: "https://cryptologos.cc/logos/elrond-egld-egld-logo.png" },
-        { name: "Cronos", src: "https://cryptologos.cc/logos/cronos-cro-logo.png" },
-    ];
+  const { t } = useTranslation();
 
-    return (
-        <motion.div style={{ opacity }} className="w-full py-10 overflow-hidden mt-20">
-            <div className="flex whitespace-nowrap overflow-hidden">
-                <motion.div 
-                    animate={{ x: ["0%", "-50%"] }}
-                    transition={{ ease: "linear", duration: 25, repeat: Infinity }}
-                    className="flex gap-20 items-center"
-                >
-                    {[...logos, ...logos].map((logo, i) => (
-                        <div key={i} className="flex items-center gap-4 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                            <img src={logo.src} alt={logo.name} className="h-8 w-auto object-contain" />
-<span className="text-white/80 text-lg font-light tracking-widest uppercase"></span>                        </div>
-                    ))}
-                </motion.div>
-            </div>
-        </motion.div>
-    );
+  const sponsors = [
+    { name: "Funcap", src: "/sponsors/funcap.jpg", url: "https://www.funcap.ce.gov.br/" },
+    { name: "Centelha", src: "/sponsors/centelha.png", url: "https://programacentelha.com.br/ce/" },
+    { name: "Sudene", src: "/sponsors/sudene.png", url: "https://www.gov.br/sudene" },
+    { name: "Finep", src: "/sponsors/finep.png", url: "http://www.finep.gov.br/" },
+    { name: "Governo", src: "/sponsors/gov.svg", url: "https://www.gov.br/" },
+  ];
+
+  const tickerItems = [...sponsors, ...sponsors, ...sponsors];
+
+  return (
+    <motion.div 
+      style={{ opacity }} 
+      className="w-full py-12 overflow-hidden relative"
+    >
+     <div className="w-full flex justify-center mb-12">
+      <h3 className="text-center text-[14px] font-black tracking-[0.6em] text-cyan-600 dark:text-cyan-400 uppercase">    
+        {t("hero.sponsors_title", "APOIADORES:")}
+      </h3>
+    </div>
+
+      <div className="relative"> 
+          <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-[#030014] via-transparent to-[#030014]" />
+        <div className="flex whitespace-nowrap">
+          <motion.div
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{
+              ease: "linear",
+              duration: 35,
+              repeat: Infinity,
+            }}
+            className="flex gap-6 px-6"
+          >
+            {tickerItems.map((item, i) => (
+              <SponsorCard key={i} item={item} />
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
-// --- TYPING EFFECT ---
+const SponsorCard = ({ item }: { item: { name: string; src: string; url: string } }) => {
+  return (
+    <motion.a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      whileHover={{ 
+        scale: 1.05, 
+        borderColor: "rgba(34, 211, 238, 0.4)",
+        backgroundColor: "rgba(255, 255, 255, 0.05)" 
+}}
+      className="relative flex items-center justify-center min-w-[280px] h-[140px] rounded-[2rem] border border-white/5 bg-[#0a0a0f]/60 backdrop-blur-xl transition-all duration-500 group overflow-hidden cursor-pointer"
+    >
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12)_0%,transparent_70%)]" />
+      <div className="relative w-full h-full p-8 flex items-center justify-center">
+        <img src={item.src} alt={item.name} className="max-w-full max-h-full object-contain transition-all duration-500 transform group-hover:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+      </div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+      <div className="absolute bottom-2 right-6 opacity-0 group-hover:opacity-40 transition-opacity text-[8px] text-cyan-400 tracking-widest uppercase">Visit Website</div>
+    </motion.a>
+  );
+};
+
 const TypingEffect = ({ text, className }: { text: string; className: string }) => {
     const characters = Array.from(text);
     return (
         <motion.div className={className} style={{ whiteSpace: "nowrap" }}>
             {characters.map((char, i) => (
-                <motion.span
-                    key={i}
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.03, delay: i * 0.02 }}
-                    viewport={{ once: true }}
-                >
+                <motion.span key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.03, delay: i * 0.02 }} viewport={{ once: true }}>
                     {char}
                 </motion.span>
             ))}
         </motion.div>
     );
 };
+
 
 export default function Encryption() {
     const sectionRef = useRef<HTMLDivElement>(null);
@@ -146,9 +142,6 @@ export default function Encryption() {
                     <SponsorsTicker opacity={sponsorsOpacity} />
                 </div>
             </div>
-
-            {/* NOVOS CARDS */}
-            <InfoCards />
 
             {/* MODAL DO VÍDEO */}
             <AnimatePresence>
