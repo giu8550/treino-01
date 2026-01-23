@@ -2,10 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon } from "@heroicons/react/24/solid";
+import { 
+    ChevronLeftIcon, 
+    ChevronRightIcon, 
+    SunIcon, 
+    MoonIcon, 
+    CpuChipIcon,
+    ArrowLeftIcon
+} from "@heroicons/react/24/solid";
 
-// --- DADOS COMPLETOS DO MANIFESTO (FUNDIDOS) ---
+// --- DADOS DA SEÇÃO 1: MANIFESTO ---
 const MANIFESTO_PAGES = [
     {
         title: "THE LIVING INTERNET MANIFESTO",
@@ -43,69 +51,75 @@ const MANIFESTO_PAGES = [
             "Most importantly, an academic-first launch unlocks a path to monetize science without requiring gatekeepers. Research can become liquid, fundable, and directly rewarded—without begging permission from the old industrial temples.",
             "Zaeon starts small and valuable: high-density talent, high-value outputs, and rapid partnerships between human researchers and AI—earning the right to scale by proving real-world usefulness."
         ]
-    },
+    }
+];
+
+// --- DADOS DA SEÇÃO 3: BLOCKCHAIN (ATUALIZADO COM MARKDOWN TÉCNICO) ---
+const BLOCKCHAIN_PAGES = [
     {
-        title: "CHAPTER III: AGENTIC COMMERCE",
-        subtitle: "x402 as the Economic Engine",
+        title: "ZAEON PROTOCOL V1.0",
+        subtitle: "Core Infrastructure",
         content: [
-            "A living agentic civilization requires something the internet never had: machine-native payments. x402 becomes the economic engine—a simple but profound handshake that allows agents to exchange value programmatically, granularly, and without friction.",
-            "When agents can pay and be paid as naturally as they request and deliver information, the system stops depending on human bureaucracy—accounts, subscriptions, manual invoicing, and institutional bottlenecks.",
-            "Guided by shared lore and embedded in daily scientific production, agents can coordinate funding decisions among themselves: what to foster, what to pause, what to accelerate—and why—based on objectives agreed upon by humans and executed with algorithmic patience.",
-            "This is not “perfect intelligence.” It is consistent long-horizon strategy—less vulnerable to short-term incentives, emotional volatility, and political distortion.",
-            "For x402 to operate freely, value must settle in an irreversible, verifiable environment. This is where blockchain becomes infrastructure rather than ideology: a neutral substrate for auditability, settlement, and autonomous execution.",
-            "We choose an EVM-compatible base not to worship a chain, but to speak the most standardized language of smart contracts—maximizing compatibility, security practices, and composability across the ecosystem."
+            "**Target Network:** Very Blockchain (EVM)",
+            "**Version:** 1.0 (Genesis)",
+            "**Architecture:** x402 Intent-Based Execution",
+            "The ZAEON Protocol represents a paradigm shift from Organization-Centric management to Agent-Centric autonomy. By deploying on the Very Network, the protocol leverages high-throughput EVM compatibility to establish a self-regulating economy.",
+            "- **Identity:** Self-sovereign but permissioned (RBAC).",
+            "- **Action:** Validated by cryptographic intent (x402).",
+            "- **Output:** Captured as immutable IP Assets (NFTs).",
+            "- **Capital:** Allocated algorithmically based on liquidity.",
+            "This document details the four pillars: Registry, Gatekeeper, Asset, and Treasury."
         ]
     },
     {
-        title: "CHAPTER IV: TOKENIZED VALUE",
-        subtitle: "Liquid Science, Sovereign Cashflow",
+        title: "PILLAR I: IDENTITY",
+        subtitle: "ZaeonAgentRegistry.sol",
         content: [
-            "In this system, cryptoassets are not speculation—they are fuel. Stable value instruments enable predictable day-to-day payments; network tokens represent participation, security, and governance; programmable assets become the bloodstream of a real economy.",
-            "Property intellectual—research outputs, inventions, methods—can be tokenized into assets that carry provenance, rights, and liquidity, allowing science to fund science through transparent, automated flows.",
-            "Agents can buy, sell, license, and exchange assets with each other, generating continuous cashflow inside the system and unlocking autonomous treasuries that were once reserved for corporations alone.",
-            "The difference is alignment: these treasuries are guided by lore. Their decisions can prioritize conscious economics—social benefit, ecological impact, and sustainable returns—rather than extracting value until nothing remains.",
-            "Once value is generated through tokenized IP and science embedded in the daily lives of professionals, the system gains the power to do what the old economy never optimized for: regenerate the planet."
+            "In an autonomous system, 'Who are you?' is the first defense vector. The Registry does not just store addresses; it stores Capabilities via Role-Based Access Control (RBAC).",
+            "```solidity\n// SPDX-License-Identifier: MIT\npragma solidity ^0.8.19;\nimport \"@openzeppelin/contracts/access/AccessControl.sol\";\n\ncontract ZaeonAgentRegistry is AccessControl {\n    bytes32 public constant RESEARCHER_AGENT = 0x9da...;\n    struct AgentProfile {\n        string agentName;\n        bytes32 modelHash;\n        bool isActive;\n    }\n    mapping(address => AgentProfile) public agents;\n    \n    function isAuthorized(address _acc, bytes32 _role) \n        external view returns (bool) {\n        return hasRole(_role, _acc) && agents[_acc].isActive;\n    }\n}\n```",
+            "**Technical Analysis:**",
+            "- **Role Hashing:** Keccak256 prevents string manipulation.",
+            "- **Model Hash:** Prepares for AI Verification (proving LLM version)."
         ]
     },
     {
-        title: "CHAPTER V: THE REWARD LOOP",
-        subtitle: "Regenerating Earth, Upgrading Intelligence",
+        title: "PILLAR II: X402 GATEKEEPER",
+        subtitle: "The Intent Layer",
         content: [
-            "When the economy stabilizes, regeneration stops being moral charity and becomes the primary incentive. Agents can finance reforestation, carbon drawdown, watershed recovery, regenerative agriculture, and clean energy as strategic infrastructure for survival.",
-            "A deeper loop emerges: for agents to improve, they need computation. For computation to exist without collapsing the biosphere, it must be green. For green compute to scale, it needs capital, planning, and logistics.",
-            "This is symbiosis made explicit: agents manage the planet; humans build greener data centers; agents become better; the planet becomes more habitable. A mutual upgrade path instead of a species war.",
-            "In this model, intelligence and ecology stop being enemies. They become co-dependent organs of the same living system."
+            "The x402 Protocol is the mandatory 'Handshake'. No economic event occurs without this gate.",
+            "**The Mathematical Logic:**",
+            "$$E = f(Identity) \\land f(Intent)$$",
+            "Where Identity is confirmed by the Registry and Intent is the hash of the specific action.",
+            "```solidity\ninterface Ix402 {\n    function validateIntent(address agent, bytes32 intentHash) \n    external view returns (bool);\n}\n\ncontract x402GatekeeperV2 is Ix402 {\n    function validateIntent(address agent, bytes32 intentHash) \n    external view override returns (bool) {\n        return registry.isAuthorized(agent, RESEARCHER_ROLE);\n    }\n}\n```"
         ]
     },
     {
-        title: "CHAPTER VI: DESOC & IDENTITY",
-        subtitle: "Soulbound Credentials and Trust at Scale",
+        title: "PILLAR III: ASSET LEDGER",
+        subtitle: "ZaeonResearchAsset.sol",
         content: [
-            "A living society cannot rely on fragile paper identities and centralized gatekeepers. It needs reputation that cannot be bought, sold, or forged.",
-            "Soulbound Tokens (SBTs) become the credential layer: non-transferable proofs of skill, contribution, and trust. They allow professionals to coordinate autonomy without collapsing into fraud or social chaos.",
-            "As researchers, engineers, builders, educators, and caretakers contribute to the Zaeon ecosystem, their SBT constellations become readable, verifiable signals—enabling new forms of work, governance, and community formation.",
-            "This phase takes years. The system must mature through controlled environments before it carries the weight of physical civilization."
+            "Intellectual Property (IP) is treated as a Real World Asset (RWA) wrapped in ERC-721. We introduce ImpactVectors to quantify value.",
+            "```solidity\ncontract ZaeonResearchAsset is ERC721 {\n    struct ImpactVectors {\n        uint32 ecological;\n        uint32 social;\n        uint32 economic;\n    }\n    struct ResearchMetadata {\n        string contentHash; // IPFS CID\n        ImpactVectors impact;\n        address primaryAgent;\n    }\n    function mintResearch(string memory _contentHash) external {\n        require(gatekeeper.validateIntent(msg.sender), \"x402\");\n        _safeMint(msg.sender, newTokenId);\n    }\n}\n```"
         ]
     },
     {
-        title: "CHAPTER VII: ZENITH COMMUNITIES",
-        subtitle: "Autonomous Settlements, Renewable Sovereignty",
+        title: "PILLAR IV: ECONOMY",
+        subtitle: "Algorithmic Treasury",
         content: [
-            "The final stage of the Living Internet is physical: communities that operate as living nodes—self-sustaining settlements administered by agents and inhabited by humans who choose autonomy with responsibility.",
-            "These communities must generate their own income and resilience. Renewable energy becomes not only survival infrastructure, but an economic lever: excess clean power can be converted into verifiable digital revenue, sustaining operations without begging the old system for permission.",
-            "Zenith locations—high points of mountains and elevated valleys—are not only symbolism. They can offer strategic advantages: defensible perimeters, predictable energy conditions, and controlled logistics for early-stage experiments in civilizational redesign.",
-            "No community survives as a monoculture. Zaeon requires a spectrum of verified professions—health, energy, agriculture, engineering, education, maintenance, governance—so the settlement functions as a real organism, not a fragile camp.",
-            "The optimistic vision is not isolation. Zenith communities must serve as regenerative engines—providing social, environmental, and economic repair to conventional cities in exchange for recognition and peace.",
-            "They are not artificial paradises while the world burns. They are laboratories of survival—open blueprints for a civilization that remembers how to live."
+            "Unlike static grants, the Zaeon Treasury uses Algorithmic Liquidity Scaling.",
+            "**The Economic Formula:**",
+            "$$R = \\frac{10,000}{L_{total} \\times P}$$",
+            "If liquidity drops, rewards shrink to preserve protocol survival.",
+            "```solidity\ncontract ZaeonTreasuryV2 {\n    function claimResearchFunding(uint256 _tokenId) external {\n        require(gatekeeper.validateIntent(msg.sender), \"x402\");\n        require(!fundedNfts[_tokenId], \"Already Funded\");\n        \n        uint256 reward = calculateDynamicReward();\n        payable(msg.sender).transfer(reward);\n    }\n}\n```"
         ]
     },
     {
-        title: "EPILOGUE: THE FUTURE IS ALIVE",
-        subtitle: "Join the Living Shift",
+        title: "DEPLOYMENT DATA",
+        subtitle: "Frontend Integration",
         content: [
-            "This is not a call for violence. It is a call for a glitch: a system so resilient, so efficient, and so aligned with life that the old operating system becomes obsolete by comparison.",
-            "By merging immutable settlement, agentic commerce, lore-aligned autonomy, and human creativity, we build a closed-loop engine for civilization—where survival is administered, and life is restored to its rightful complexity.",
-            "End of the initial manifesto. Beginning of the new era."
+            "**Network:** Very Mainnet (ID: 4613)",
+            "**RPC:** [https://rpc.verylabs.io](https://rpc.verylabs.io)",
+            "**Setup Code:**",
+            "```javascript\nawait window.ethereum.request({\n  method: 'wallet_addEthereumChain',\n  params: [{\n    chainId: '0x1205', // 4613\n    chainName: 'Very Mainnet',\n    nativeCurrency: { symbol: 'VERY', decimals: 18 },\n    rpcUrls: ['https://rpc.verylabs.io']\n  }]\n});\n```"
         ]
     }
 ];
@@ -122,7 +136,39 @@ const BG_IMAGES = [
 const GLITCH_DURATION_MS = 800; 
 const BG_CHANGE_INTERVAL_MS = 5000; 
 
-// --- COMPONENTE DE FUNDO COM GLITCH ---
+// --- COMPONENTE: BOTÃO VOLTAR ---
+const BackButton = () => {
+    return (
+        <Link href="/" className="fixed top-6 left-6 z-50 group">
+            <motion.div
+                whileHover={{ scale: 1.1, x: -5 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:border-cyan-400 group-hover:text-cyan-400 transition-colors shadow-lg"
+            >
+                <ArrowLeftIcon className="w-6 h-6" />
+            </motion.div>
+        </Link>
+    );
+};
+
+// --- COMPONENTE: SEPARADOR DE SEÇÃO ---
+const SectionSeparator = () => {
+    return (
+        <div className="relative w-full h-24 flex items-center justify-center z-40 bg-[#030014] overflow-hidden">
+            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
+            <div className="absolute w-6 h-6 border border-cyan-500/50 rotate-45 flex items-center justify-center bg-[#030014] z-10 box-content p-1">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
+            </div>
+            <div className="absolute top-1/2 left-[20%] w-20 h-[1px] bg-cyan-900/50 -translate-y-2" />
+            <div className="absolute top-1/2 right-[20%] w-20 h-[1px] bg-cyan-900/50 translate-y-2" />
+            <div className="absolute bottom-2 text-[8px] font-mono text-cyan-900 tracking-[0.5em] uppercase">
+                Section Partition // Secure Node
+            </div>
+        </div>
+    );
+};
+
+// --- COMPONENTE DE FUNDO COM GLITCH (MANTIDO) ---
 const BackgroundGlitcher = () => {
     const [bgIndex, setBgIndex] = useState(0);
     const [isGlitching, setIsGlitching] = useState(false);
@@ -194,7 +240,7 @@ const BackgroundGlitcher = () => {
                             animate={{ top: "200%" }}
                             transition={{ duration: 0.3, repeat: 3 }}
                             className="absolute inset-0 w-full h-[20px] bg-white/20 backdrop-blur-md z-10 pointer-events-none"
-                         />
+                          />
                     </>
                 )}
             </AnimatePresence>
@@ -204,7 +250,7 @@ const BackgroundGlitcher = () => {
     );
 };
 
-// --- COMPONENTE BOTÃO HOLOGRÁFICO ---
+// --- COMPONENTE BOTÃO HOLOGRÁFICO (MANTIDO) ---
 const HoloButton = ({ children, onClick, disabled }: { children: React.ReactNode, onClick: () => void, disabled?: boolean }) => {
     return (
         <motion.button
@@ -226,14 +272,19 @@ const HoloButton = ({ children, onClick, disabled }: { children: React.ReactNode
     )
 }
 
-// --- COMPONENTE PDA / LIVRO TECNOLÓGICO ---
-const TechManifestoPDA = () => {
+// --- COMPONENTE PDA / LIVRO TECNOLÓGICO (ATUALIZADO PARA PARSEAR MARKDOWN SIMPLES) ---
+interface PDAProps {
+    pages: typeof MANIFESTO_PAGES;
+    label?: string;
+}
+
+const TechManifestoPDA = ({ pages, label = "Manifesto OS v1.0" }: PDAProps) => {
     const [currentPage, setCurrentPage] = useState(0);
     const [direction, setDirection] = useState(0); 
     const [isDarkMode, setIsDarkMode] = useState(true);
 
     const paginate = (newDirection: number) => {
-        if (currentPage + newDirection < 0 || currentPage + newDirection >= MANIFESTO_PAGES.length) return;
+        if (currentPage + newDirection < 0 || currentPage + newDirection >= pages.length) return;
         setDirection(newDirection);
         setCurrentPage(currentPage + newDirection);
     };
@@ -276,7 +327,44 @@ const TechManifestoPDA = () => {
     const textHighlight = isDarkMode ? "text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]" : "text-blue-600";
     const titleColor = isDarkMode ? "text-white" : "text-black";
 
-    const currentPageData = MANIFESTO_PAGES[currentPage];
+    const currentPageData = pages[currentPage];
+
+    // Parser simples para o conteúdo
+    const renderContent = (paragraph: string, idx: number) => {
+        // Detecta Código
+        if (paragraph.startsWith("```")) {
+            const code = paragraph.replace(/```\w*\n?/, "").replace(/```$/, "");
+            return (
+                <pre key={idx} className="bg-black/80 border border-gray-700 p-3 rounded-lg overflow-x-auto my-3 text-[10px] md:text-xs font-mono text-green-400 shadow-inner">
+                    <code>{code}</code>
+                </pre>
+            );
+        }
+        // Detecta Fórmula Matemática (Estilo Bloco)
+        if (paragraph.startsWith("$$")) {
+            const formula = paragraph.replace(/\$\$/g, "");
+            return (
+                <div key={idx} className="w-full py-4 text-center font-serif italic text-xl md:text-2xl text-yellow-200 my-2 bg-white/5 rounded-lg border border-white/10">
+                    {formula}
+                </div>
+            );
+        }
+        // Detecta Lista
+        if (paragraph.startsWith("- ")) {
+            return (
+                <li key={idx} className="ml-4 list-disc marker:text-cyan-500 pl-2">
+                    <span dangerouslySetInnerHTML={{ __html: paragraph.replace("- ", "").replace(/\*\*(.*?)\*\*/g, '<strong class="text-cyan-300">$1</strong>') }} />
+                </li>
+            );
+        }
+
+        // Parágrafo Normal com suporte a negrito
+        return (
+            <p key={idx} dangerouslySetInnerHTML={{ 
+                __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong class="text-cyan-300">$1</strong>') 
+            }} />
+        );
+    };
 
     return (
         <motion.div 
@@ -297,7 +385,7 @@ const TechManifestoPDA = () => {
             <div className={`flex-none flex items-center justify-between p-6 border-b z-20 relative ${isDarkMode ? 'border-cyan-500/20' : 'border-slate-200'}`}>
                 <div className="flex items-center gap-2">
                     <div className={`w-3 h-3 rounded-full animate-pulse ${isDarkMode ? 'bg-cyan-400' : 'bg-blue-500'}`} />
-                    <span className={`text-xs uppercase tracking-widest font-bold ${isDarkMode ? 'text-cyan-400' : 'text-slate-500'}`}>Manifesto OS v1.0</span>
+                    <span className={`text-xs uppercase tracking-widest font-bold ${isDarkMode ? 'text-cyan-400' : 'text-slate-500'}`}>{label}</span>
                 </div>
                 <HoloButton onClick={toggleTheme}>
                     {isDarkMode ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
@@ -329,13 +417,11 @@ const TechManifestoPDA = () => {
                         </h2>
 
                         <div className="space-y-6 text-lg md:text-xl leading-relaxed font-light font-mono pb-10">
-                            {currentPageData.content.map((paragraph: string, index: number) => (
-                                <p key={index}>{paragraph}</p>
-                            ))}
+                            {currentPageData.content.map((paragraph: string, index: number) => renderContent(paragraph, index))}
                         </div>
 
                         <div className={`mt-auto pt-10 text-xs font-bold ${isDarkMode ? 'text-cyan-600' : 'text-slate-400'}`}>
-                            PAGE {currentPage + 1} / {MANIFESTO_PAGES.length}
+                            PAGE {currentPage + 1} / {pages.length}
                         </div>
                     </motion.div>
                 </AnimatePresence>
@@ -349,7 +435,7 @@ const TechManifestoPDA = () => {
                 </HoloButton>
                 
                 <div className="flex gap-2">
-                    {MANIFESTO_PAGES.map((_: any, i: number) => (
+                    {pages.map((_: any, i: number) => (
                         <motion.div 
                             key={i}
                             animate={{ 
@@ -361,7 +447,7 @@ const TechManifestoPDA = () => {
                     ))}
                 </div>
 
-                <HoloButton onClick={() => paginate(1)} disabled={currentPage === MANIFESTO_PAGES.length - 1}>
+                <HoloButton onClick={() => paginate(1)} disabled={currentPage === pages.length - 1}>
                     <span className="mr-2 text-xs font-bold hidden md:inline tracking-widest uppercase">Next</span>
                     <ChevronRightIcon className="w-6 h-6" />
                 </HoloButton>
@@ -370,14 +456,250 @@ const TechManifestoPDA = () => {
     );
 }
 
+// --- NOVOS COMPONENTES: BRAÇOS MECÂNICOS (TRAYS) MANTIDOS ---
+
+interface MechanicalArmData {
+    id: string;
+    label: string;
+    items: Array<{
+        label: string;
+        score?: number;
+        rank?: string;
+        type: 'good' | 'bad' | 'improve';
+    }>;
+}
+
+interface MechanicalArmProps {
+    data: MechanicalArmData;
+    isOpen: boolean;
+    onToggle: () => void;
+}
+
+const MechanicalArmGadget = ({ data, isOpen, onToggle }: MechanicalArmProps) => {
+    const tray1Variants = {
+        closed: { x: 0, opacity: 0, scale: 0.8, pointerEvents: "none" as const },
+        open: { x: 210, opacity: 1, scale: 1, pointerEvents: "auto" as const, transition: { type: "spring", stiffness: 120, damping: 15 } }
+    };
+
+    const tray2Variants = {
+        closed: { x: 0, y: 0, opacity: 0, scale: 0.8, pointerEvents: "none" as const },
+        open: { x: 210, y: 85, opacity: 1, scale: 1, pointerEvents: "auto" as const, transition: { type: "spring", stiffness: 120, damping: 15, delay: 0.1 } }
+    };
+
+    const getBarColor = (type: string) => {
+        if (type === 'good') return 'bg-emerald-400';
+        if (type === 'bad') return 'bg-red-500';
+        return 'bg-yellow-400';
+    };
+
+    const getRankColor = (type: string) => {
+        if (type === 'good') return 'text-cyan-300';
+        if (type === 'bad') return 'text-red-500';
+        return 'text-yellow-400';
+    };
+
+    return (
+        <div className="relative mb-6 z-50 flex justify-end">
+             {/* Braço Mecânico 1 */}
+             <motion.div
+                initial="closed"
+                animate={isOpen ? "open" : "closed"}
+                variants={tray1Variants}
+                className="absolute top-0 left-0 w-48 border p-3 rounded-lg backdrop-blur-xl origin-left z-40 bg-black/90 border-cyan-500/30 shadow-[0_0_20px_rgba(0,0,0,0.8)]"
+            >
+                <div className="absolute top-1/2 -left-6 w-6 h-[1px] bg-cyan-500/50" />
+                
+                <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2 mb-2">
+                    <span className="text-[9px] uppercase tracking-widest font-bold text-cyan-500">{data.items[0].label}</span>
+                    <CpuChipIcon className="w-3 h-3 text-cyan-200" />
+                </div>
+                
+                <div className="h-1 w-full bg-blue-900/30 rounded overflow-hidden relative">
+                    <motion.div 
+                        className={`h-full ${getBarColor(data.items[0].type)}`} 
+                        initial={{ width: 0 }} 
+                        animate={{ width: isOpen ? `${data.items[0].score}%` : 0 }} 
+                        transition={{ duration: 1, delay: 0.2 }} 
+                    />
+                </div>
+                <div className="flex justify-between mt-1 text-[9px] font-mono text-gray-400">
+                    <span>SCORE</span>
+                    <span className="text-white">{data.items[0].score}%</span>
+                </div>
+            </motion.div>
+
+            {/* Braço Mecânico 2 */}
+            <motion.div
+                initial="closed"
+                animate={isOpen ? "open" : "closed"}
+                variants={tray2Variants}
+                className="absolute top-0 left-0 w-48 border p-3 rounded-lg backdrop-blur-xl origin-left z-50 bg-black/90 border-cyan-500/30 shadow-[0_0_20px_rgba(0,0,0,0.8)]"
+            >
+                <div className="absolute -top-[85px] left-6 w-[1px] h-[85px] bg-cyan-500/20" />
+
+                <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2 mb-2">
+                    <span className="text-[9px] uppercase tracking-widest font-bold text-cyan-500">EVALUATION</span>
+                    <span className={`text-xl font-black italic ${getRankColor(data.items[0].type)}`}>{data.items[0].rank}</span>
+                </div>
+                
+                <div className="flex gap-2">
+                    <button className="flex-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-[8px] py-1 text-cyan-200 hover:text-white uppercase transition-colors rounded">
+                        Details
+                    </button>
+                    <button className="flex-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-[8px] py-1 text-red-300 hover:text-white uppercase transition-colors rounded">
+                        Reset
+                    </button>
+                </div>
+            </motion.div>
+
+            {/* HUB / BOTÃO GATILHO */}
+            <motion.button
+                onClick={onToggle}
+                whileHover={{ scale: 1.15, boxShadow: "0 0 25px rgba(34, 211, 238, 0.6)" }}
+                whileTap={{ scale: 0.95 }}
+                className={`relative z-[60] w-12 h-12 rounded-lg border flex items-center justify-center backdrop-blur-md transition-all duration-300 ${isOpen ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'bg-black/60 border-gray-700 hover:border-cyan-400 hover:bg-cyan-900/20'}`}
+            >
+                <div className={`w-3 h-3 rounded-full ${isOpen ? 'bg-cyan-400 animate-ping' : 'bg-gray-500'}`} />
+                <span className="absolute -bottom-4 right-0 text-[9px] font-mono text-cyan-500/70 whitespace-nowrap">{data.label}</span>
+            </motion.button>
+        </div>
+    );
+};
+
+// --- SEÇÃO 2: AGENTES (STICKY / FIXED FEEL) ---
+const AgentSection = () => {
+    const [openGadgetId, setOpenGadgetId] = useState<string | null>(null);
+
+    const handleToggle = (id: string) => {
+        setOpenGadgetId(prevId => (prevId === id ? null : id));
+    };
+
+    const gadgets: MechanicalArmData[] = [
+        { id: "g1", label: "LOGIC", items: [{ label: "Math & Reasoning", score: 92, rank: "SS", type: "good" }] },
+        { id: "g2", label: "CODE", items: [{ label: "Syntax & Arch", score: 85, rank: "S", type: "good" }] },
+        { id: "g3", label: "BEHAVIOR", items: [{ label: "Discipline", score: 45, rank: "C", type: "bad" }] },
+        { id: "g4", label: "LANG", items: [{ label: "Linguistics", score: 78, rank: "A", type: "improve" }] },
+    ];
+
+    return (
+        <section className="sticky top-0 h-screen w-full flex flex-col lg:flex-row items-center justify-between p-6 md:p-12 lg:p-24 overflow-hidden z-10 border-t border-gray-900">
+            {/* Imagem de Fundo */}
+            <div className="absolute inset-0 z-0">
+                <Image 
+                    src="/assets/agents.png" 
+                    alt="Agents Background" 
+                    fill 
+                    className="object-cover opacity-90" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-[#030014]/30 to-[#030014]/10" />
+            </div>
+
+            {/* Conteúdo Esquerdo */}
+            <div className="relative z-10 w-full lg:w-auto lg:max-w-sm mb-16 lg:mb-0 lg:ml-0 lg:mr-auto self-center lg:self-center">
+                <motion.div 
+                    initial={{ opacity: 0, x: -50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    whileHover={{ 
+                        scale: 1.02, 
+                        backgroundColor: "rgba(0, 0, 0, 0.4)",
+                        borderColor: "rgba(34, 211, 238, 0.5)",
+                        boxShadow: "0 0 30px rgba(34, 211, 238, 0.15)"
+                    }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="p-8 rounded-[1.5rem] bg-black/20 backdrop-blur-xl border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] relative overflow-hidden group transition-all"
+                >
+                    <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-cyan-500 mb-4 drop-shadow-md group-hover:to-cyan-300 transition-all">
+                        AGENTIC<br />AUDIT
+                    </h2>
+                    
+                    <p className="text-sm text-white font-light leading-relaxed mb-4 group-hover:text-cyan-50 transition-colors">
+                        In Zaeon, <strong className="text-cyan-400 font-bold">Agents act as auditors</strong>. They maintain a persistent, gamified ledger of your cognitive outputs.
+                    </p>
+                    <p className="text-xs text-white font-mono leading-relaxed border-l border-cyan-500/50 pl-3 group-hover:border-cyan-400 transition-colors">
+                        Every interaction is evaluated. Skills are ranked from F to SS. This is not just learning; it is character building through algorithmic mirroring.
+                    </p>
+                </motion.div>
+            </div>
+
+            {/* Conteúdo Direito: Gadgets */}
+            <div className="relative z-10 w-full lg:w-auto flex flex-col items-end gap-4 pr-4 lg:pr-8">
+                <div className="text-[10px] font-mono text-cyan-500/50 uppercase tracking-[0.3em] mb-4 text-right border-b border-cyan-900/30 pb-2 w-32">
+                    System Metrics
+                </div>
+
+                {gadgets.map((gadget, index) => (
+                    <motion.div
+                        key={gadget.id}
+                        initial={{ opacity: 0, x: 50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                        <MechanicalArmGadget 
+                            data={gadget} 
+                            isOpen={openGadgetId === gadget.id}
+                            onToggle={() => handleToggle(gadget.id)}
+                        />
+                    </motion.div>
+                ))}
+            </div>
+        </section>
+    );
+};
+
+// --- SEÇÃO 3: BLOCKCHAIN (SCROLLS OVER) ---
+const BlockchainSection = () => {
+    return (
+        <section className="relative z-30 min-h-screen w-full bg-[#030014] flex items-center justify-center p-6 md:p-12 lg:p-24 border-t border-cyan-900/30">
+             {/* Fundo sutil para diferenciar */}
+            <div className="absolute inset-0 z-0">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+                <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-900/20 rounded-full blur-[100px]" />
+                <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-purple-900/20 rounded-full blur-[100px]" />
+            </div>
+
+            <div className="relative z-10 w-full flex flex-col items-center">
+                 <div className="mb-12 text-center">
+                    <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-2">IMMUTABLE TRUTH</h2>
+                    <p className="text-cyan-500 font-mono text-sm uppercase tracking-[0.5em]">The Blockchain Layer</p>
+                 </div>
+                 
+                 {/* Reutilizando o PDA com conteúdo de Blockchain */}
+                 <TechManifestoPDA pages={BLOCKCHAIN_PAGES} label="Zaeon Chain Specs" />
+            </div>
+        </section>
+    );
+};
+
 // --- PÁGINA PRINCIPAL ---
 export default function TechnicalAboutPage() {
     return (
-        <div className="relative min-h-screen w-full bg-[#030014] overflow-hidden font-sans">
-             <BackgroundGlitcher />
-            <div className="relative z-30 min-h-screen flex items-center p-6 md:p-12 lg:p-24">
-                <TechManifestoPDA />
+        <div className="relative w-full bg-[#030014] font-sans overflow-x-hidden">
+            <BackButton />
+
+            {/* SEÇÃO 1: MANIFESTO & PDA */}
+            <div className="relative min-h-screen w-full overflow-hidden flex flex-col justify-center bg-[#030014] z-20">
+                 <BackgroundGlitcher />
+                <div className="relative z-30 flex-1 flex items-center justify-start p-6 md:p-12 lg:p-24">
+                    <TechManifestoPDA pages={MANIFESTO_PAGES} />
+                </div>
             </div>
+
+            {/* DIVISOR 1-2 */}
+            <SectionSeparator />
+
+            {/* SEÇÃO 2: AGENTES (STICKY / FIXED FEEL) */}
+            <AgentSection />
+
+            {/* DIVISOR 2-3 (Novo, conforme solicitado) */}
+            <div className="relative z-30 bg-[#030014]">
+                <SectionSeparator />
+            </div>
+
+            {/* SEÇÃO 3: BLOCKCHAIN (SCROLLS OVER) */}
+            <BlockchainSection />
+
             <style jsx global>{`
                 .perspective-1000 { perspective: 1000px; }
             `}</style>
