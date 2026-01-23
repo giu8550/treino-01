@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 // --- PROVIDERS ---
 import AuthProvider from "@/src/providers/SessionProvider";
 import { ThemeProvider } from "./providers";
+// 1. IMPORT THE WEB3 PROVIDER
+import { Web3Provider } from "@/src/context/Web3Context";
 
 import "../src/i18n";
 import "./globals.css";
@@ -39,27 +41,29 @@ export const metadata: Metadata = siteConfig;
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <html lang="en" className="scroll-smooth" suppressHydrationWarning>
-        <body
-            className={cn(
-                "relative bg-white dark:bg-background text-foreground overflow-x-hidden overflow-y-scroll",
-                spaceGrotesk.variable,
-                jetbrainsMono.variable,
-                outfit.variable,
-                "font-sans"
-            )}
-        >
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-        >
-                <AuthProvider>
-                    {/* O conteúdo da página decide quando mostrar Navbar/Background */}
-                    {children}
-                </AuthProvider>
-        </ThemeProvider>
-        </body>
+            <body
+                className={cn(
+                    "relative bg-white dark:bg-background text-foreground overflow-x-hidden overflow-y-scroll",
+                    spaceGrotesk.variable,
+                    jetbrainsMono.variable,
+                    outfit.variable,
+                    "font-sans"
+                )}
+            >
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="dark"
+                    enableSystem
+                    disableTransitionOnChange
+                >
+                    <AuthProvider>
+                        {/* 2. WRAP CHILDREN IN WEB3 PROVIDER */}
+                        <Web3Provider>
+                            {children}
+                        </Web3Provider>
+                    </AuthProvider>
+                </ThemeProvider>
+            </body>
         </html>
     );
 }
