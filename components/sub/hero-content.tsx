@@ -12,11 +12,8 @@ import {
   CheckBadgeIcon,
   CpuChipIcon,
   UserCircleIcon,
-  CameraIcon,
-  AcademicCapIcon,
-  ArrowUpTrayIcon,
-  CheckIcon,
-  ArrowRightStartOnRectangleIcon // Ícone de Logout
+  ArrowRightStartOnRectangleIcon,
+  LockClosedIcon // Novo ícone para indicar travamento
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -27,7 +24,7 @@ import dynamic from "next/dynamic";
 import { signIn, signOut, useSession } from "next-auth/react";
 import GameHint from "@/src/components/ui/game-hint";
 
-// Importações internas (Ajuste se necessário para o seu caminho real)
+// Importações internas
 import { slideInFromLeft } from "@/lib/motion";
 import onboardPng from "@/app/onboard.png";
 
@@ -52,24 +49,26 @@ const ROLES = [
 
 type Role = typeof ROLES[number]["slug"];
 
-// --- ONBOARDING MODAL COMPONENT ---
+// --- ONBOARDING MODAL COMPONENT (EDITADO) ---
 
 function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClose: () => void; role: Role; onSuccess: (data: any) => void }) {
   const { t } = useTranslation();
+  
+  // States do Formulário (Travados visualmente)
   const [idValue, setIdValue] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(0); // Mantemos o step em 0 para mostrar o form inicial
   const [useWallet, setUseWallet] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
-  const idRef = useRef<HTMLInputElement | null>(null);
-  const nameRef = useRef<HTMLInputElement | null>(null);
-  const emailRef = useRef<HTMLInputElement | null>(null);
-  const phoneRef = useRef<HTMLInputElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // States do Código BETA (Lado Direito)
+  const [betaCode, setBetaCode] = useState("");
+  const [betaError, setBetaError] = useState(false);
 
+  const idRef = useRef<HTMLInputElement | null>(null);
+  
   const roleObj = ROLES.find((r) => r.slug === role);
   const roleLabel = roleObj ? t(roleObj.key) : role;
 
@@ -88,80 +87,29 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
 
   const req = getRequirements();
 
-  // Definindo steps dentro do componente para usar o 't'
   const steps = [
     { key: "id", label: req.label, placeholder: req.placeholder, type: "text" as const },
-    { key: "name", label: t("modal.name"), placeholder: "", type: "text" as const },
+    { key: "name", label: t("modal.name"), placeholder: "Your Name", type: "text" as const },
     { key: "email", label: t("modal.email"), placeholder: "you@email.com", type: "email" as const },
     { key: "phone", label: t("modal.phone"), placeholder: "(00) 00000-0000", type: "text" as const },
     { key: "docs", label: t("modal.docs_label"), placeholder: t("modal.pdf_placeholder"), type: "file" as const },
   ] as const;
 
-  const lastIndex = steps.length - 1;
-
-  const validate = (idx: number) => {
-    const key = steps[idx]?.key;
-    if (!key) return false;
-    if (key === "id") return useWallet ? idValue.trim().length > 20 : idValue.trim().length > 3;
-    if (key === "name") return fullName.trim().length > 2;
-    if (key === "email") return /\S+@\S+\.\S+/.test(email);
-    if (key === "phone") return phone.trim().replace(/\D/g, "").length >= 10;
-    if (key === "docs") return true;
-    return false;
-  };
-
-  const canSubmit = steps.every((_, i) => validate(i));
-
+  // Limpa estados ao abrir
   useEffect(() => {
     if (open) {
-      setIdValue(""); setFullName(""); setEmail(""); setPhone(""); setUploadedFiles([]); setStep(0); setUseWallet(false);
-      const t = setTimeout(() => idRef.current?.focus(), 20);
-      return () => clearTimeout(t);
+      setIdValue(""); setFullName(""); setEmail(""); setPhone(""); setUploadedFiles([]); 
+      setBetaCode(""); setBetaError(false);
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    const t = setTimeout(() => {
-      const key = steps[step]?.key;
-      if (key === "id") idRef.current?.focus();
-      if (key === "name") nameRef.current?.focus();
-      if (key === "email") emailRef.current?.focus();
-      if (key === "phone") phoneRef.current?.focus();
-    }, 10);
-    return () => clearTimeout(t);
-  }, [step, open]);
-
+  // Função para salvar cookie (mantida da lógica original)
   const saveIntentToCookie = () => {
     const data = JSON.stringify({ role, phone, idValue, idType: useWallet ? 'wallet' : 'role_id' });
     document.cookie = `zaeon_intent=${encodeURIComponent(data)}; path=/; max-age=600`;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setUploadedFiles(Array.from(e.target.files));
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (uploadedFiles.length > 0) {
-      const file = uploadedFiles[0];
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("userId", idValue);
-
-      try {
-        console.log("Arquivo preparado para envio:", file.name);
-      } catch (error) {
-        console.error("Erro upload:", error);
-      }
-    }
-
-    saveIntentToCookie();
-    onSuccess({ role, id: idValue, idType: useWallet ? 'wallet' : 'role_id', name: fullName, email, phone, hasDocs: uploadedFiles.length > 0 });
-    onClose();
-  };
-
+  // Login Google Real
   const handleGoogleQuickStart = () => {
     saveIntentToCookie();
     let targetPath = "/";
@@ -173,119 +121,197 @@ function OnboardModal({ open, onClose, role, onSuccess }: { open: boolean; onClo
     signIn('google', { callbackUrl: targetPath }, { prompt: "select_account" });
   };
 
+  // Validação do Código Beta
+  const handleBetaSubmit = () => {
+    // Lógica simples: Se não for um código específico, dá erro
+    if (betaCode !== "ZAEON-ALPHA-KEY") {
+      setBetaError(true);
+      // Remove o erro após animação
+      setTimeout(() => setBetaError(false), 500);
+    } else {
+      // Se acertasse o código, aqui liberaria os inputs (não implementado pois o foco é travar)
+      alert("Code Accepted. Welcome to Beta.");
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
     if (e.code === "Escape") { e.preventDefault(); onClose(); return; }
-    if (e.code === "Enter") {
-      e.preventDefault();
-      if (steps[step].key === 'docs' && uploadedFiles.length === 0) {
-        if (step < lastIndex) setStep(s => s + 1);
-        else handleSubmit();
-        return;
-      }
-      if (!validate(step)) return;
-      if (step < lastIndex) setStep((s) => Math.min(lastIndex, s + 1));
-      else handleSubmit();
-    }
   };
 
   if (!open) return null;
 
-  const inputClass = "h-10 rounded-lg border border-white/10 bg-black/70 px-3 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-cyan-400/60 w-full";
+  // Estilo dos inputs travados
+  const inputClass = "h-10 rounded-lg border border-white/5 bg-black/40 px-3 text-white/30 placeholder:text-white/10 outline-none w-full cursor-not-allowed";
 
   return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" role="dialog" aria-modal="true" onKeyDown={handleKeyDown}>
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative w-full max-w-[960px] rounded-2xl border border-white/10 bg-[rgba(7,16,28,0.85)] shadow-[0_10px_50px_rgba(0,0,0,0.55)] overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)]/80 animate-pulse" />
-          <button onClick={onClose} className="absolute right-3 top-3 rounded-md p-2 text-white/70 hover:bg-white/10"><XMarkIcon className="h-5 w-5" /></button>
-          <div className="grid grid-cols-[1.3fr_0.7fr]">
-            <div className="p-6 space-y-3">
-              <div className="flex items-center gap-3 mb-1">
-                <p className="text-sm text-white/85 tracking-wide">{t("modal.title")} · {roleLabel}</p>
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
+        
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }} 
+          animate={{ opacity: 1, scale: 1 }} 
+          className="relative w-full max-w-[900px] rounded-2xl border border-white/10 bg-[#0b121f] shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden"
+        >
+          {/* Barra de progresso topo (decorativa) */}
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)]/50" />
+          
+          <button onClick={onClose} className="absolute right-3 top-3 z-50 rounded-md p-2 text-white/50 hover:bg-white/10 hover:text-white transition-colors">
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] min-h-[500px]">
+            
+            {/* LADO ESQUERDO: FORMULÁRIO TRAVADO */}
+            <div className="p-8 space-y-5 relative">
+              {/* Overlay suave para indicar inatividade */}
+              <div className="absolute inset-0 z-10 bg-black/10 pointer-events-none" />
+
+              <div className="flex items-center gap-2 mb-6 opacity-50">
+                <LockClosedIcon className="w-4 h-4 text-white/60" />
+                <p className="text-xs font-bold text-white/60 tracking-widest uppercase">Registration Locked</p>
               </div>
 
-              <div className="mb-4">
-                <button
-                    onClick={handleGoogleQuickStart}
-                    className="w-full flex items-center justify-center gap-3 bg-white text-black hover:bg-gray-100 font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-                >
-                  <Image src="https://authjs.dev/img/providers/google.svg" alt="Google" width={20} height={20} className="w-5 h-5" />
-                  {t("login.google") || "Sign in with Google"}
-                </button>
-                <div className="flex items-center gap-2 mt-3 mb-2 opacity-50">
-                  <div className="h-px bg-white/30 flex-1"></div>
-                  <span className="text-[10px] uppercase text-white">{t("modal.or_manual")}</span>
-                  <div className="h-px bg-white/30 flex-1"></div>
-                </div>
-              </div>
-
-              {steps.map((s, i) => {
-                const active = i === step;
-                return (
-                    <motion.div key={s.key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-[220px_1fr] items-center gap-3">
-                      <div className={["rounded-lg px-3 py-2 border w-full flex items-center justify-between transition-colors", active ? "border-cyan-300/50 bg-[linear-gradient(120deg,rgba(34,211,238,.18),rgba(139,92,246,.18))] shadow-[0_0_22px_rgba(34,211,238,0.25)]" : "border-white/10 bg-white/[0.06]"].join(" ")}>
-                        <p className="text-[12px] text-white font-semibold">{s.label}</p>
-                        {s.key === 'id' && (
-                            <button onClick={() => { setUseWallet(!useWallet); setIdValue(""); idRef.current?.focus(); }} className="ml-2 text-[10px] uppercase font-bold tracking-wide text-cyan-400 hover:text-cyan-200 flex items-center gap-1 bg-black/20 px-2 py-1 rounded">
-                              {useWallet ? ( <><IdentificationIcon className="w-3 h-3" /> {t("modal.use_id")}</> ) : ( <><WalletIcon className="w-3 h-3" /> {t("modal.use_wallet")}</> )}
-                            </button>
-                        )}
-                      </div>
-
+              <div className="space-y-4 opacity-60 grayscale-[0.5] pointer-events-none select-none">
+                {steps.map((s, i) => (
+                    <div key={s.key} className="grid grid-cols-[120px_1fr] items-center gap-4">
+                      <p className="text-[12px] text-white/50 font-semibold text-right">{s.label}</p>
                       <div className="relative w-full">
                         {s.key === 'docs' ? (
-                            <div className="flex flex-col gap-2">
-                              <div onClick={() => fileInputRef.current?.click()} className={`h-10 w-full rounded-lg border border-dashed flex items-center px-3 cursor-pointer transition-all ${uploadedFiles.length > 0 ? 'border-green-500/50 bg-green-500/10' : 'border-white/20 bg-black/40 hover:bg-white/5'}`}>
-                                <DocumentArrowUpIcon className={`w-4 h-4 mr-2 ${uploadedFiles.length > 0 ? 'text-green-400' : 'text-white/60'}`} />
-                                <span className={`text-xs truncate ${uploadedFiles.length > 0 ? 'text-green-400' : 'text-white/60'}`}>
-                                          {uploadedFiles.length > 0 ? uploadedFiles[0].name : t("modal.upload_placeholder")}
-                                      </span>
-                                <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
-                              </div>
-                              {uploadedFiles.length === 0 && active && (
-                                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/20 p-2 rounded-lg mt-1">
-                                    <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
-                                    <p className="text-[10px] text-yellow-200/80 leading-tight">
-                                      <strong>{t("modal.attention_title")}</strong> {t("modal.attention_desc")}
-                                    </p>
-                                  </motion.div>
-                              )}
+                            <div className="h-10 w-full rounded-lg border border-dashed border-white/10 bg-black/20 flex items-center px-3">
+                              <DocumentArrowUpIcon className="w-4 h-4 mr-2 text-white/20" />
+                              <span className="text-xs text-white/20">{t("modal.upload_placeholder")}</span>
                             </div>
                         ) : (
-                            <input ref={s.key === "id" ? idRef : s.key === "name" ? nameRef : s.key === "email" ? emailRef : phoneRef} className={inputClass} placeholder={s.placeholder} type={s.type} value={s.key === "id" ? idValue : s.key === "name" ? fullName : s.key === "email" ? email : phone} onChange={(e) => { const val = e.target.value; if (s.key === "id") setIdValue(val); if (s.key === "name") setFullName(val); if (s.key === "email") setEmail(val); if (s.key === "phone") setPhone(val); }} />
+                            <input 
+                              disabled 
+                              className={inputClass} 
+                              placeholder={s.placeholder} 
+                              type={s.type} 
+                              value={s.key === "id" ? idValue : s.key === "name" ? fullName : s.key === "email" ? email : phone} 
+                            />
                         )}
                       </div>
-                    </motion.div>
-                );
-              })}
-
-              <div className="flex items-center gap-3 pt-3">
-                <button
-                    disabled={!validate(step) && step !== lastIndex}
-                    onClick={step < lastIndex ? () => setStep(s => s + 1) : handleSubmit}
-                    className={["rounded-xl px-5 h-10 text-sm font-semibold text-white", "bg-[linear-gradient(90deg,#22d3ee,#60a5fa,#22d3ee)] hover:brightness-110", "shadow-[0_0_22px_rgba(56,189,248,0.38)] transition", (!validate(step) && step !== lastIndex) ? "opacity-50 cursor-not-allowed" : ""].join(" ")}
-                >
-                  {step === lastIndex ? (uploadedFiles.length > 0 ? t("modal.finish") : t("modal.skip")) : t("modal.continue")}
-                </button>
-                <button onClick={onClose} className="rounded-xl px-5 h-10 text-sm font-semibold text-white/80 hover:text-white border border-white/15">{t("modal.cancel")}</button>
+                    </div>
+                ))}
+              </div>
+              
+              <div className="absolute bottom-6 left-8 right-8">
+                 <button disabled className="w-full h-10 rounded-xl bg-white/5 text-white/20 text-sm font-semibold cursor-not-allowed border border-white/5">
+                    Awaiting Access Code...
+                 </button>
               </div>
             </div>
-            <div className="relative flex justify-end pr-4 pt-2">
-              <Image src={onboardPng} alt="Zaeon Onboard" className="w-[85%] max-w-[360px] h-auto object-contain translate-y-[-20px]" priority draggable={false} />
+
+            {/* LADO DIREITO: MENSAGEM & BETA CODE */}
+            <div className="relative bg-[linear-gradient(160deg,rgba(15,23,42,0.6),rgba(30,41,59,0.8))] border-l border-white/5 p-8 flex flex-col justify-center items-center text-center">
+              
+              {/* Noise Texture */}
+              <div className="absolute inset-0 opacity-[0.15] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none mix-blend-overlay" />
+
+              <div className="relative z-10 flex flex-col items-center gap-5 w-full max-w-[280px]">
+                
+                {/* Flag de Atenção */}
+                <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+                  <ExclamationTriangleIcon className="w-7 h-7 text-yellow-500" />
+                </div>
+
+                {/* Mensagem Corrigida */}
+                <div className="space-y-2">
+                  <h3 className="text-white font-bold text-lg tracking-tight">Early Access</h3>
+                  <p className="text-[12px] leading-relaxed text-slate-300 font-medium">
+                    Zaeon is currently available for <strong className="text-yellow-400">BETA testers ONLY</strong>. 
+                    Enter the code you received to access full features and flagship models, or log in to your Google account to access as a guest. Guests have access to a limited version of our project.
+                  </p>
+                </div>
+                
+                <Link href="/help-online" className="text-[11px] text-cyan-400 hover:text-cyan-300 underline underline-offset-2 opacity-80 hover:opacity-100 transition-opacity">
+                   Want to help us go online? Look here.
+                </Link>
+
+                <div className="w-full h-px bg-white/10 my-1" />
+
+                {/* Input Código Beta */}
+                <div className="w-full space-y-2">
+                  <label className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Access Code</label>
+                  <motion.div
+                     animate={betaError ? { x: [-5, 5, -5, 5, 0] } : {}}
+                     transition={{ duration: 0.4 }}
+                  >
+                    <div className="relative flex items-center">
+                      <input 
+                        value={betaCode}
+                        onChange={(e) => { setBetaCode(e.target.value); setBetaError(false); }}
+                        onKeyDown={(e) => e.key === "Enter" && handleBetaSubmit()}
+                        placeholder="XXXX-XXXX"
+                        className={`w-full h-10 rounded-xl bg-black/40 text-center text-white text-sm font-mono tracking-widest outline-none border transition-all placeholder:text-white/10 ${betaError ? "border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)] focus:border-red-500" : "border-white/10 focus:border-cyan-400/50"}`}
+                      />
+                      <button onClick={handleBetaSubmit} className="absolute right-1 top-1 bottom-1 px-3 bg-white/5 hover:bg-white/10 rounded-lg text-xs text-white transition-colors">
+                        <ChevronRightIcon className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+
+                <div className="flex items-center gap-3 w-full opacity-60">
+                   <div className="h-px bg-white/20 flex-1" />
+                   <span className="text-[10px] uppercase text-white">OR</span>
+                   <div className="h-px bg-white/20 flex-1" />
+                </div>
+
+                {/* Botão Google Redondo (Rota Real) */}
+                <button 
+                  onClick={handleGoogleQuickStart}
+                  className="group relative flex items-center justify-center w-12 h-12 rounded-full bg-white text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-300"
+                  title="Sign in with Google (Limited Version)"
+                >
+                  <Image src="https://authjs.dev/img/providers/google.svg" alt="Google" width={24} height={24} className="w-6 h-6" />
+                </button>
+
+              </div>
             </div>
+
           </div>
         </motion.div>
       </div>
   );
 }
 
-// --- MAIN HERO CONTENT COMPONENT ---
+// --- CONSTANTES DE ESTILO (BLUE CYBER GLASS) ---
+
+const panel = [
+  "relative z-20 w-full max-w-[480px] mt-24 rounded-3xl overflow-hidden transition-all duration-500",
+  "backdrop-blur-xl",
+  "bg-black/60 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+  "dark:bg-cyan-900/20 dark:border-cyan-400/30 dark:shadow-[0_0_60px_rgba(34,211,238,0.15)]",
+  "after:pointer-events-none after:absolute after:inset-0 after:opacity-[0.1] after:bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"
+].join(" ");
+
+const cardBase = [
+  "group relative overflow-hidden flex items-center justify-between rounded-xl px-5 min-h-[64px]",
+  "transition-all duration-300 ease-out cursor-pointer",
+  "font-bold tracking-wide",
+  "text-white",
+  "bg-black/40 hover:bg-black/60 border border-white/5 hover:border-white/20",
+  "dark:bg-cyan-950/30 dark:hover:bg-cyan-900/50 dark:border-cyan-400/10 dark:hover:border-cyan-400/30",
+  "hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+].join(" ");
+
+const cardSelected = "ring-1 ring-cyan-400/60 shadow-[0_0_20px_rgba(34,211,238,0.3)] scale-[1.02] bg-black/50 dark:bg-cyan-900/40";
+
+const accentBar = (active: boolean) => [
+  "absolute left-0 top-0 h-full w-[4px] rounded-l-xl transition-all duration-300",
+  active 
+    ? "bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)] opacity-100" 
+    : "bg-transparent w-[0px] opacity-0"
+].join(" ");
+
+// --- MAIN COMPONENT (RESTANTE DO CÓDIGO) ---
 
 const HeroContentComponent = () => {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { data: session, status, update } = useSession();
+  const { data: session, status } = useSession(); // update removido pois não estava sendo usado
 
   const [index, setIndex] = useState(0);
   const [roleIndex, setRoleIndex] = useState(0);
@@ -293,40 +319,15 @@ const HeroContentComponent = () => {
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [chosenRole, setChosenRole] = useState<Role>("student");
   const [showImage, setShowImage] = useState(true);
-const lastScrollY = useRef(0);
-
-useEffect(() => {
-  const handleScroll = () => {
-    const currentScrollY = window.scrollY;
-
-    if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
-      // Rolando para baixo -> Esconde a imagem
-      setShowImage(false);
-    } else {
-      // Rolando para cima -> Mostra a imagem
-      setShowImage(true);
-    }
-    lastScrollY.current = currentScrollY;
-  };
-
-  window.addEventListener("scroll", handleScroll, { passive: true });
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
+  const lastScrollY = useRef(0);
 
   // Estados de Menu
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [tutorials, setTutorials] = useState(true);
 
   // Estados do Perfil Custom
   const [customName, setCustomName] = useState(session?.user?.name || "");
-  const [customCourse, setCustomCourse] = useState("");
-  const [avatarPreview, setAvatarPreview] = useState(session?.user?.image || "");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-
+  
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const isLoggedIn = status === "authenticated";
@@ -335,57 +336,24 @@ useEffect(() => {
 
   useEffect(() => {
     if (session?.user?.name) setCustomName(session.user.name);
-    if (session?.user?.image) setAvatarPreview(session.user.image);
   }, [session]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+        setShowImage(false);
+      } else {
+        setShowImage(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    if (!customName.trim()) return;
-    setIsSavingProfile(true);
-
-    const formData = new FormData();
-    formData.append("name", customName);
-    formData.append("course", customCourse);
-    if (avatarFile) {
-      formData.append("image", avatarFile);
-    }
-
-    try {
-      const res = await fetch("/api/user/update", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (res.ok) {
-        await update({
-          name: customName,
-          image: avatarPreview,
-          course: customCourse
-        });
-
-        setIsSaved(true);
-
-        setTimeout(() => {
-          setIsSaved(false);
-          setIsProfileOpen(false);
-        }, 1500);
-      }
-    } catch (error) {
-      console.error("Erro ao salvar perfil:", error);
-    } finally {
-      setIsSavingProfile(false);
-    }
   };
 
   const handleOnboardSuccess = (data: any) => {
@@ -457,41 +425,35 @@ useEffect(() => {
 
   const handleModalClose = () => { setOnboardOpen(false); setPickerOpen(false); };
 
-  // ALTERAÇÃO: Aumento da transparência no gradiente de fundo (alpha reduzido para 0.12/0.15)
-  const panel = "relative z-20 w-full max-w-[480px] mt-24 rounded-2xl overflow-hidden backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.12)] bg-[linear-gradient(135deg,rgba(7,38,77,0.12),rgba(11,58,164,0.10),rgba(16,134,201,0.15),rgba(11,58,164,0.10),rgba(7,38,77,0.12))] bg-[length:400%_400%] animate-[gradientFlow_12s_ease-in-out_infinite] after:pointer-events-none after:absolute after:inset-0 after:bg-[repeating-linear-gradient(transparent_0px,transparent_8px,rgba(255,255,255,0.025)_9px,transparent_10px)] after:opacity-20";
-  const cardBase = "group relative overflow-hidden flex items-center justify-between rounded-xl px-5 min-h-[64px] ring-1 ring-white/10 text-white transition-all duration-300 ease-out bg-[linear-gradient(120deg,rgba(3,22,45,0.55),rgba(6,42,90,0.55),rgba(7,60,120,0.55))] hover:bg-[linear-gradient(120deg,rgba(6,50,100,0.65),rgba(8,60,130,0.65))] hover:scale-[1.02] focus-visible:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_12px_rgba(34,211,238,0.12)]";
-  const cardSelected = "ring-cyan-300/45 shadow-[0_0_28px_rgba(34,211,238,0.25)]";
-  const accentBar = (active: boolean) => ["absolute left-0 top-0 h-full w-[3px] rounded-l-xl transition-colors", active ? "bg-[linear-gradient(180deg,#22d3ee,#60a5fa,#22d3ee)]" : "bg-white/10 group-hover:bg-[linear-gradient(180deg,rgba(34,211,238,.7),rgba(96,165,250,.7),rgba(34,211,238,.7))]",].join(" ");
-  const labelClass = "text-[16px] font-medium tracking-[0.01em] text-white";
+  const labelClass = "text-[16px] font-medium tracking-[0.01em]";
 
-  // Render New Account Item (Mantido igual)
   const renderNewAccountItem = (selected: boolean) => {
     if (isLoggedIn) {
       return (
           <li>
-            <div className={[cardBase, selected ? cardSelected : "", "cursor-default border border-green-500/30 bg-green-900/10"].join(" ")} onMouseEnter={() => setIndex(0)}>
-              <span className={accentBar(selected)} />
-              <span className="text-[16px] font-bold tracking-[0.01em] text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">
+            <div className={`${cardBase} ${selected ? cardSelected : ""} cursor-default border border-cyan-400/30 bg-cyan-900/10 dark:bg-cyan-900/20`} onMouseEnter={() => setIndex(0)}>
+              <div className={accentBar(selected)} />
+              <span className="text-[16px] font-bold tracking-[0.01em] text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
                  {displayRole} Lv.1
               </span>
-              <CheckBadgeIcon className="h-6 w-6 text-green-400" />
+              <CheckBadgeIcon className="h-6 w-6 text-cyan-400" />
             </div>
           </li>
       );
     }
     return (
         <li>
-          <button type="button" className={[cardBase, selected ? cardSelected : "", "pr-3"].join(" ")} onMouseEnter={() => setIndex(0)} onClick={() => setPickerOpen(true)}>
-            <span className={accentBar(selected)} />
+          <button type="button" className={`${cardBase} ${selected ? cardSelected : ""} pr-3 w-full`} onMouseEnter={() => setIndex(0)} onClick={() => setPickerOpen(true)}>
+            <div className={accentBar(selected)} />
             <span className={labelClass}>{t("menu.new")}</span>
             <div className="flex items-center gap-2 sm:gap-3">
-              {!pickerOpen ? ( <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" /> ) : (
+              {!pickerOpen ? ( <ChevronRightIcon className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" /> ) : (
                   <motion.div initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleIndex((r) => (r - 1 + ROLES.length) % ROLES.length); }} className="rounded-md p-1.5 hover:bg-white/10"><ChevronLeftIcon className="h-5 w-5 text-white/95" /></button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleIndex((r) => (r - 1 + ROLES.length) % ROLES.length); }} className="rounded-md p-1.5 hover:bg-white/10"><ChevronLeftIcon className="h-5 w-5" /></button>
                     <div onClick={(e) => { e.stopPropagation(); const chosen = ROLES[roleIndex]; setChosenRole(chosen.slug); setOnboardOpen(true); }} className="select-none px-5 py-2 rounded-xl text-[14px] font-bold text-white bg-black/85 border border-white/15 hover:scale-105 transition-transform">
                       {t(ROLES[roleIndex].key)}
                     </div>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleIndex((r) => (r + 1) % ROLES.length); }} className="rounded-md p-1.5 hover:bg-white/10"><ChevronRightIcon className="h-5 w-5 text-white/95" /></button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleIndex((r) => (r + 1) % ROLES.length); }} className="rounded-md p-1.5 hover:bg-white/10"><ChevronRightIcon className="h-5 w-5" /></button>
                   </motion.div>
               )}
             </div>
@@ -503,43 +465,27 @@ useEffect(() => {
   return (
       <div ref={containerRef} className="w-full min-h-screen flex justify-start items-start z-10 relative px-4 md:pl-20 py-12 overflow-hidden">
         
-        {/* NOVA IMAGEM: assets/computer.png no canto direito */}
-<motion.div 
-  initial={{ x: 0, opacity: 1 }}
-  animate={{ 
-    x: showImage ? 0 : "100%", 
-    opacity: showImage ? 1 : 0 
-  }}
-  transition={{ 
-    duration: 1.5, 
-    ease: [0.23, 1, 0.32, 1] 
-  }}
-  /* Aumentamos a largura para 85vw e ajustamos o top para evitar o corte */
-  className="absolute -right-80 top-20 bottom-0 w-[85vw] max-w-none pointer-events-none z-0 hidden lg:block overflow-hidden"
->
-  <Image 
-    src="/assets/computer.png" 
-    alt="Workstation Image" 
-    fill
-    /* object-top garante que a parte de cima (cabeça) apareça primeiro */
-    className="object-right object-top object-contain opacity-95 transition-opacity duration-500"
-    priority
-  />
-</motion.div>
+        {/* IMAGEM LATERAL */}
+        <motion.div 
+          initial={{ x: 0, opacity: 1 }}
+          animate={{ x: showImage ? 0 : "100%", opacity: showImage ? 1 : 0 }}
+          transition={{ duration: 1.5, ease: [0.23, 1, 0.32, 1] }}
+          className="absolute -right-80 top-20 bottom-0 w-[85vw] max-w-none pointer-events-none z-0 hidden lg:block overflow-hidden"
+        >
+          <Image 
+            src="/assets/computer.png" 
+            alt="Workstation Image" 
+            fill
+            className="object-right object-top object-contain opacity-95 transition-opacity duration-500"
+            priority
+          />
+        </motion.div>
 
-        {/* WRAPPER DE COLUNA PARA ALINHAR MENU + HINT */}
         <div className="flex flex-col items-start z-20">
           <motion.aside 
-            variants={slideInFromLeft(0.12)}
-            initial="hidden"
-            animate={{ 
-                x: showImage ? 0 : "-100%", 
-                opacity: showImage ? 1 : 0 
-            }}
-            transition={{ 
-                duration: 1.5, 
-                ease: [0.23, 1, 0.32, 1] 
-            }}
+            initial={{ x: "-100%", opacity: 0 }}
+            animate={{ x: showImage ? 0 : "-100%", opacity: showImage ? 1 : 0 }}
+            transition={{ duration: 1.5, ease: [0.23, 1, 0.32, 1] }}
             className={panel}
           >
             <div className="flex items-center gap-3 px-6 pt-7 pb-4">
@@ -548,7 +494,6 @@ useEffect(() => {
 
             <nav className="px-4 sm:px-6 pb-6 relative min-h-[300px]">
               <AnimatePresence mode="wait" initial={false}>
-                {/* --- MENU PRINCIPAL --- */}
                 {!isOptionsOpen ? (
                     <motion.ul key="main-menu" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-3">
                       {renderNewAccountItem(index === 0)}
@@ -563,11 +508,11 @@ useEffect(() => {
                           if (isLoggedIn) {
                             return (
                                 <li key={item.labelKey}>
-                                  <div className={[cardBase, selected ? cardSelected : "", "cursor-default"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                    <span className={accentBar(selected)} />
+                                  <div className={`${cardBase} ${selected ? cardSelected : ""} cursor-default`} onMouseEnter={() => setIndex(realIndex)}>
+                                    <div className={accentBar(selected)} />
                                     <div className="flex flex-col justify-center">
-                                      <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-0.5">{t("menu.connected_as")}</span>
-                                      <span className="text-[13px] font-medium text-white truncate max-w-[200px]">{session?.user?.email}</span>
+                                      <span className="text-[10px] opacity-60 uppercase tracking-widest font-bold mb-0.5">{t("menu.connected_as")}</span>
+                                      <span className="text-[13px] font-medium truncate max-w-[200px]">{session?.user?.email}</span>
                                     </div>
                                     <Image src="https://authjs.dev/img/providers/google.svg" alt="G" width={20} height={20} className="w-5 h-5 opacity-80" />
                                   </div>
@@ -576,13 +521,13 @@ useEffect(() => {
                           }
                           return (
                               <li key={item.labelKey}>
-                                <button onClick={handleLoadGame} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                  <span className={accentBar(selected)} />
+                                <button onClick={handleLoadGame} className={`${cardBase} ${selected ? cardSelected : ""} w-full`} onMouseEnter={() => setIndex(realIndex)}>
+                                  <div className={accentBar(selected)} />
                                   <div className="flex items-center gap-3">
                                     <span className={labelClass}>{t(item.labelKey)}</span>
                                     {selected && <span className="text-[10px] text-white/50 bg-white/10 px-2 py-0.5 rounded ml-2">{t("menu.google_save")}</span>}
                                   </div>
-                                  <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                                  <ChevronRightIcon className="h-5 w-5 opacity-60 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
                                 </button>
                               </li>
                           )
@@ -591,13 +536,12 @@ useEffect(() => {
                         if (isManual) {
                           return (
                               <li key={item.labelKey}>
-                                <Link href="/workstation/admin" className={[cardBase, selected ? cardSelected : ""].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                  <span className={accentBar(selected)} />
+                                <Link href="/workstation/admin" className={`${cardBase} ${selected ? cardSelected : ""}`} onMouseEnter={() => setIndex(realIndex)}>
+                                  <div className={accentBar(selected)} />
                                   <div className="flex items-center gap-2">
                                     <span className={labelClass}>{t(item.labelKey)}</span>
-                                    <span className="text-[9px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">{t("menu.dev_hack")}</span>
                                   </div>
-                                  <CpuChipIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                                  <CpuChipIcon className="h-5 w-5 opacity-60 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
                                 </Link>
                               </li>
                           )
@@ -606,10 +550,10 @@ useEffect(() => {
                         if (isOptions) {
                           return (
                               <li key={item.labelKey}>
-                                <button onClick={() => setIsOptionsOpen(true)} className={[cardBase, selected ? cardSelected : "", "w-full"].join(" ")} onMouseEnter={() => setIndex(realIndex)}>
-                                  <span className={accentBar(selected)} />
+                                <button onClick={() => setIsOptionsOpen(true)} className={`${cardBase} ${selected ? cardSelected : ""} w-full`} onMouseEnter={() => setIndex(realIndex)}>
+                                  <div className={accentBar(selected)} />
                                   <span className={labelClass}>{t(item.labelKey)}</span>
-                                  <ChevronRightIcon className="h-5 w-5 text-white/85 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+                                  <ChevronRightIcon className="h-5 w-5 opacity-60 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
                                 </button>
                               </li>
                           );
@@ -620,15 +564,15 @@ useEffect(() => {
                 ) : !isProfileOpen ? (
                     <motion.div key="options-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
                       <div className="flex items-center mb-1">
-                        <button onClick={() => setIsOptionsOpen(false)} className="flex items-center gap-2 text-sm font-bold transition-colors text-blue-600 hover:text-blue-500 dark:text-cyan-400 dark:hover:text-cyan-300">
+                        <button onClick={() => setIsOptionsOpen(false)} className="flex items-center gap-2 text-sm font-bold transition-colors text-blue-500 hover:text-blue-400 dark:text-cyan-400 dark:hover:text-cyan-300">
                           <ArrowLeftIcon className="w-4 h-4" />
                           <span className="uppercase tracking-wider text-[11px]">{t("menu.back")}</span>
                         </button>
                       </div>
                       <div className={`${cardBase} py-2`}>
                         <div className="flex flex-col">
-                          <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("options.language")}</span>
-                          <span className="text-[15px] font-semibold text-white">
+                          <span className="text-[13px] opacity-60 font-medium uppercase tracking-wider mb-1">{t("options.language")}</span>
+                          <span className="text-[15px] font-semibold">
                             {i18n.language === 'en' ? 'English' : i18n.language === 'zh' ? '中文' : i18n.language === 'ko' ? '한국어' : i18n.language === 'fr' ? 'Français' : i18n.language === 'pt' ? 'Português' : 'Español'}
                           </span>
                         </div>
@@ -640,43 +584,47 @@ useEffect(() => {
                           <option value="zh">中文</option>
                           <option value="ko">한국어</option>
                         </select>
-                        <ChevronRightIcon className="h-5 w-5 text-white/40" />
+                        <ChevronRightIcon className="h-5 w-5 opacity-40" />
                       </div>
                       <div className={`${cardBase} py-2 cursor-pointer`} onClick={() => setIsProfileOpen(true)}>
                         <div className="flex flex-col">
-                          <span className="text-[13px] text-white/50 font-medium uppercase tracking-wider mb-1">{t("menu.identity")}</span>
-                          <span className="text-[15px] font-semibold text-white">{t("menu.custom_profile")}</span>
+                          <span className="text-[13px] opacity-60 font-medium uppercase tracking-wider mb-1">{t("menu.identity")}</span>
+                          <span className="text-[15px] font-semibold">{t("menu.custom_profile")}</span>
                         </div>
-                        <UserCircleIcon className="h-6 w-6 text-white/40" />
+                        <UserCircleIcon className="h-6 w-6 opacity-40" />
                       </div>
                       <div className={`${cardBase} py-2 cursor-pointer group hover:bg-red-500/10 hover:border-red-500/30 transition-all`} onClick={() => signOut({ callbackUrl: "/" })}>
                         <div className="flex flex-col">
-                          <span className="text-[13px] text-white/50 group-hover:text-red-300/70 font-medium uppercase tracking-wider mb-1">Session Control</span>
+                          <span className="text-[13px] opacity-60 group-hover:text-red-500 font-medium uppercase tracking-wider mb-1">Session Control</span>
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_red]" />
-                            <span className="text-[15px] font-semibold text-white group-hover:text-red-400">Disconnect (Logout)</span>
+                            <span className="text-[15px] font-semibold group-hover:text-red-500">Disconnect (Logout)</span>
                           </div>
                         </div>
-                        <ArrowRightStartOnRectangleIcon className="h-5 w-5 text-white/40 group-hover:text-red-400" />
+                        <ArrowRightStartOnRectangleIcon className="h-5 w-5 opacity-40 group-hover:text-red-500" />
                       </div>
                     </motion.div>
                 ) : (
                     <motion.div key="profile-menu" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-4">
-                      {/* Conteúdo do perfil omitido para brevidade, mantenha o seu original */}
+                       <div className="flex items-center mb-1">
+                        <button onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 text-sm font-bold transition-colors text-blue-500 hover:text-blue-400 dark:text-cyan-400 dark:hover:text-cyan-300">
+                          <ArrowLeftIcon className="w-4 h-4" />
+                          <span className="uppercase tracking-wider text-[11px]">{t("menu.back")}</span>
+                        </button>
+                      </div>
+                      <div className="p-4 text-center opacity-50 text-white">
+                        Profile Settings (Content here)
+                      </div>
                     </motion.div>
                 )}
               </AnimatePresence>
             </nav>
-            <div className="px-6 pb-7 text-[11px] text-white/55 tracking-wide">{t("footer.version")}</div>
+            <div className="px-6 pb-7 text-[11px] opacity-55 tracking-wide text-white">{t("footer.version")}</div>
           </motion.aside>
 
-          {/* GAME HINT REPOSICIONADO ABAIXO DO ASIDE */}
           <motion.div
-    className="mt-4 w-full"
-            animate={{ 
-              x: showImage ? 0 : "-120%", 
-              opacity: showImage ? 1 : 0 
-            }}
+            className="mt-4 w-full"
+            animate={{ x: showImage ? 0 : "-120%", opacity: showImage ? 1 : 0 }}
             transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
           >
             <GameHint 

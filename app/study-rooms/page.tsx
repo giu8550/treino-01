@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useRouter } from "next/navigation"; // 1. IMPORTAR ROUTER
+import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import {
     UserGroupIcon,
@@ -17,7 +17,7 @@ import MatrixRain from "@/components/main/star-background";
 
 export default function StudyRoomsPage() {
     const { t } = useTranslation();
-    const router = useRouter(); // 2. INICIALIZAR ROUTER
+    const router = useRouter();
     const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
     const [mounted, setMounted] = useState(false);
 
@@ -25,7 +25,6 @@ export default function StudyRoomsPage() {
         setMounted(true);
     }, []);
 
-    // 3. ADICIONAR AS ROTAS ESPECÍFICAS EM CADA OBJETO
     const ROOMS = [
         {
             id: 1,
@@ -36,7 +35,7 @@ export default function StudyRoomsPage() {
             icon: CpuChipIcon,
             color: "text-cyan-300",
             bg: "bg-cyan-500/20",
-            route: "/study-rooms/cyber" // Rota do Hall Cibernético
+            route: "/study-rooms/cyber"
         },
         {
             id: 2,
@@ -47,7 +46,7 @@ export default function StudyRoomsPage() {
             icon: BeakerIcon,
             color: "text-green-300",
             bg: "bg-green-500/20",
-            route: "/study-rooms/bio" // Rota do Bio-Lab
+            route: "/study-rooms/bio"
         },
         {
             id: 3,
@@ -58,7 +57,7 @@ export default function StudyRoomsPage() {
             icon: CalculatorIcon,
             color: "text-purple-300",
             bg: "bg-purple-500/20",
-            route: "/study-rooms/quantic" // Rota do Campo Quântico
+            route: "/study-rooms/quantic"
         },
         {
             id: 4,
@@ -69,25 +68,53 @@ export default function StudyRoomsPage() {
             icon: GlobeAltIcon,
             color: "text-blue-300",
             bg: "bg-blue-500/20",
-            route: "/study-rooms/lounge" // Rota do Lounge Global
+            route: "/study-rooms/lounge"
         },
     ];
 
-    // 4. FUNÇÃO PARA NAVEGAR QUANDO CLICAR EM ENTRAR
     const handleJoinRoom = () => {
         if (!selectedRoom) return;
-
         const room = ROOMS.find((r) => r.id === selectedRoom);
         if (room?.route) {
             router.push(room.route);
         }
     };
 
-    // Estilos de vidro (Dark Blue Glass - Transparente)
-    const glassPanelStyle = "backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.1)] bg-[linear-gradient(135deg,rgba(7,38,77,0.4),rgba(11,58,164,0.3),rgba(7,38,77,0.4))]";
-    const cardBaseStyle = "group relative overflow-hidden flex items-center justify-between rounded-xl px-4 py-3 ring-1 ring-white/10 text-white transition-all duration-300 ease-out bg-[linear-gradient(120deg,rgba(3,22,45,0.3),rgba(6,42,90,0.3),rgba(7,60,120,0.3))] hover:bg-[linear-gradient(120deg,rgba(6,50,100,0.4),rgba(8,60,130,0.4))] hover:scale-[1.02]";
-    const cardSelectedStyle = "ring-cyan-300/45 shadow-[0_0_28px_rgba(34,211,238,0.2)] bg-[linear-gradient(120deg,rgba(6,50,100,0.5),rgba(8,60,130,0.5))]";
-    const accentBar = (active: boolean) => `absolute left-0 top-0 h-full w-[3px] transition-colors ${active ? "bg-[linear-gradient(180deg,#22d3ee,#60a5fa,#22d3ee)]" : "bg-transparent group-hover:bg-white/10"}`;
+    // --- ESTILOS SINCRONIZADOS COM A HERO PAGE ---
+
+    // Painel: Preto no Modo Claro / Azul Ciano Glass no Modo Escuro
+    const panelStyle = [
+        "backdrop-blur-xl transition-all duration-500",
+        // Claro
+        "bg-black/60 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+        // Escuro
+        "dark:bg-cyan-900/20 dark:border-cyan-400/30 dark:shadow-[0_0_60px_rgba(34,211,238,0.15)]",
+        "after:pointer-events-none after:absolute after:inset-0 after:opacity-[0.1] after:bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"
+    ].join(" ");
+
+    // Cards: Botões escuros/translúcidos com texto branco
+    const cardBaseStyle = [
+        "group relative overflow-hidden flex items-center justify-between rounded-xl px-4 py-3",
+        "transition-all duration-300 ease-out cursor-pointer",
+        "font-bold tracking-wide",
+        "text-white", // Texto sempre branco
+        // Claro
+        "bg-black/40 hover:bg-black/60 border border-white/5 hover:border-white/20",
+        // Escuro
+        "dark:bg-cyan-950/30 dark:hover:bg-cyan-900/50 dark:border-cyan-400/10 dark:hover:border-cyan-400/30",
+        "hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+    ].join(" ");
+
+    // Selecionado: Glow Azul Ciano
+    const cardSelectedStyle = "ring-1 ring-cyan-400/60 shadow-[0_0_20px_rgba(34,211,238,0.3)] scale-[1.02] bg-black/50 dark:bg-cyan-900/40";
+
+    const accentBar = (active: boolean) => [
+        "absolute left-0 top-0 h-full w-[4px] transition-all duration-300",
+        active 
+            ? "bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)] opacity-100" 
+            : "bg-transparent w-[0px] opacity-0 group-hover:bg-white/10"
+    ].join(" ");
+
 
     if (!mounted) {
         return (
@@ -157,9 +184,10 @@ export default function StudyRoomsPage() {
                             whileInView={{ y: 0, opacity: 1 }}
                             whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(34, 211, 238, 0.3)" }}
                             transition={{ duration: 0.5 }}
-                            className={`relative w-full max-w-[400px] mb-4 px-6 py-4 flex items-center justify-center gap-3 rounded-xl cursor-default ${glassPanelStyle}`}
+                            // Apliquei o novo estilo PANEL aqui também
+                            className={`relative w-full max-w-[400px] mb-4 px-6 py-4 flex items-center justify-center gap-3 rounded-2xl cursor-default overflow-hidden ${panelStyle}`}
                         >
-                            <span className="text-sm font-bold font-mono tracking-[0.15em] uppercase drop-shadow-sm text-white text-center leading-tight">
+                            <span className="text-sm font-bold font-mono tracking-[0.15em] uppercase drop-shadow-sm text-white text-center leading-tight relative z-10">
                                 {t("study_rooms.highlight")} <span className="text-cyan-300">{t("study_rooms.together")}</span>
                             </span>
                         </motion.div>
@@ -169,10 +197,10 @@ export default function StudyRoomsPage() {
                             initial={{ opacity: 0, scale: 0.9, x: 50 }}
                             whileInView={{ opacity: 1, scale: 1, x: 0 }}
                             transition={{ delay: 0.2, duration: 0.6 }}
-                            className={`relative w-full max-w-[400px] rounded-2xl overflow-hidden ${glassPanelStyle}`}
+                            className={`relative w-full max-w-[400px] rounded-3xl overflow-hidden ${panelStyle}`}
                         >
                             {/* Header */}
-                            <div className="h-12 flex items-center justify-between px-5 border-b border-white/10 bg-white/5">
+                            <div className="h-12 flex items-center justify-between px-5 border-b border-white/10 bg-white/5 relative z-10">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e] animate-pulse" />
                                     <span className="text-[10px] font-mono tracking-widest uppercase font-bold text-cyan-200">{t("study_rooms.lobby_status")}</span>
@@ -181,7 +209,7 @@ export default function StudyRoomsPage() {
                             </div>
 
                             {/* Lista */}
-                            <div className="p-5 space-y-4">
+                            <div className="p-5 space-y-4 relative z-10">
                                 <div>
                                     <h2 className="text-xl font-bold leading-none text-white">{t("study_rooms.find_party")}</h2>
                                     <p className="text-[10px] mt-1 uppercase tracking-wide text-white/50">{t("study_rooms.select_cluster")}</p>
@@ -222,10 +250,10 @@ export default function StudyRoomsPage() {
                                 </div>
                             </div>
 
-                            {/* Footer */}
-                            <div className="p-4 border-t border-white/10 bg-black/20">
+                            {/* Footer do Gadget */}
+                            <div className="p-4 border-t border-white/10 bg-black/20 relative z-10">
                                 <button
-                                    onClick={handleJoinRoom} // 5. EVENTO DE CLIQUE ADICIONADO AQUI
+                                    onClick={handleJoinRoom}
                                     disabled={!selectedRoom}
                                     className={`w-full py-3 rounded-lg font-bold text-xs uppercase tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-2 ${selectedRoom ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-[0_0_20px_rgba(34,211,238,0.4)]" : "bg-white/5 text-white/20 cursor-not-allowed"}`}
                                 >
@@ -233,6 +261,14 @@ export default function StudyRoomsPage() {
                                 </button>
                             </div>
                         </motion.div>
+                        
+                        {/* COPYRIGHT FOOTER */}
+                        <div className="mt-8 text-center w-full max-w-[400px]">
+                             <p className="text-[10px] text-slate-500 dark:text-cyan-900/60 font-medium tracking-wider uppercase opacity-70">
+                                &copy; Zaeon - Zenith of Artificial & Earthly Organisms Network, 2026.
+                             </p>
+                        </div>
+
                     </div>
                 </div>
             </div>

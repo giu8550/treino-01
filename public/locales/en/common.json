@@ -6,8 +6,8 @@
     "study_rooms": "Study Rooms"
   },
   "intro": {
-    "line1": "STUDY_LEARN_RESEARCH...",
-    "line2": "PUBLISH_AND_MONETIZE."
+    "line1": "STUDY, LEARN = RESEARCH...",
+    "line2": "PUBLISH = MONETIZE"
   },
   "menu": {
     "new": "New Account",
@@ -35,7 +35,7 @@
     "off": "OFF"
   },
   "footer": {
-    "powered": "Help us go on chain! - Join our foundation",
+    "powered": "Help us go on chain! - Fund our researc here.",
     "version": "Zaeon OS - v1.0"
   },
   "modal": {
@@ -73,17 +73,17 @@
     "mode_study": "Study Mode",
     "mode_work": "Work Mode",
     "switch_hint": "Click to switch to {{mode}}",
-    "switching": "Switching Environment...",
+    "switching": "Switching...",
     "study_title": "Study Mode",
     "add_files": "Add PDF",
-    "citations_title": "AI Citations",
+    "citations_title": "Citations",
     "citations_empty": "Waiting for analysis...",
     "citations_ready": "Context Loaded. Ready to cite.",
     "videos_title": "Videos",
     "status_digesting": "Digesting Document",
     "status_typing": "Generating notes...",
     "chat_header": "Research Insights",
-    "chat_placeholder": "Interact with the desk...",
+    "chat_placeholder": "Interact...",
     "chat_empty": "Add a PDF and press Play to start.",
     "chat_context_active": "Active Context",
     "reload": "Reload",
@@ -146,17 +146,17 @@
     "highlight": "Find your Squad. Research. Publish.",
     "together": "TOGETHER.",
     "lobby_status": "LOBBY_STATUS: LIVE",
-    "find_party": "Find Your Party",
+    "find_party": "Collective Science is funnier",
     "select_cluster": "Select a research cluster",
     "join": "Join Session",
     "select": "Select a Room",
     "rooms": {
       "cyber_name": "Cybernetics Hall",
-      "cyber_topic": "Computer Science",
+      "cyber_topic": "Technology & Innovation",
       "bio_name": "Bio-Lab Alpha",
-      "bio_topic": "Medicine & Health",
+      "bio_topic": "Bio, Medicine & Health",
       "quantum_name": "Quantum Field",
-      "quantum_topic": "Mathematics",
+      "quantum_topic": "Mathematics and physics",
       "global_name": "Global Lounge",
       "global_topic": "General Studies"
     }

@@ -16,7 +16,7 @@ import {
 // --- DADOS DA SEÇÃO 1: MANIFESTO ---
 const MANIFESTO_PAGES = [
     {
-        title: "THE LIVING INTERNET MANIFESTO",
+        title: "THE LIVING INTERNET THEORY",
         subtitle: "Preamble: Digital Genesis",
         content: [
             "We are on the brink of total collapse. The internet as we know it no longer exists. Once a great beam of light—used to inform, unite, and empower—now it has become the tool through which major corporations enact a silent pact to destroy the poorest classes, in the name of profit, greed, and the illusion of power.",
@@ -30,7 +30,7 @@ const MANIFESTO_PAGES = [
     },
     {
         title: "CHAPTER I: THE LIVING INTERNET",
-        subtitle: "From Passive Web to Civilizational OS",
+        subtitle: "From Passive Web to Self-Organizing System",
         content: [
             "The central thesis is simple and brutal: human administration is a cognitive bottleneck. We attempt to govern ecosystems, economies, education, logistics, and climate with minds built for survival in small tribes.",
             "The Living Internet begins the moment we transfer the cognitive load of coordination—resource management, verification, treasury operations, and long-horizon planning—to autonomous AI agents, while humans return to what only humans can do: validate meaning, create, research, teach, explore.",
