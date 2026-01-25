@@ -180,6 +180,34 @@
       "global_topic": "General Studies"
     }
   },
+  "lounge_chat": {
+    "system_restricted": "System Restricted",
+    "chat_offline": "Chat Offline",
+    "access_denied": "Access Denied",
+    "no_credentials": "You don't have enough credentials to access the global chat."
+  },
+  "research_module": {
+    "active_projects": "{{count}} ACTIVE PROJECTS",
+    "credentials_error": "You don't have enough credentials to access the chat",
+    "api_connected": "API Connected",
+    "rank": "Rank",
+    "negotiate_ip": "Negotiate IP",
+    "not_available": "Not available yet",
+    "phds": "PhDs",
+    "masters": "Masters",
+    "undergrads": "Undergrads",
+    "exploring": "Exploring",
+    "validating": "Validating",
+    "building": "Building",
+    "review": "Awaiting Human Peer Review",
+    "completed": "Completed",
+    "agents_production": "Agents in Production",
+    "commercial": "Commercial App",
+    "research": "Research App",
+    "social": "Social Impact",
+    "profitability": "Profitability",
+    "project_rank": "Project Rank"
+  },
   "about": {
     "back": "Back",
     "scroll_down": "scroll down to learn everything",
@@ -250,6 +278,32 @@
       "mba": "MBA IT Project Mgmt"
     }
   },
+  "hero": {
+    "powered": "Desenvolvido por VERY Network",
+    "version": "Zaeon OS - v1.0",
+    "sponsors_title": "SPONSORS:",
+    "alt_workstation": "Workstation View",
+    "alt_onboard": "Onboarding Assistant"
+  },
+  "feed": {
+    "header_community": "Zaeon Global Network",
+    "header_section": "Zaeon Protocol // {{section}}",
+    "tooltip_uplink": "Uplink: Syncing...",
+    "tooltip_ready": "System: Ready for Uplink",
+    "tooltip_online": "ONLINE",
+    "tooltip_offline": "OFFLINE",
+    "btn_enter": "ENTER COMMUNITY",
+    "btn_back": "Back",
+    "live_stream": "Data Stream",
+    "input_placeholder": "Broadcast message...",
+    "thread_view": "Thread View",
+    "responses": "Responses",
+    "reply_placeholder": "Reply...",
+    "empty_state": "No broadcasts detected in this sector.",
+    "delete_confirm": "Delete this broadcast?",
+    "static_rules": "⚠️ Rules: Zaeon is an academic collaboration environment. Respect others.",
+    "static_welcome": "Starting Cluster monitoring. Welcome, explorers."
+  },
   "profile": {
     "back_options": "Back to Options",
     "tap_avatar": "Tap to change avatar",
@@ -262,6 +316,9 @@
     "default_course": "this course",
     "saving": "Saving...",
     "save": "Save Changes",
-    "success": "Profile saved!"
+    "success": "Profile saved!",
+    "session_label": "Session Control",
+    "logout_action": "Disconnect (Logout)",
+    "success_message": "Credentials Updated"
   }
 }

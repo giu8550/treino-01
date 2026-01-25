@@ -7,9 +7,10 @@ import {
     MinusIcon, 
     LockClosedIcon
 } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 
 export const LoungeChatWidget = () => {
-    // Mantemos apenas o estado de abrir/fechar, pois o conteúdo é estático
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(true);
 
     const glassStyle = `
@@ -24,7 +25,6 @@ export const LoungeChatWidget = () => {
             animate={{ 
                 y: 0, 
                 opacity: 1, 
-                // Altura reduzida pois não há lista para rolar
                 height: isOpen ? 200 : 48, 
                 width: isOpen ? 340 : 280 
             }}
@@ -38,11 +38,12 @@ export const LoungeChatWidget = () => {
             >
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        {/* Status Vermelho (Offline) */}
                         <div className="w-2 h-2 rounded-full bg-red-500" />
                     </div>
                     <span className="text-xs font-black uppercase tracking-widest text-white/50">
-                        {isOpen ? "System Restricted" : "Chat Offline"}
+                        {isOpen 
+                            ? t("lounge_chat.system_restricted", "System Restricted") 
+                            : t("lounge_chat.chat_offline", "Chat Offline")}
                     </span>
                 </div>
                 
@@ -70,11 +71,11 @@ export const LoungeChatWidget = () => {
                         </div>
                         
                         <h4 className="text-sm font-bold text-[#0f172a] dark:text-white mb-1">
-                            Access Denied
+                            {t("lounge_chat.access_denied", "Access Denied")}
                         </h4>
                         
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono leading-relaxed">
-                            You don&apos;t have enough credentials to access the global chat.
+                            {t("lounge_chat.no_credentials", "You don't have enough credentials to access the global chat.")}
                         </p>
                     </motion.div>
                 )}

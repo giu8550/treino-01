@@ -610,14 +610,15 @@ const AgentSection = () => {
                     className="p-8 rounded-[1.5rem] bg-black/20 backdrop-blur-xl border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] relative overflow-hidden group transition-all"
                 >
                     <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-cyan-500 mb-4 drop-shadow-md group-hover:to-cyan-300 transition-all">
-                        AGENTIC<br />AUDIT
+                        AGENTIC<br />LAYER
                     </h2>
                     
                     <p className="text-sm text-white font-light leading-relaxed mb-4 group-hover:text-cyan-50 transition-colors">
-                        In Zaeon, <strong className="text-cyan-400 font-bold">Agents act as auditors</strong>. They maintain a persistent, gamified ledger of your cognitive outputs.
+                        Here, <strong className="text-cyan-400 font-bold">AI Agents are more then assistents</strong>. <div></div>
+                        They are trained to encourage and foster innovation, discipline, and creativity.
                     </p>
                     <p className="text-xs text-white font-mono leading-relaxed border-l border-cyan-500/50 pl-3 group-hover:border-cyan-400 transition-colors">
-                        Every interaction is evaluated. Skills are ranked from F to SS. This is not just learning; it is character building through algorithmic mirroring.
+                        Each agent is trained to be a good citizen of a new economy, so they see each student as a valuable asset that can later generate real value through valuable researches and IPs.
                     </p>
                 </motion.div>
             </div>
