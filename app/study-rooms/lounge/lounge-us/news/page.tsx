@@ -2,23 +2,50 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { motion } from "framer-motion";
-import { BanknotesIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { BanknotesIcon, ArrowPathIcon, NewspaperIcon } from "@heroicons/react/24/outline"; // Adicionei NewspaperIcon se quiser variar
 import { ZAEON_CONFIG, ABIS } from "src/config/contracts";
 
-// Keep your existing NEWS_DATA constant here...
-const NEWS_DATA = [ null ]; // Your original array
+// --- CORREÇÃO AQUI ---
+// Removemos o 'null' e colocamos objetos com a estrutura correta.
+const NEWS_DATA = [
+    {
+        id: "static-1",
+        date: "JAN 2026",
+        category: "System Update",
+        title: "Protocol Initialization",
+        description: "Zaeon Protocol contracts deployed on Cronos chain.",
+        location: "Global",
+        // Note: Como é um dado estático, passamos o componente do ícone diretamente
+        icon: <ArrowPathIcon className="w-4 h-4" />, 
+        isLive: false // Importante ser false para pegar o estilo cinza/branco
+    },
+    {
+        id: "static-2",
+        date: "DEC 2025",
+        category: "Governance",
+        title: "Treasury Module V1",
+        description: "Implementation of algorithmic governance rules.",
+        location: "On-Chain",
+        icon: <BanknotesIcon className="w-4 h-4" />,
+        isLive: false
+    }
+];
+// Se não quiser dados iniciais, use apenas: const NEWS_DATA = [];
 
 export default function NewsModule() {
     const [liveEvents, setLiveEvents] = useState<any[]>([]);
 
     useEffect(() => {
         // Setup a Read-Only Provider (No wallet needed to view news)
+        // Nota: Certifique-se que ZAEON_CONFIG.RPC_URL está definido no seu config
         const provider = new ethers.JsonRpcProvider(ZAEON_CONFIG.RPC_URL);
         const treasury = new ethers.Contract(ZAEON_CONFIG.ADDRESSES.TREASURY, ABIS.TREASURY, provider);
 
         const fetchEvents = async () => {
-            // Get events from the last 10000 blocks (or simply listen)
+            // Get events from the last blocks
             try {
+                // Nota: queryFilter pode ser pesado dependendo do RPC. 
+                // Às vezes é bom limitar blocos: queryFilter("FundsAllocated", -10000, "latest")
                 const events = await treasury.queryFilter("FundsAllocated"); 
                 const formattedEvents = events.reverse().map((e: any, i) => ({
                     id: `live-${i}`,
@@ -35,6 +62,7 @@ export default function NewsModule() {
         };
 
         fetchEvents();
+
         // Setup Listener
         const listener = (agent: string, tokenId: bigint, amount: bigint) => {
              const newEvent = {
@@ -55,6 +83,7 @@ export default function NewsModule() {
     }, []);
 
     // Merge Live Data + Historical Data
+    // O erro acontecia aqui ao renderizar porque NEWS_DATA tinha null
     const combinedData = [...liveEvents, ...NEWS_DATA];
 
     return (
@@ -70,7 +99,7 @@ export default function NewsModule() {
             <div className="space-y-4">
                 {combinedData.map((item, index) => (
                     <motion.div
-                        key={item.id}
+                        key={item.id} // Certifique-se que o ID é único
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`group relative p-6 rounded-3xl border transition-all cursor-pointer hover:shadow-lg 
@@ -79,7 +108,6 @@ export default function NewsModule() {
                                 : 'bg-white/40 dark:bg-white/[0.03] border-black/5 dark:border-white/5'
                             }`}
                     >
-                         {/* Render logic same as your original, just handling 'isLive' styling */}
                         <div className="flex justify-between items-start mb-3">
                              <div className="flex items-center gap-3">
                                 <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${item.isLive ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-600'}`}>

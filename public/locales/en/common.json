@@ -27,6 +27,13 @@
     "professional": "Teacher",
     "entrepreneur": "Entrepreneur"
   },
+  "hints": {
+    "new_game": "HINT: Start with a new profile to check out Zaeon tech.",
+    "save_progress": "HINT: Connect your Google account to save progress and achievements.",
+    "roles": "HINT: Each class (Student, Researcher) unlocks exclusive tools.",
+    "wallet": "HINT: Load your saved progress to continue your journey.",
+    "options": "HINT: Access options to customize your profile and settings."
+  },
   "options": {
     "language": "Language",
     "node": "Node",
@@ -137,7 +144,19 @@
   "encryption": {
     "title": "AI Agents from Another Dimension.",
     "subtitle": "They came to help you be the best.",
-    "button": "Learn more"
+    "button": "Learn more",
+    "typing_title": "A new way to produce science.",
+    "pipeline_title": "The Zaeon Pipeline",
+    "steps": {
+      "vertex": { "title": "Vertex AI", "full": "Google Vertex AI", "desc": "Predictive Modeling" },
+      "students": { "title": "Students", "full": "Academic Network", "desc": "Collection & Curatorship" },
+      "research": { "title": "Research", "full": "Laboratories", "desc": "Scientific Validation" },
+      "publish": { "title": "Publishing", "full": "Dissemination", "desc": "Technical Papers" },
+      "compliance": { "title": "Compliance", "full": "Auditing", "desc": "Ethics & Legal" },
+      "blockchain": { "title": "Blockchain", "full": "Very Network", "desc": "Immutable Record" },
+      "ip": { "title": "IP", "full": "Property", "desc": "Copyrights" },
+      "token": { "title": "Token", "full": "Tokenization", "desc": "Digital Assets" }
+    }
   },
   "study_rooms": {
     "system": "SYSTEM_OPTIMAL",
