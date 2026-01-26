@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     CpuChipIcon, 
@@ -9,223 +9,36 @@ import {
     ServerStackIcon,
     CurrencyDollarIcon,
     LockClosedIcon, 
+    ArrowPathIcon,
+    PaperClipIcon,
+    XMarkIcon,
+    CloudArrowUpIcon,
+    DocumentTextIcon,
+    CheckCircleIcon,
+    ArrowUpTrayIcon
 } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 
 // --- TYPES ---
-interface Participants {
-    grads: number;
-    masters: number;
-    phds: number;
-}
-
-interface ResearchDetails {
-    agents: string[];
-    commercial: number;
-    research: number;
-    social: number;
-    profitability: number;
-    rank: string;
-}
-
 interface ResearchItem {
-    id: number;
+    id: number | string;
     title: string;
-    participants: Participants;
+    participants: { grads: number; masters: number; phds: number };
     progress: number;
     status: string;
-    details: ResearchDetails;
-}
-
-// --- DATA ---
-const TITLES: string[] = [
-    // 0
-    "In situ Biosynthesis of Bacterial Cellulose/Graphene Oxide Composites via Komagataeibacter Fermentation",
-    // 1
-    "Mycelium-Based Memristor Arrays: Low-Cost Neuromorphic Computing on Fungal Substrates",
-    // 2
-    "Engineered PETase (FAST-PETase-Class) for Rapid Depolymerization of Post-Consumer PET Under Mild Conditions",
-    // 3
-    "Bacillus Spore–Enabled Self-Healing Concrete via Microbially Induced Calcium Carbonate Precipitation (MICP)",
-    // 4
-    "Artificial Photosynthesis for Flue-Gas CO₂ Capture and In-Situ Conversion to Fuels/Chemicals",
-    // 5
-    "Plant Electrophysiology Interfaces: Biohybrid Plant–Machine Communication for Environmental Sensing",
-    // 6
-    "Bioleaching Rare Earth Elements from E-Waste Using Fungi-Driven Urban Biomining",
-    // 7
-    "High-Resolution Electronic Skin (E-Skin) Sensor Arrays for Tactile Feedback in Advanced Prosthetics",
-    // 8
-    "Genetic Algorithms + Protein Language Models for Multi-Objective Enzyme/Protein Optimization",
-    // 9
-    "Synthetic DNA Archival Data Storage with Error Correction and Random-Access Retrieval",
-    // 10
-    "Bioluminescent Bio-Modules for Urban Accent Lighting: Pilot-Scale Alternatives to Conventional Fixtures",
-    // 11
-    "Chitin/Chitosan-Based Membranes and Sponges for Microplastic Removal in Wastewater Streams",
-];
-
-// --- MÉTRICAS FIXAS BASEADAS NA REALIDADE ---
-const FIXED_METRICS = [
-    // 0: Bacterial Cellulose (Material Science)
-    // Comercial: 45% (Possível, uso em baterias/filtros, mas escala difícil)
-    // Research: 65% (Material interessante, mas não revolucionário)
-    // Social: 30% (Indireto)
-    // Profit: 45% (Custos de fermentação vs preço de mercado)
-    { commercial: 45, research: 65, social: 30, profitability: 45 },
-
-    // 1: Mycelium Memristors (Bio-Computing)
-    // Comercial: 20% (Muito remoto, "wetware" ainda é ficção científica comercial)
-    // Research: 80% (Pesquisa de base fortíssima para computação não-silício)
-    // Social: 25% (Baixo impacto imediato)
-    // Profit: 15% (Longe de dar lucro)
-    { commercial: 20, research: 80, social: 25, profitability: 15 },
-
-    // 2: PETase (Enzima come plástico)
-    // Comercial: 75% (Alta demanda global por reciclagem química)
-    // Research: 75% (Otimização enzimática é hot topic)
-    // Social: 80% (Resolve um dos maiores problemas do mundo)
-    // Profit: 60% (Gestão de resíduos tem margem apertada, mas alto volume)
-    { commercial: 75, research: 75, social: 80, profitability: 60 },
-
-    // 3: Self-Healing Concrete (Infraestrutura)
-    // Comercial: 70% (Demanda existente em construção civil)
-    // Research: 55% (Tecnologia já conhecida, foco em aplicação)
-    // Social: 60% (Segurança e durabilidade urbana)
-    // Profit: 65% (Produto premium para construção)
-    { commercial: 70, research: 55, social: 60, profitability: 65 },
-
-    // 4: Artificial Photosynthesis (Energia)
-    // Comercial: 35% (Difícil competir com solar + baterias atualmente)
-    // Research: 85% (O "Santo Graal" da química)
-    // Social: 85% (Salvação climática potencial)
-    // Profit: 40% (Infraestrutura cara)
-    { commercial: 35, research: 85, social: 85, profitability: 40 },
-
-    // 5: Plant Electrophysiology (AgTech/Sensores)
-    // Comercial: 25% (Nicho remoto, agricultura de precisão extrema)
-    // Research: 70% (Interação bio-digital)
-    // Social: 40% (Monitoramento ambiental)
-    // Profit: 30% (Hardware difícil de vender em massa)
-    { commercial: 25, research: 70, social: 40, profitability: 30 },
-
-    // 6: Bioleaching Rare Earths (Mineração Urbana)
-    // Comercial: 65% (Metais estratégicos valem muito)
-    // Research: 60% (Processos biológicos industriais)
-    // Social: 70% (Reduz mineração tóxica tradicional)
-    // Profit: 75% (Matéria prima é lixo, produto final é ouro/litio) - Teto de Profit
-    { commercial: 65, research: 60, social: 70, profitability: 75 },
-
-    // 7: E-Skin (MedTech)
-    // Comercial: 45% (Mercado de próteses é caro e regulado)
-    // Research: 75% (Avanços em tato artificial)
-    // Social: 75% (Qualidade de vida para amputados)
-    // Profit: 55% (Alto custo de P&D)
-    { commercial: 45, research: 75, social: 75, profitability: 55 },
-
-    // 8: Protein Language Models (AI/Bio)
-    // Comercial: 80% (Pharma paga bilhões por descoberta de drogas)
-    // Research: 85% (Fronteira da ciência atual)
-    // Social: 70% (Cura de doenças)
-    // Profit: 75% (Modelo SaaS/Licenciamento - Teto de Profit)
-    { commercial: 80, research: 85, social: 70, profitability: 75 },
-
-    // 9: DNA Data Storage (Big Data)
-    // Comercial: 25% (Muito lento/caro para uso hoje, futuro distante)
-    // Research: 80% (Codificação genética de dados)
-    // Social: 30% (Arquivamento histórico)
-    // Profit: 25% (Custo por megabyte inviável hoje)
-    { commercial: 25, research: 80, social: 30, profitability: 25 },
-
-    // 10: Bioluminescent Lighting (Arquitetura Bio)
-    // Comercial: 30% (Estético, novidade, não substitui LED)
-    // Research: 50% (Biologia sintética básica)
-    // Social: 35% (Menos eletricidade, mas pouco impacto global)
-    // Profit: 30% (Difícil escalar organismos vivos na casa das pessoas)
-    { commercial: 30, research: 50, social: 35, profitability: 30 },
-
-    // 11: Chitin Membranes (Microplastics Filter)
-    // Comercial: 55% (Estações de tratamento de água precisam)
-    // Research: 45% (Química de polímeros conhecida)
-    // Social: 75% (Saúde pública e oceanos)
-    // Profit: 50% (Produto commodity de baixo custo)
-    { commercial: 55, research: 45, social: 75, profitability: 50 },
-];
-
-const AGENT_NAMES: string[] = [
-    "Neuro-Scribe", "Quantum-Oracle", "Helix-Weaver", "Chronos-Watch", "Logic-Gatekeeper", 
-    "Synapse-Architect", "Data-Wraith", "Isotope-X", "Cipher-Daemon", "Echo-Mind", 
-    "Prism-Analyzer", "Void-Walker", "Nano-Stitcher", "Aether-Link", "Vector-7"
-];
-
-const getRank = (score: number): string => {
-    // Ajustado levemente para refletir a realidade mais dura das métricas
-    if (score >= 75) return "SS"; 
-    if (score >= 65) return "S";
-    if (score >= 50) return "A";
-    if (score >= 35) return "B";
-    return "C";
-};
-
-// Gerador de dados
-const RESEARCH_DATA: ResearchItem[] = Array.from({ length: 35 }).map((_, i) => {
-    const titleIndex = i % TITLES.length;
-    
-    // 1. Progresso (Mantido)
-    let progress;
-    if (i === 0) progress = 75;
-    else if (i === 1) progress = 69;
-    else if (i === 2) progress = 65;
-    else progress = Math.floor(Math.random() * 46) + 5; 
-
-    // 2. Lógica de Participantes (Mantida)
-    let phds = 0;
-    if (i < 3) phds = 1;
-
-    let masters = 0;
-    if (i < 15) masters = Math.floor(Math.random() * 2) + 1; 
-
-    const grads = Math.floor(Math.random() * 4) + 1; 
-
-    // 3. Lógica de Stats (FIXA e REALISTA)
-    const stats = FIXED_METRICS[titleIndex];
-    const avgScore = (stats.commercial + stats.research + stats.social + stats.profitability) / 4;
-    const rank = getRank(avgScore);
-
-    // 4. Lógica de Agentes (Mantida)
-    let agentCount;
-    if (rank === "SS" || rank === "S") {
-        agentCount = Math.floor(Math.random() * 2) + 4; // 4 ou 5
-    } else {
-        agentCount = Math.floor(Math.random() * 4) + 2; // 2 a 5
-    }
-
-    const shuffledAgents = [...AGENT_NAMES].sort(() => 0.5 - Math.random());
-    const projectAgents = shuffledAgents.slice(0, agentCount);
-
-    return {
-        id: i + 1,
-        title: TITLES[titleIndex] + (i > 11 ? ` [Phase ${Math.floor(i/5)}]` : ""),
-        participants: { grads, masters, phds }, 
-        progress: progress,
-        status: progress > 50 ? "building" : "in_progress",
-        details: { 
-            agents: projectAgents, 
-            commercial: stats.commercial, 
-            research: stats.research, 
-            social: stats.social, 
-            profitability: stats.profitability, 
-            rank: rank 
-        }
+    details: {
+        agents: string[];
+        commercial: number;
+        research: number;
+        social: number;
+        profitability: number;
+        rank: string;
     };
-});
-
-// --- SUB-COMPONENT ---
-interface ResearchCardProps {
-    item: ResearchItem;
+    isReal?: boolean;
 }
 
-function ResearchCard({ item }: ResearchCardProps) {
+// --- SUB-COMPONENT: RESEARCH CARD ---
+function ResearchCard({ item }: { item: ResearchItem }) {
     const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
     const [ipStatus, setIpStatus] = useState<string>("negotiate_ip");
@@ -235,11 +48,10 @@ function ResearchCard({ item }: ResearchCardProps) {
         setIpStatus("not_available");
     };
 
-    const getStatusLabel = (s: string) => {
-        return s === "building" ? t("research_module.building", "Building") : t("research_module.exploring", "Exploring"); 
-    };
+    const isPending = item.status === "pending_analysis";
 
-    const getProgressLabel = (p: number): string => {
+    const getProgressLabel = (p: number, status: string): string => {
+        if (status === "pending_analysis") return t("research_module.status_pending", "Submission in analysis...");
         if (p < 25) return t("research_module.exploring", "Exploring");
         if (p < 51) return t("research_module.validating", "Validating");
         if (p < 75) return t("research_module.building", "Building");
@@ -249,28 +61,28 @@ function ResearchCard({ item }: ResearchCardProps) {
 
     return (
         <motion.div 
-            layout
-            onClick={() => setIsExpanded(!isExpanded)}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className={`p-5 rounded-2xl border transition-all cursor-pointer group relative overflow-hidden
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: isPending ? 0.6 : 1, y: 0 }}
+            className={`rounded-2xl border transition-all relative overflow-hidden mb-4
+                ${isPending ? "cursor-wait bg-white/5 border-white/5 grayscale" : "cursor-pointer group"}
                 ${isExpanded 
                     ? "bg-white dark:bg-[#1e293b] border-blue-500/50 shadow-2xl z-10" 
-                    : "bg-white/40 dark:bg-white/[0.03] border-slate-200 dark:border-white/5 hover:border-[#0f172a]/30 dark:hover:border-white/20"
+                    : !isPending && "bg-white/40 dark:bg-white/[0.03] border-slate-200 dark:border-white/5 hover:border-[#0f172a]/30 dark:hover:border-white/20"
                 }`}
+            onClick={() => !isPending && setIsExpanded(!isExpanded)}
         >
-            <div className="flex justify-between items-start mb-3">
+            {/* Header */}
+            <div className="p-5 flex justify-between items-start">
                 <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-blue-600 text-white' : 'bg-[#0f172a]/5 dark:bg-white/10 text-[#0f172a] dark:text-white'}`}>
                         <BeakerIcon className="w-4 h-4" />
                     </div>
-                    <div>
-                        <h4 className="text-xs font-bold text-[#0f172a] dark:text-slate-200 uppercase max-w-md leading-tight">
+                    <div className="flex-1 pr-4">
+                        <h4 className="text-xs font-bold text-[#0f172a] dark:text-slate-200 uppercase max-w-lg leading-tight">
                             {item.title}
                         </h4>
-                        {/* RANK BADGE NO HEADER */}
-                        {(item.details.rank === "S" || item.details.rank === "SS") && (
+                        {/* Rank Badge no Header (Apenas S e SS) */}
+                        {!isPending && (item.details.rank === "S" || item.details.rank === "SS") && (
                             <span className={`text-[9px] font-black ml-1 ${
                                 item.details.rank === 'SS' ? 'text-blue-600 dark:text-blue-500' : 'text-amber-500'
                             }`}>
@@ -279,55 +91,34 @@ function ResearchCard({ item }: ResearchCardProps) {
                         )}
                     </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                     <span className={`text-[9px] font-black px-2 py-1 rounded-md uppercase ${item.progress > 90 ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-slate-200 dark:bg-white/10 text-slate-500'}`}>
-                        {getProgressLabel(item.progress)}
+                <div className="flex flex-col items-end gap-1 min-w-[80px]">
+                     <span className={`text-[9px] font-black px-2 py-1 rounded-md uppercase text-right whitespace-nowrap
+                        ${isPending 
+                            ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 animate-pulse' 
+                            : item.progress > 90 
+                                ? 'bg-green-500/20 text-green-600 dark:text-green-400' 
+                                : 'bg-slate-200 dark:bg-white/10 text-slate-500'
+                        }`}>
+                        {getProgressLabel(item.progress, item.status)}
                     </span>
-                    {isExpanded && <ChevronDownIcon className="w-3 h-3 text-slate-400 animate-bounce" />}
+                    {!isPending && (
+                        <ChevronDownIcon className={`w-3 h-3 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                    )}
                 </div>
             </div>
 
-            <div className="flex gap-4 mb-4 pl-11">
-                {item.participants.phds > 0 && (
-                    <div className="text-[9px] text-slate-500 dark:text-slate-400">
-                        <b className="text-[#0f172a] dark:text-white">{item.participants.phds}</b> {t("research_module.phds", "PhDs")}
-                    </div>
-                )}
-                {item.participants.masters > 0 && (
-                    <div className="text-[9px] text-slate-500 dark:text-slate-400">
-                        <b className="text-[#0f172a] dark:text-white">{item.participants.masters}</b> {t("research_module.masters", "Masters")}
-                    </div>
-                )}
-                <div className="text-[9px] text-slate-500 dark:text-slate-400">
-                    <b className="text-[#0f172a] dark:text-white">{item.participants.grads}</b> {t("research_module.undergrads", "Undergrads")}
-                </div>
-            </div>
-
-            <div className="pl-11">
-                <div className="flex justify-between text-[9px] font-bold mb-1 text-[#0f172a] dark:text-white">
-                    <span className="uppercase tracking-wide">{getProgressLabel(item.progress)}</span>
-                    <span>{item.progress}%</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                    <motion.div 
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${item.progress}%` }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        className={`h-full rounded-full ${item.progress > 90 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-[#0f172a] to-blue-600 dark:from-blue-600 dark:to-purple-500'}`}
-                    />
-                </div>
-            </div>
-
+            {/* Expansão */}
             <AnimatePresence>
-                {isExpanded && (
+                {isExpanded && !isPending && (
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
+                        className="overflow-hidden bg-slate-50/50 dark:bg-black/20"
                     >
-                        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 pl-2">
+                        <div className="p-5 border-t border-slate-200 dark:border-white/5">
                             
+                            {/* Agentes */}
                             <div className="mb-4">
                                 <h5 className="text-[10px] font-bold uppercase text-slate-400 mb-2 flex items-center gap-2">
                                     <ServerStackIcon className="w-3 h-3" /> {t("research_module.agents_production", "Agents in Production")}
@@ -341,56 +132,53 @@ function ResearchCard({ item }: ResearchCardProps) {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-3 mb-6">
+                            {/* Métricas */}
+                            <div className="grid grid-cols-2 gap-4 mb-6">
                                 {[
-                                    { label: t("research_module.commercial", "Commercial App"), val: item.details.commercial },
-                                    { label: t("research_module.research", "Research App"), val: item.details.research },
-                                    { label: t("research_module.social", "Social Impact"), val: item.details.social },
-                                    { label: t("research_module.profitability", "Profitability"), val: item.details.profitability }
-                                ].map((metric, idx: number) => (
+                                    { label: "Commercial", val: item.details.commercial },
+                                    { label: "Research", val: item.details.research },
+                                    { label: "Social", val: item.details.social },
+                                    { label: "Profitability", val: item.details.profitability }
+                                ].map((metric, idx) => (
                                     <div key={idx}>
-                                        <div className="flex justify-between text-[9px] mb-1">
-                                            <span className="text-slate-500">{metric.label}</span>
-                                            <span className="font-mono text-slate-700 dark:text-slate-300">{metric.val}/100</span>
+                                        <div className="flex justify-between text-[9px] mb-1 text-slate-500">
+                                            <span>{metric.label}</span>
+                                            <span className="font-mono">{metric.val}%</span>
                                         </div>
-                                        <div className="h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                            <div 
-                                                style={{ width: `${metric.val}%` }} 
-                                                className={`h-full rounded-full ${metric.val > 80 ? 'bg-emerald-500' : 'bg-slate-400'}`}
-                                            />
+                                        <div className="h-1 bg-slate-200 dark:bg-white/10 rounded-full">
+                                            <div style={{ width: `${metric.val}%` }} className="h-full bg-blue-500 rounded-full" />
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="flex items-center justify-between mt-4 bg-slate-50 dark:bg-black/20 p-3 rounded-xl">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] uppercase text-slate-400">{t("research_module.project_rank", "Project Rank")}</span>
-                                        <span className={`text-2xl font-black ${
-                                            // LÓGICA DE COR DO RANK SS ALTERADA PARA AZUL
-                                            item.details.rank === 'SS' ? 'text-blue-600 dark:text-blue-500' : 
-                                            item.details.rank === 'S' ? 'text-amber-500' : 
-                                            'text-slate-700 dark:text-white'
-                                        }`}>
-                                            {item.details.rank}
-                                        </span>
-                                    </div>
+                            {/* --- FOOTER DO CARD (RANK + BOTÃO) --- */}
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-white/5">
+                                {/* RANK VOLTOU AQUI */}
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Project Rank</span>
+                                    <span className={`text-3xl font-black ${
+                                        item.details.rank === 'SS' ? 'text-blue-500' : 
+                                        item.details.rank === 'S' ? 'text-amber-500' : 
+                                        item.details.rank === 'A' ? 'text-green-500' :
+                                        'text-slate-700 dark:text-white'
+                                    }`}>
+                                        {item.details.rank}
+                                    </span>
                                 </div>
 
                                 <button 
                                     onClick={handleNegotiate}
-                                    className={`text-[10px] font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2
+                                    className={`text-[10px] font-bold px-6 py-2 rounded-xl transition-all flex items-center gap-2
                                         ${ipStatus === "negotiate_ip" 
                                             ? "bg-[#0f172a] text-white hover:bg-blue-600 dark:bg-white dark:text-black dark:hover:bg-blue-400" 
                                             : "bg-red-500/10 text-red-500 border border-red-500/20 cursor-not-allowed"
                                         }`}
                                 >
-                                    <CurrencyDollarIcon className="w-3 h-3" />
+                                    <CurrencyDollarIcon className="w-4 h-4" />
                                     {t(`research_module.${ipStatus}`)}
                                 </button>
                             </div>
-
                         </div>
                     </motion.div>
                 )}
@@ -402,53 +190,269 @@ function ResearchCard({ item }: ResearchCardProps) {
 // --- MAIN COMPONENT ---
 export default function ResearchModule() {
     const { t } = useTranslation();
+    const [data, setData] = useState<ResearchItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    
+    const [isSubmissionMode, setIsSubmissionMode] = useState(false);
+    const [formTitle, setFormTitle] = useState("");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const fetchProtocol = async (query: string = "") => {
+        setLoading(true);
+        try {
+            const response = await fetch(`/api/research?query=${encodeURIComponent(query)}`);
+            const json = await response.json();
+            setData(json);
+        } catch (error) {
+            console.error("Connection lost", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProtocol("");
+    }, []);
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setSelectedFile(e.target.files[0]);
+        }
+    };
+
+    const handleCancel = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsSubmissionMode(false);
+        setFormTitle("");
+        setSelectedFile(null);
+    };
+
+    const handleSubmit = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!formTitle || !selectedFile) return;
+
+        setIsUploading(true);
+
+        try {
+            const res = await fetch('/api/research', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    title: formTitle,
+                    participants: { grads: 4, masters: 2, phds: 1 }, 
+                    hasFile: true 
+                })
+            });
+            
+            if (res.ok) {
+                setFormTitle("");
+                setSelectedFile(null);
+                setIsSubmissionMode(false);
+                setShowSuccess(true);
+                await fetchProtocol(""); 
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     return (
-        <div className="w-full h-full flex flex-col gap-6">
+        <div className="w-full h-full flex flex-col gap-6 relative pb-20">
             
-            <div className="w-full p-6 rounded-3xl bg-[#0f172a] border border-white/10 shadow-xl overflow-hidden relative group">
-                <div className="absolute top-0 right-0 p-4 opacity-20">
-                    <CpuChipIcon className="w-24 h-24 text-red-500/50" />
-                </div>
-                
-                <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/90">
-                            {t("research_module.active_projects", { count: 35, defaultValue: "35 ACTIVE PROJECTS" })}
-                        </h3>
+            {/* --- SUBMISSION CARD --- */}
+            <motion.div 
+                layout
+                transition={{ duration: 0.4, type: "spring", stiffness: 100 }}
+                className={`w-full rounded-3xl border border-white/10 shadow-xl relative overflow-hidden transition-colors duration-300
+                    ${isSubmissionMode 
+                        ? "bg-[#0b1120] ring-1 ring-blue-500/50 cursor-default" 
+                        : "bg-[#0f172a] hover:bg-[#16203a] cursor-pointer"
+                    }`}
+                onClick={() => !isSubmissionMode && setIsSubmissionMode(true)}
+            >
+                <div className="p-6 relative z-10">
+                    <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none">
+                        <CpuChipIcon className="w-24 h-24 text-red-500/50" />
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500' : 'bg-green-500'} ${isSubmissionMode ? '' : 'animate-pulse'}`} />
+                                {!isSubmissionMode && <div className={`absolute inset-0 w-2 h-2 rounded-full ${loading ? 'bg-yellow-500' : 'bg-green-500'} animate-ping opacity-75`} />}
+                            </div>
+
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/90">
+                                {isSubmissionMode 
+                                    ? t("research_module.init_protocol", "INITIATE PROTOCOL") 
+                                    : loading 
+                                        ? "SYNCING LEDGER..." 
+                                        : (
+                                            <span className="group-hover:text-blue-400 transition-colors">
+                                                <span className="block group-hover:hidden">{t("research_module.active_projects", { count: data.length, defaultValue: "35 ACTIVE PROJECTS" })}</span>
+                                                <span className="hidden group-hover:block">{t("research_module.submit_hover", "SUBMIT MY RESEARCH")}</span>
+                                            </span>
+                                        )
+                                }
+                            </h3>
+                        </div>
+
+                        {isSubmissionMode && (
+                            <button onClick={handleCancel} className="p-1 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors">
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
                     
-                    <div className="h-20 flex items-center justify-center border border-red-500/20 bg-red-500/5 rounded-lg">
-                        <div className="flex items-center gap-3 text-red-400">
-                            <LockClosedIcon className="w-5 h-5" />
-                            <span className="font-mono text-xs font-bold uppercase tracking-wider">
-                                {t("research_module.credentials_error", "You don't have enough credentials to access the chat")}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    <AnimatePresence mode="wait">
+                        {!isSubmissionMode ? (
+                            <motion.div 
+                                key="status"
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                className="h-20 flex items-center justify-center border border-white/5 bg-white/[0.02] rounded-lg group-hover:border-blue-500/30 group-hover:bg-blue-500/5 transition-colors"
+                            >
+                                <div className="flex items-center gap-3 text-slate-500 group-hover:text-blue-400 transition-colors">
+                                    <CloudArrowUpIcon className="w-5 h-5" />
+                                    <span className="font-mono text-xs font-bold uppercase tracking-wider">
+                                        {t("research_module.click_submit", "Click to Initialize Submission")}
+                                    </span>
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div 
+                                key="form"
+                                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                                className="flex flex-col gap-4 overflow-visible"
+                            >
+                                <div className="space-y-1 pt-2">
+                                    <label className="text-[9px] uppercase font-bold text-slate-400 pl-1">{t("research_module.label_title", "Project Title")}</label>
+                                    <input 
+                                        type="text"
+                                        value={formTitle}
+                                        onChange={(e) => setFormTitle(e.target.value)}
+                                        placeholder={t("research_module.ph_title", "Ex: Quantum Resistance...")}
+                                        className="w-full h-12 px-4 rounded-xl bg-black/30 border border-white/10 text-white text-sm focus:border-blue-500/50 outline-none transition-all placeholder:text-white/20"
+                                        autoFocus
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                </div>
 
-            <div className="flex items-center justify-between px-2">
+                                <div className="flex items-center justify-between gap-3 pt-2">
+                                    <input type="file" accept=".pdf,.doc,.docx" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                                        className={`h-12 px-4 rounded-xl border flex items-center justify-center gap-2 transition-all flex-1
+                                            ${selectedFile 
+                                                ? "bg-blue-500/20 border-blue-500/50 text-blue-300" 
+                                                : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white"
+                                            }`}
+                                    >
+                                        {selectedFile ? <DocumentTextIcon className="w-4 h-4" /> : <PaperClipIcon className="w-4 h-4" />}
+                                        <span className="text-xs font-bold uppercase truncate max-w-[150px]">
+                                            {selectedFile ? selectedFile.name : "Attach File"}
+                                        </span>
+                                        {selectedFile && (
+                                            <div onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }} className="ml-2 hover:text-red-400">
+                                                <XMarkIcon className="w-3 h-3" />
+                                            </div>
+                                        )}
+                                    </button>
+
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={handleCancel}
+                                            disabled={isUploading}
+                                            className="h-12 px-6 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase border border-transparent hover:border-white/10"
+                                        >
+                                            Cancel
+                                        </button>
+
+                                        <button 
+                                            onClick={handleSubmit}
+                                            disabled={!formTitle || !selectedFile || isUploading}
+                                            className="h-12 px-8 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2"
+                                        >
+                                            {isUploading ? (
+                                                <><ArrowPathIcon className="w-4 h-4 animate-spin" /> Sending...</>
+                                            ) : (
+                                                <><ArrowUpTrayIcon className="w-4 h-4" /> Submit</>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </motion.div>
+
+            {/* --- LIST HEADER --- */}
+            <div className="flex items-center justify-between px-2 mt-2">
                 <h2 className="text-[#0f172a] dark:text-white text-sm font-bold uppercase tracking-widest">
+                   Recent Submissions
                 </h2>
                 <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-                     <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                     </span>
-                     <span className="text-[9px] font-bold text-blue-600 dark:text-blue-300 uppercase tracking-wider">
-                         {t("research_module.api_connected", "API Connected")}
-                     </span>
+                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-300 uppercase tracking-wider">
+                        {t("research_module.api_connected", "API Connected")}
+                    </span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 pb-20">
-                {RESEARCH_DATA.map((item: ResearchItem) => (
-                    <ResearchCard key={item.id} item={item} />
-                ))}
+            {/* --- GRID --- */}
+            <div className="grid grid-cols-1 gap-4">
+                {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="p-5 rounded-2xl border border-white/5 bg-white/5 animate-pulse h-[100px]" />
+                    ))
+                ) : (
+                    data.map((item) => (
+                        <ResearchCard key={item.id} item={item} />
+                    ))
+                )}
             </div>
+
+            {/* --- SUCCESS MODAL --- */}
+            <AnimatePresence>
+                {showSuccess && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setShowSuccess(false)}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-[#0f172a] border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl relative"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex flex-col items-center text-center gap-4">
+                                <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
+                                    <CheckCircleIcon className="w-10 h-10 text-green-500" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white">Submission Received</h3>
+                                <p className="text-sm text-slate-400 leading-relaxed">
+                                    An agent will review your work and contact you soon about the submission result. Thanks!
+                                </p>
+                                <button 
+                                    onClick={() => setShowSuccess(false)}
+                                    className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-bold transition-colors"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
