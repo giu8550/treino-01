@@ -39,61 +39,184 @@ interface ResearchItem {
 
 // --- DATA ---
 const TITLES: string[] = [
-    "Graphene Bio-synthesis via E.Coli Bacteria",
-    "Mycelium Neural Networks: Organic Data Processing",
-    "Z-77 Enzyme: Accelerated PET Polymer Degradation",
-    "Self-healing Concrete with Bacterial Spores",
-    "Artificial Photosynthesis for Industrial Carbon Capture",
-    "Neuro-Botanical Interface: Plant-Machine Communication",
-    "Bio-mining of Rare Earths in E-Waste",
-    "Sensory Synthetic Skin for Advanced Prosthetics",
-    "Genetic Algorithms for Protein Optimization",
-    "Synthetic DNA Data Storage (Project Glass)",
-    "Urban Bioluminescence: Public Lighting Replacement",
-    "Microplastic Filtration via Chitin Membranes",
+    // 0
+    "In situ Biosynthesis of Bacterial Cellulose/Graphene Oxide Composites via Komagataeibacter Fermentation",
+    // 1
+    "Mycelium-Based Memristor Arrays: Low-Cost Neuromorphic Computing on Fungal Substrates",
+    // 2
+    "Engineered PETase (FAST-PETase-Class) for Rapid Depolymerization of Post-Consumer PET Under Mild Conditions",
+    // 3
+    "Bacillus Spore–Enabled Self-Healing Concrete via Microbially Induced Calcium Carbonate Precipitation (MICP)",
+    // 4
+    "Artificial Photosynthesis for Flue-Gas CO₂ Capture and In-Situ Conversion to Fuels/Chemicals",
+    // 5
+    "Plant Electrophysiology Interfaces: Biohybrid Plant–Machine Communication for Environmental Sensing",
+    // 6
+    "Bioleaching Rare Earth Elements from E-Waste Using Fungi-Driven Urban Biomining",
+    // 7
+    "High-Resolution Electronic Skin (E-Skin) Sensor Arrays for Tactile Feedback in Advanced Prosthetics",
+    // 8
+    "Genetic Algorithms + Protein Language Models for Multi-Objective Enzyme/Protein Optimization",
+    // 9
+    "Synthetic DNA Archival Data Storage with Error Correction and Random-Access Retrieval",
+    // 10
+    "Bioluminescent Bio-Modules for Urban Accent Lighting: Pilot-Scale Alternatives to Conventional Fixtures",
+    // 11
+    "Chitin/Chitosan-Based Membranes and Sponges for Microplastic Removal in Wastewater Streams",
 ];
 
-const AGENT_NAMES: string[] = ["Alpha-Node", "Synapse-X", "Core-V", "Flux-8", "Vertex-Alpha", "Omni-1", "Nexus-9"];
+// --- MÉTRICAS FIXAS BASEADAS NA REALIDADE ---
+const FIXED_METRICS = [
+    // 0: Bacterial Cellulose (Material Science)
+    // Comercial: 45% (Possível, uso em baterias/filtros, mas escala difícil)
+    // Research: 65% (Material interessante, mas não revolucionário)
+    // Social: 30% (Indireto)
+    // Profit: 45% (Custos de fermentação vs preço de mercado)
+    { commercial: 45, research: 65, social: 30, profitability: 45 },
+
+    // 1: Mycelium Memristors (Bio-Computing)
+    // Comercial: 20% (Muito remoto, "wetware" ainda é ficção científica comercial)
+    // Research: 80% (Pesquisa de base fortíssima para computação não-silício)
+    // Social: 25% (Baixo impacto imediato)
+    // Profit: 15% (Longe de dar lucro)
+    { commercial: 20, research: 80, social: 25, profitability: 15 },
+
+    // 2: PETase (Enzima come plástico)
+    // Comercial: 75% (Alta demanda global por reciclagem química)
+    // Research: 75% (Otimização enzimática é hot topic)
+    // Social: 80% (Resolve um dos maiores problemas do mundo)
+    // Profit: 60% (Gestão de resíduos tem margem apertada, mas alto volume)
+    { commercial: 75, research: 75, social: 80, profitability: 60 },
+
+    // 3: Self-Healing Concrete (Infraestrutura)
+    // Comercial: 70% (Demanda existente em construção civil)
+    // Research: 55% (Tecnologia já conhecida, foco em aplicação)
+    // Social: 60% (Segurança e durabilidade urbana)
+    // Profit: 65% (Produto premium para construção)
+    { commercial: 70, research: 55, social: 60, profitability: 65 },
+
+    // 4: Artificial Photosynthesis (Energia)
+    // Comercial: 35% (Difícil competir com solar + baterias atualmente)
+    // Research: 85% (O "Santo Graal" da química)
+    // Social: 85% (Salvação climática potencial)
+    // Profit: 40% (Infraestrutura cara)
+    { commercial: 35, research: 85, social: 85, profitability: 40 },
+
+    // 5: Plant Electrophysiology (AgTech/Sensores)
+    // Comercial: 25% (Nicho remoto, agricultura de precisão extrema)
+    // Research: 70% (Interação bio-digital)
+    // Social: 40% (Monitoramento ambiental)
+    // Profit: 30% (Hardware difícil de vender em massa)
+    { commercial: 25, research: 70, social: 40, profitability: 30 },
+
+    // 6: Bioleaching Rare Earths (Mineração Urbana)
+    // Comercial: 65% (Metais estratégicos valem muito)
+    // Research: 60% (Processos biológicos industriais)
+    // Social: 70% (Reduz mineração tóxica tradicional)
+    // Profit: 75% (Matéria prima é lixo, produto final é ouro/litio) - Teto de Profit
+    { commercial: 65, research: 60, social: 70, profitability: 75 },
+
+    // 7: E-Skin (MedTech)
+    // Comercial: 45% (Mercado de próteses é caro e regulado)
+    // Research: 75% (Avanços em tato artificial)
+    // Social: 75% (Qualidade de vida para amputados)
+    // Profit: 55% (Alto custo de P&D)
+    { commercial: 45, research: 75, social: 75, profitability: 55 },
+
+    // 8: Protein Language Models (AI/Bio)
+    // Comercial: 80% (Pharma paga bilhões por descoberta de drogas)
+    // Research: 85% (Fronteira da ciência atual)
+    // Social: 70% (Cura de doenças)
+    // Profit: 75% (Modelo SaaS/Licenciamento - Teto de Profit)
+    { commercial: 80, research: 85, social: 70, profitability: 75 },
+
+    // 9: DNA Data Storage (Big Data)
+    // Comercial: 25% (Muito lento/caro para uso hoje, futuro distante)
+    // Research: 80% (Codificação genética de dados)
+    // Social: 30% (Arquivamento histórico)
+    // Profit: 25% (Custo por megabyte inviável hoje)
+    { commercial: 25, research: 80, social: 30, profitability: 25 },
+
+    // 10: Bioluminescent Lighting (Arquitetura Bio)
+    // Comercial: 30% (Estético, novidade, não substitui LED)
+    // Research: 50% (Biologia sintética básica)
+    // Social: 35% (Menos eletricidade, mas pouco impacto global)
+    // Profit: 30% (Difícil escalar organismos vivos na casa das pessoas)
+    { commercial: 30, research: 50, social: 35, profitability: 30 },
+
+    // 11: Chitin Membranes (Microplastics Filter)
+    // Comercial: 55% (Estações de tratamento de água precisam)
+    // Research: 45% (Química de polímeros conhecida)
+    // Social: 75% (Saúde pública e oceanos)
+    // Profit: 50% (Produto commodity de baixo custo)
+    { commercial: 55, research: 45, social: 75, profitability: 50 },
+];
+
+const AGENT_NAMES: string[] = [
+    "Neuro-Scribe", "Quantum-Oracle", "Helix-Weaver", "Chronos-Watch", "Logic-Gatekeeper", 
+    "Synapse-Architect", "Data-Wraith", "Isotope-X", "Cipher-Daemon", "Echo-Mind", 
+    "Prism-Analyzer", "Void-Walker", "Nano-Stitcher", "Aether-Link", "Vector-7"
+];
 
 const getRank = (score: number): string => {
-    if (score >= 95) return "SS";
-    if (score >= 85) return "S";
-    if (score >= 70) return "A";
-    if (score >= 50) return "B";
+    // Ajustado levemente para refletir a realidade mais dura das métricas
+    if (score >= 75) return "SS"; 
+    if (score >= 65) return "S";
+    if (score >= 50) return "A";
+    if (score >= 35) return "B";
     return "C";
 };
 
-// Gerador de dados (igual ao original)
+// Gerador de dados
 const RESEARCH_DATA: ResearchItem[] = Array.from({ length: 35 }).map((_, i) => {
+    const titleIndex = i % TITLES.length;
+    
+    // 1. Progresso (Mantido)
     let progress;
     if (i === 0) progress = 75;
     else if (i === 1) progress = 69;
     else if (i === 2) progress = 65;
     else progress = Math.floor(Math.random() * 46) + 5; 
 
-    let phds = 0, masters = 0;
-    if (i < 4) { phds = Math.floor(Math.random() * 3) + 1; masters = Math.floor(Math.random() * 4) + 1; }
-    else if (i < 18) { masters = Math.floor(Math.random() * 4) + 1; }
+    // 2. Lógica de Participantes (Mantida)
+    let phds = 0;
+    if (i < 3) phds = 1;
 
-    const commercial = Math.floor(Math.random() * 40) + 60;
-    const research = Math.floor(Math.random() * 40) + 60;
-    const social = Math.floor(Math.random() * 40) + 60;
-    const profitability = Math.floor(Math.random() * 40) + 60;
-    const avgScore = (commercial + research + social + profitability) / 4;
+    let masters = 0;
+    if (i < 15) masters = Math.floor(Math.random() * 2) + 1; 
 
-    const agentCount = Math.floor(Math.random() * 4) + 2;
-    const projectAgents: string[] = [];
-    for(let k=0; k<agentCount; k++) {
-        projectAgents.push(AGENT_NAMES[k % AGENT_NAMES.length]);
+    const grads = Math.floor(Math.random() * 4) + 1; 
+
+    // 3. Lógica de Stats (FIXA e REALISTA)
+    const stats = FIXED_METRICS[titleIndex];
+    const avgScore = (stats.commercial + stats.research + stats.social + stats.profitability) / 4;
+    const rank = getRank(avgScore);
+
+    // 4. Lógica de Agentes (Mantida)
+    let agentCount;
+    if (rank === "SS" || rank === "S") {
+        agentCount = Math.floor(Math.random() * 2) + 4; // 4 ou 5
+    } else {
+        agentCount = Math.floor(Math.random() * 4) + 2; // 2 a 5
     }
+
+    const shuffledAgents = [...AGENT_NAMES].sort(() => 0.5 - Math.random());
+    const projectAgents = shuffledAgents.slice(0, agentCount);
 
     return {
         id: i + 1,
-        title: TITLES[i % TITLES.length] + (i > 11 ? ` [Phase ${Math.floor(i/5)}]` : ""),
-        participants: { grads: Math.floor(Math.random() * 8) + 2, masters, phds },
+        title: TITLES[titleIndex] + (i > 11 ? ` [Phase ${Math.floor(i/5)}]` : ""),
+        participants: { grads, masters, phds }, 
         progress: progress,
-        status: progress > 50 ? "building" : "in_progress", // Usando chaves para tradução
-        details: { agents: projectAgents, commercial, research, social, profitability, rank: getRank(avgScore) }
+        status: progress > 50 ? "building" : "in_progress",
+        details: { 
+            agents: projectAgents, 
+            commercial: stats.commercial, 
+            research: stats.research, 
+            social: stats.social, 
+            profitability: stats.profitability, 
+            rank: rank 
+        }
     };
 });
 
@@ -112,12 +235,10 @@ function ResearchCard({ item }: ResearchCardProps) {
         setIpStatus("not_available");
     };
 
-    // Helper para status traduzido
     const getStatusLabel = (s: string) => {
-        return s === "building" ? t("research_module.building", "Building") : t("research_module.exploring", "Exploring"); // Simplificado
+        return s === "building" ? t("research_module.building", "Building") : t("research_module.exploring", "Exploring"); 
     };
 
-    // Helper para label de progresso traduzido
     const getProgressLabel = (p: number): string => {
         if (p < 25) return t("research_module.exploring", "Exploring");
         if (p < 51) return t("research_module.validating", "Validating");
@@ -148,8 +269,13 @@ function ResearchCard({ item }: ResearchCardProps) {
                         <h4 className="text-xs font-bold text-[#0f172a] dark:text-slate-200 uppercase max-w-md leading-tight">
                             {item.title}
                         </h4>
+                        {/* RANK BADGE NO HEADER */}
                         {(item.details.rank === "S" || item.details.rank === "SS") && (
-                            <span className="text-[9px] font-black text-amber-500 ml-1">{t("research_module.rank")} {item.details.rank}</span>
+                            <span className={`text-[9px] font-black ml-1 ${
+                                item.details.rank === 'SS' ? 'text-blue-600 dark:text-blue-500' : 'text-amber-500'
+                            }`}>
+                                {t("research_module.rank")} {item.details.rank}
+                            </span>
                         )}
                     </div>
                 </div>
@@ -242,7 +368,8 @@ function ResearchCard({ item }: ResearchCardProps) {
                                     <div className="flex flex-col">
                                         <span className="text-[9px] uppercase text-slate-400">{t("research_module.project_rank", "Project Rank")}</span>
                                         <span className={`text-2xl font-black ${
-                                            item.details.rank === 'SS' ? 'text-purple-500' : 
+                                            // LÓGICA DE COR DO RANK SS ALTERADA PARA AZUL
+                                            item.details.rank === 'SS' ? 'text-blue-600 dark:text-blue-500' : 
                                             item.details.rank === 'S' ? 'text-amber-500' : 
                                             'text-slate-700 dark:text-white'
                                         }`}>

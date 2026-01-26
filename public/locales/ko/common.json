@@ -1,202 +1,356 @@
 {
-  "navbar": {
-    "about": "소개",
-    "homework": "과제",
-    "workstation": "연구실",
-    "study_rooms": "스터디 룸"
-  },
-  "menu": {
-    "new": "새 계정",
-    "load": "계정 불러오기",
-    "options": "옵션",
-    "manual": "매뉴얼",
-    "back": "뒤로"
-  },
-  "roles": {
-    "student": "학생",
-    "researcher": "연구원",
-    "professional": "전문가",
-    "entrepreneur": "기업가"
-  },
-  "options": {
-    "language": "언어",
-    "node": "노드",
-    "tutorials": "튜토리얼",
-    "on": "켜짐",
-    "off": "꺼짐"
-  },
-  "footer": {
-    "powered": "Powered by Casper",
-    "version": "Zaeon OS - v0.1"
-  },
-  "modal": {
-    "title": "새 계정",
-    "name": "이름",
-    "email": "이메일",
-    "phone": "전화번호",
-    "continue": "계속",
-    "cancel": "취소",
-    "use_wallet": "지갑 사용",
-    "use_id": "ID 사용",
-    "wallet_label": "Movement 지갑",
-    "wallet_placeholder": "0x...",
-    "lbl_student": "학생 ID",
-    "ph_student": "000...",
-    "lbl_researcher": "ORCID ID",
-    "ph_researcher": "ID...",
-    "lbl_professional": "세금 ID",
-    "ph_professional": "...",
-    "lbl_entrepreneur": "기업 ID",
-    "ph_entrepreneur": "...",
-    "name_ph": "홍길동",
-    "email_ph": "you@email.com",
-    "phone_ph": "010-0000-0000"
-  },
-  "homework": {
-    "study_title": "학습 파일",
-    "add_files": "PDF 추가",
-    "citations_title": "AI 인용",
-    "citations_empty": "분석 대기 중...",
-    "videos_title": "비디오",
-    "status_digesting": "문서 분석 중",
-    "status_typing": "노트 생성 중...",
-    "chat_header": "연구 통찰",
-    "chat_placeholder": "Zaeon에게 질문...",
-    "reload": "새로고침",
-    "save_all": "모두 저장",
-    "paste_link": "링크 붙여넣기",
-    "suggest": "제안"
-  },
-  "encryption": {
-    "title": "다른 차원에서 온 AI 에이전트.",
-    "subtitle": "최고가 될 수 있도록 돕기 위해 왔습니다.",
-    "button": "더 알아보기"
-  },
-  "study_rooms": {
-    "system": "시스템 최적",
-    "secure": "보안 채널",
-    "encrypted": "암호화됨",
-    "highlight": "팀을 찾으세요. 연구하고, 게시하세요.",
-    "together": "함께.",
-    "lobby_status": "로비 상태: 라이브",
-    "find_party": "파티 찾기",
-    "select_cluster": "연구 클러스터 선택",
-    "join": "세션 참여",
-    "select": "방 선택",
-    "rooms": {
-      "cyber_name": "사이버네틱스 홀",
-      "cyber_topic": "컴퓨터 과학",
-      "bio_name": "바이오 랩 알파",
-      "bio_topic": "의학 및 건강",
-      "quantum_name": "양자 필드",
-      "quantum_topic": "수학",
-      "global_name": "글로벌 라운지",
-      "global_topic": "일반 연구"
-    }
-  },
-  "workstation": {
-    "focus_mode": "집중 모드",
-    "system_init": "시스템 초기화 완료. 에이전트 대기 중.",
-    "connected": "로그인됨",
-    "welcome": "환영합니다",
-    "login": "로그인",
-    "active_agent": "활성 에이전트",
-    "clear_history": "기록 지우기",
-    "send": "전송",
-    "generate": "생성",
-    "processing": "처리 중...",
-    "session_save": "세션 저장",
-    "auto_fix": "자동 수정",
-    "no_wallet": "지갑 연결",
-    "doc_title_placeholder": "문서 제목...",
-    "doc_content_placeholder": "결과 대기 중...",
-    "chat_placeholder": "{{role}}에 대해 Zaeon에게 질문하세요...",
-    "logs": {
-      "switched": "{{name}}로 변경됨",
-      "gen_protocol": "{{name}}를 통해 프로토콜 시작",
-      "content_gen": "콘텐츠 생성됨.",
-      "ipfs_success": "IPFS 성공: {{hash}}",
-      "blockchain_init": "Movement에서 보안 중...",
-      "success": "성공!",
-      "error": "오류."
-    }
-  },
-  "agents": {
-    "zenita": {
-      "role": "기술"
+    "navbar": {
+        "about": "회사 소개",
+        "homework": "연구실",
+        "workstation": "워크스테이션",
+        "study_rooms": "스터디룸"
     },
-    "ballena": {
-      "role": "건강/의학"
+    "intro": {
+        "line1": "연구하다, 배우다 = 연구하다...",
+        "line2": "게시 = 수익 창출"
     },
-    "ethernaut": {
-      "role": "수학"
+    "menu": {
+        "new": "새 계정",
+        "load": "계정 로드",
+        "options": "옵션",
+        "manual": "수동",
+        "back": "뒤쪽에",
+        "identity": "신원",
+        "custom_profile": "맞춤 프로필",
+        "connected_as": "다음으로 연결됨",
+        "google_save": "구글 저장",
+        "dev_hack": "CEO 모드"
+    },
+    "roles": {
+        "student": "학생",
+        "researcher": "연구원",
+        "professional": "선생님",
+        "entrepreneur": "기업가"
+    },
+    "hints": {
+        "new_game": "힌트: Zaeon tech를 확인하려면 새 프로필로 시작하세요.",
+        "save_progress": "힌트: 진행 상황과 성과를 저장하려면 Google 계정을 연결하세요.",
+        "roles": "힌트: 각 클래스(학생, 연구원)는 전용 도구를 잠금 해제합니다.",
+        "wallet": "힌트: 여행을 계속하려면 저장된 진행 상황을 로드하세요.",
+        "options": "힌트: 프로필과 설정을 사용자 정의할 수 있는 옵션에 액세스하세요."
+    },
+    "options": {
+        "language": "언어",
+        "node": "마디",
+        "tutorials": "튜토리얼",
+        "on": "에",
+        "off": "끄다"
+    },
+    "footer": {
+        "powered": "우리가 사슬에 갈 수 있도록 도와주세요! - 여기에 우리 연구 자금을 지원하세요.",
+        "version": "제온 OS - v1.0"
+    },
+    "modal": {
+        "title": "새 계정",
+        "name": "성명",
+        "email": "이메일",
+        "phone": "핸드폰",
+        "continue": "계속하다",
+        "cancel": "취소",
+        "use_wallet": "월렛 사용",
+        "use_id": "사용 아이디",
+        "wallet_label": "맨틀 지갑",
+        "wallet_placeholder": "0x...",
+        "lbl_student": "학생증",
+        "ph_student": "000...",
+        "lbl_researcher": "ORCID 아이디",
+        "ph_researcher": "ID...",
+        "lbl_professional": "세금 ID",
+        "ph_professional": null,
+        "lbl_entrepreneur": "회사 ID",
+        "ph_entrepreneur": null,
+        "name_ph": "존 도",
+        "email_ph": "you@email.com",
+        "phone_ph": "(00) 00000-0000",
+        "docs_label": "확인 문서",
+        "pdf_placeholder": "PDF 업로드",
+        "upload_placeholder": "기관 증거 업로드(PDF)",
+        "or_manual": "또는 수동으로",
+        "attention_title": "주목:",
+        "attention_desc": "문서를 건너뛰면 계정이 확인되지 않음으로 표시됩니다. 나중에 자격 증명을 제공해야 합니다.",
+        "finish": "등록 완료",
+        "skip": "문서 없이 계속"
+    },
+    "homework": {
+        "mode_study": "학습 모드",
+        "mode_work": "작업 모드",
+        "switch_hint": "{{mode}}로 전환하려면 클릭하세요.",
+        "switching": "전환 중...",
+        "study_title": "학습 모드",
+        "add_files": "PDF 추가",
+        "citations_title": "인용",
+        "citations_empty": "분석을 기다리는 중...",
+        "citations_ready": "컨텍스트가 로드되었습니다. 인용할 준비가 되었습니다.",
+        "videos_title": "비디오",
+        "status_digesting": "문서 소화",
+        "status_typing": "메모 생성 중...",
+        "chat_header": "연구 통찰",
+        "chat_placeholder": "상호작용...",
+        "chat_empty": "PDF를 추가하고 재생을 눌러 시작하세요.",
+        "chat_context_active": "활성 컨텍스트",
+        "reload": "새로고침",
+        "save_all": "모두 저장",
+        "paste_link": "링크 붙여넣기",
+        "suggest": "제안하다",
+        "specialist_1": "학업지원",
+        "specialist_2": "기술 검토자",
+        "specialist_label": "전문가",
+        "specialist_start": "전문가와 대화 시작",
+        "specialist_placeholder": "메시지를 입력하세요..."
+    },
+    "workstation": {
+        "focus_mode": "초점 모드",
+        "system_init": "시스템이 초기화되었습니다. 에이전트가 준비되었습니다.",
+        "connected": "연결됨",
+        "welcome": "환영",
+        "login": "로그인",
+        "active_agent": "활성제",
+        "clear_history": "기록 지우기",
+        "send": "보내다",
+        "generate": "생성하다",
+        "processing": "처리 중...",
+        "session_save": "세션 저장",
+        "auto_fix": "자동 수정",
+        "no_wallet": "지갑 연결",
+        "doc_title_placeholder": "문서 제목...",
+        "doc_content_placeholder": "출력을 기다리는 중...",
+        "chat_placeholder": "Zaeon에게 {{role}}에 대해 물어보세요...",
+        "logs": {
+            "switched": "{{name}}(으)로 전환됨",
+            "gen_protocol": "{{name}}을(를) 통해 시작된 프로토콜",
+            "content_gen": "콘텐츠가 생성되었습니다.",
+            "ipfs_success": "IPFS 성공: {{해시}}",
+            "blockchain_init": "맨틀에 고정 중...",
+            "success": "성공!",
+            "error": "오류."
+        }
+    },
+    "agents": {
+        "zenita": {
+            "role": "기술"
+        },
+        "ballena": {
+            "role": "건강"
+        },
+        "ethernaut": {
+            "role": "수학"
+        }
+    },
+    "encryption": {
+        "title": "다른 차원의 AI 에이전트.",
+        "subtitle": "그들은 당신이 최고가 되도록 돕기 위해 왔습니다.",
+        "button": "자세히 알아보기",
+        "typing_title": "과학을 생산하는 새로운 방법.",
+        "pipeline_title": "자온 파이프라인",
+        "steps": {
+            "vertex": {
+                "title": "버텍스 AI",
+                "full": "구글 버텍스 AI",
+                "desc": "예측 모델링"
+            },
+            "students": {
+                "title": "재학생",
+                "full": "학술 네트워크",
+                "desc": "컬렉션 및 큐레이터십"
+            },
+            "research": {
+                "title": "연구",
+                "full": "실험실",
+                "desc": "과학적 검증"
+            },
+            "publish": {
+                "title": "출판",
+                "full": "씨 뿌리기",
+                "desc": "기술 논문"
+            },
+            "compliance": {
+                "title": "규정 준수",
+                "full": "감사",
+                "desc": "윤리 및 법률"
+            },
+            "blockchain": {
+                "title": "블록체인",
+                "full": "매우 네트워크",
+                "desc": "불변의 기록"
+            },
+            "ip": {
+                "title": "IP",
+                "full": "재산",
+                "desc": "저작권"
+            },
+            "token": {
+                "title": "토큰",
+                "full": "토큰화",
+                "desc": "디지털 자산"
+            }
+        }
+    },
+    "study_rooms": {
+        "system": "시스템_최적",
+        "secure": "SECURE_CHANNEL",
+        "encrypted": "암호화됨",
+        "highlight": "당신의 분대를 찾으세요. 연구. 게시.",
+        "together": "함께.",
+        "lobby_status": "LOBBY_STATUS: 라이브",
+        "find_party": "집단과학이 더 재미있다",
+        "select_cluster": "연구클러스터 선택",
+        "join": "세션에 참여",
+        "select": "객실 선택",
+        "rooms": {
+            "cyber_name": "사이버네틱스 홀",
+            "cyber_topic": "기술 및 혁신",
+            "bio_name": "바이오랩 알파",
+            "bio_topic": "바이오, 의학 및 건강",
+            "quantum_name": "양자장",
+            "quantum_topic": "수학과 물리학",
+            "global_name": "글로벌 라운지",
+            "global_topic": "일반 연구"
+        }
+    },
+    "lounge_chat": {
+        "system_restricted": "시스템 제한",
+        "chat_offline": "오프라인 채팅",
+        "access_denied": "접근 불가",
+        "no_credentials": "글로벌 채팅에 액세스할 수 있는 자격 증명이 부족합니다."
+    },
+    "research_module": {
+        "active_projects": "{{count}}개의 활성 프로젝트",
+        "credentials_error": "채팅에 액세스할 수 있는 자격 증명이 충분하지 않습니다.",
+        "api_connected": "API 연결됨",
+        "rank": "계급",
+        "negotiate_ip": "IP 협상",
+        "not_available": "아직 사용할 수 없음",
+        "phds": "박사 학위",
+        "masters": "석사",
+        "undergrads": "학부생",
+        "exploring": "탐색",
+        "validating": "검증 중",
+        "building": "건물",
+        "review": "인간 동료 검토를 기다리는 중",
+        "completed": "완전한",
+        "agents_production": "프로덕션 중인 에이전트",
+        "commercial": "상업용 앱",
+        "research": "연구 앱",
+        "social": "사회적 영향",
+        "profitability": "수익성",
+        "project_rank": "프로젝트 순위"
+    },
+    "about": {
+        "back": "뒤쪽에",
+        "scroll_down": "아래로 스크롤하여 모든 것을 알아보세요.",
+        "title_secondary": "미래의 학교.",
+        "title_main": "지금 일어나고 있습니다.",
+        "genesis": {
+            "title": "프로토콜의 기원",
+            "p1": "오늘날 우리의 관심은 오직 이익만을 추구하는 대기업들에 의해 빼앗기고 그들의 알고리즘이 인간의 지능을 침식하는 동안 수백만 명의 관심을 사로잡고 있습니다.",
+            "p2": "Zaeon은 이러한 상황을 바꾸기 위해 등장했습니다. 우리는 깊이, 현대성, 재미를 통해 다시 배움의 즐거움을 되찾기 위해 왔습니다. 전통적인 교육이 시간에 멈춘 동안 우리는 강력한 AI 에이전트를 통해 귀하의 진정한 잠재력을 발휘합니다. 여기서 인간과 기계는 더 나은 세상을 위해 일합니다.",
+            "p2_highlight": "블록체인 내에서."
+        },
+        "mission": {
+            "title": "우리의 사명",
+            "p1": "고성능 교육에 대한 일상 생활을 위한 사용하기 쉬운 도구를 제공하여 차세대 학생, 연구원 및 교사에게 역량을 부여합니다.",
+            "p2": "학문적 인내를 위한 완전한 수익화 플랫폼으로 그들을 이끈다."
+        },
+        "architecture": {
+            "title": "자온건축",
+            "subtitle": "전 세계 수백만 명의 학생들에게 영향을 미칠 혁신적인 기술입니다.",
+            "card_title": "맨틀 네트워크 RWA 엔진",
+            "card_desc": "AI 에이전트의 도움으로 연구를 통해 수익을 창출하세요. IP 자산 및 실질 수익률.",
+            "flow": {
+                "step1": "연구",
+                "step2": "확인",
+                "step3": "맨틀 네트워크",
+                "step4": "RWA 엔진",
+                "step5": "지적 자산",
+                "step6": "연구 수익화",
+                "step7": "이익 풀"
+            }
+        },
+        "cta": {
+            "tour_title": "더 자세히 알아볼 준비가 되셨나요? 우리는 당신을 얻었다.",
+            "button_go": "가다 !"
+        }
+    },
+    "tech_room": {
+        "gateway_title": "SECURE_GATEWAY_V3",
+        "access_denied_code": "접근이 거부되었습니다.",
+        "restricted_title": "제한된 접근",
+        "student_area": "학생 구역",
+        "msg_denied": "접근 불가.",
+        "msg_id_req": "신분증이 필요합니다.",
+        "key_label": "액세스 키",
+        "btn_auth": "인증",
+        "btn_wrong": "잘못된 키",
+        "tunnel": "암호화된 터널: ZAEON-NET",
+        "status_fail": "상태: ERR_AUTH_FAIL",
+        "status_wait": "상태: AWAITING_KEY",
+        "courses": {
+            "cs": "컴퓨터 과학",
+            "se": "소프트웨어 공학",
+            "is": "정보 시스템",
+            "ce": "컴퓨터 공학",
+            "ads": "시스템 분석 및 개발",
+            "net": "컴퓨터 네트워크",
+            "infosec": "정보 보안",
+            "db": "데이터베이스",
+            "it_mgmt": "IT 관리",
+            "games": "디지털 게임",
+            "ai": "인공지능",
+            "ds": "데이터 과학",
+            "cloud": "클라우드 컴퓨팅",
+            "devops": "데브옵스",
+            "cyber": "사이버 보안",
+            "block": "블록체인",
+            "bigdata": "빅데이터 분석",
+            "mba": "MBA IT 프로젝트 관리"
+        }
+    },
+    "hero": {
+        "powered": "자온",
+        "version": "제온 OS - v1.0",
+        "sponsors_title": "후원자:",
+        "alt_workstation": "워크스테이션 보기",
+        "alt_onboard": "온보딩 어시스턴트"
+    },
+    "feed": {
+        "header_community": "제온글로벌네트워크",
+        "header_section": "Zaeon 프로토콜 // {{섹션}}",
+        "tooltip_uplink": "업링크: 동기화 중...",
+        "tooltip_ready": "시스템: 업링크 준비 완료",
+        "tooltip_online": "온라인",
+        "tooltip_offline": "오프라인",
+        "btn_enter": "커뮤니티에 참여하세요",
+        "btn_back": "뒤쪽에",
+        "live_stream": "데이터 스트림",
+        "input_placeholder": "방송 메시지...",
+        "thread_view": "스레드 보기",
+        "responses": "응답",
+        "reply_placeholder": "회신하다...",
+        "empty_state": "이 부문에서는 방송이 감지되지 않습니다.",
+        "delete_confirm": "이 방송을 삭제하시겠습니까?",
+        "static_rules": "⚠️ 규칙: Zaeon은 학술 협업 환경입니다. 다른 사람을 존중하십시오.",
+        "static_welcome": "클러스터 모니터링을 시작합니다. 환영합니다, 탐험가 여러분."
+    },
+    "profile": {
+        "back_options": "옵션으로 돌아가기",
+        "tap_avatar": "아바타를 변경하려면 탭하세요.",
+        "display_name": "표시 이름",
+        "name_placeholder": "별칭을 입력하세요...",
+        "course_label": "아카데믹 코스",
+        "course_placeholder": "예: 컴퓨터 과학",
+        "verification_title": "확인 필요:",
+        "verification_desc": "학업 기능을 잠금 해제하려면 나중에 {{course}} 등록 증명서를 제출하라는 요청을 받게 됩니다.",
+        "default_course": "이 코스",
+        "saving": "절약...",
+        "save": "변경 사항 저장",
+        "success": "프로필이 저장되었습니다!",
+        "session_label": "세션 제어",
+        "logout_action": "연결 끊기(로그아웃)",
+        "success_message": "자격 증명이 업데이트되었습니다."
     }
-  },
-  "about": {
-    "back": "뒤로",
-    "scroll_down": "모든 내용을 보려면 아래로 스크롤하세요",
-    "title_secondary": "미래의 학교.",
-    "title_main": "지금 일어나고 있습니다.",
-    "genesis": {
-      "title": "프로토콜의 기원",
-      "p1": "오늘날 우리의 관심은 오직 이익만을 추구하는 대기업들에 의해 도둑맞고 있습니다.",
-      "p2": "Zaeon은 이를 바꾸기 위해 탄생했습니다. 우리는 배움의 즐거움을 되찾아주려 합니다. ",
-      "p2_highlight": "블록체인 안에서 더 나은 세상을 만들 것입니다."
-    },
-    "mission": {
-      "title": "우리의 미션",
-      "p1": "지식과 교육을 추구하는 이들의 일상을 위한 고영향력 도구를 제공합니다.",
-      "p2": "우리는 Movement 기술을 사용하여 당신의 성장을 누구도 지우거나 수정할 수 없는 방식으로 기록합니다.",
-      "quote": "지식은 단순히 습득되는 것이 아니라, 보존되고 보호되어야 합니다."
-    },
-    "architecture": {
-      "title": "Zaeon 아키텍처",
-      "subtitle": "전 세계 수백만 명의 학생들에게 영향을 미칠 혁신적인 기술.",
-      "card1_t": "지능형 에이전트",
-      "card1_d": "국가, 기관, 분야별로 최적화된 지식을 가진 전문가 멘토를 제공합니다.",
-      "card2_t": "신뢰할 수 있는 블록체인",
-      "card2_d": "Movement는 고성능 데이터베이스 역할을 하여 생성된 모든 문서가 당신의 지적 재산임을 보장합니다.",
-      "card3_t": "하이브리드 학습",
-      "card3_d": "에이전트는 지역 스터디 그룹을 장려하는 동시에, 글로벌 실시간 협업 환경을 제어합니다."
-    },
-    "cta": {
-      "wait": "미래가 당신의 연결을 기다립니다",
-      "join": "Zaeon에 참여하세요",
-      "button": "프로토콜 시작"
-    }
-  },
-  "tech_room": {
-    "gateway_title": "SECURE_GATEWAY_V3",
-    "access_denied_code": "ACCESS_DENIED",
-    "restricted_title": "접근 제한",
-    "student_area": "학생 전용 구역",
-    "msg_denied": "접근 거부됨.",
-    "msg_id_req": "신분 확인 필요.",
-    "key_label": "액세스 키",
-    "btn_auth": "인증",
-    "btn_wrong": "잘못된 키",
-    "tunnel": "암호화 터널: ZAEON-NET",
-    "status_fail": "상태: ERR_AUTH_FAIL",
-    "status_wait": "상태: AWAITING_KEY",
-    "courses": {
-      "cs": "컴퓨터 과학",
-      "se": "소프트웨어 공학",
-      "is": "정보 시스템",
-      "ce": "컴퓨터 공학",
-      "ads": "시스템 분석 및 개발",
-      "net": "컴퓨터 네트워크",
-      "infosec": "정보 보안",
-      "db": "데이터베이스",
-      "it_mgmt": "IT 관리",
-      "games": "디지털 게임",
-      "ai": "인공지능",
-      "ds": "데이터 사이언스",
-      "cloud": "클라우드 컴퓨팅",
-      "devops": "DevOps",
-      "cyber": "사이버 보안",
-      "block": "블록체인",
-      "bigdata": "빅데이터 분석",
-      "mba": "MBA IT 프로젝트 관리"
-    }
-  }
 }

@@ -1,213 +1,356 @@
 {
-  "navbar": {
-    "about": "Sobre Nós",
-    "homework": "Laboratório de Pesquisa",
-    "workstation": "Estaçãp de Trabalho",
-    "study_rooms": "Salas de Estudo"
-  },
-  "intro": {
-    "line1": "ESTUDE_APRENDA_PESQUISE...",
-    "line2": "PUBLIQUE_&_MONETIZE."
-  },
-  "menu": {
-    "new": "Nova Conta",
-    "load": "Carregar Conta",
-    "options": "Opções",
-    "manual": "Dashboard",
-    "back": "Voltar"
-  },
-  "roles": {
-    "student": "Estudante",
-    "researcher": "Pesquisador",
-    "professional": "Professor",
-    "entrepreneur": "Empresário"
-  },
-  "options": {
-    "language": "Idioma",
-    "node": "Nó",
-    "tutorials": "Tutoriais",
-    "on": "LIGADO",
-    "off": "DESLIGADO"
-  },
-  "footer": {
-    "powered": "Powered by Cronos",
-    "version": "Zaeon OS - v0.1"
-  },
-  "hints": {
-    "new_game": "BEM VINDO A ZAEON, NOBRE SER VIVO! - Aqui todos são bem vindos e bem vindas, nós, agentes de IA, recebemos você com alegria.",
-    "save_progress": "DICA: Use sua conta Google para logar mais rápido, confirme sua identidade depois, e salve seu progresso na rede Cronos.",
-    "roles": "DICA: Cada classe (Estudante, Pesquisador, Professor, Empresário) desbloqueia ferramentas exclusivas pra você no sistema Zaeon.",
-    "wallet": "DICA: Use sua carteira Cronos para logar mais rápido, confirme sua identidade depois, e salve seu progresso eternamente na blockchain.",
-    "options": "DICA: Acesse as OPÇÕES para personalizar o seu perfil: mudar idioma, foto de perfil e curso que você estuda ou pretende estudar."
-  },
-  "modal": {
-    "title": "Nova Conta",
-    "name": "Nome Completo",
-    "email": "E-mail",
-    "phone": "Celular",
-    "continue": "Continuar",
-    "cancel": "Cancelar",
-    "use_wallet": "Usar Carteira",
-    "use_id": "Usar ID",
-    "wallet_label": "Carteira Cronos",
-    "wallet_placeholder": "0x...",
-    "lbl_student": "CPF do Estudante",
-    "ph_student": "000.000...",
-    "lbl_researcher": "ORCID ou Lattes",
-    "ph_researcher": "ID...",
-    "lbl_professional": "CPF ou CNPJ",
-    "ph_professional": "...",
-    "lbl_entrepreneur": "CNPJ da Empresa",
-    "ph_entrepreneur": "...",
-    "name_ph": "João Silva",
-    "email_ph": "voce@email.com",
-    "phone_ph": "(11) 7777-7777"
-  },
-  "homework": {
-    "study_title": "Arquivos de Estudo",
-    "add_files": "Adicionar PDF",
-    "citations_title": "Citações de IA",
-    "citations_empty": "Aguardando análise...",
-    "videos_title": "Vídeos",
-    "status_digesting": "Digerindo Documento",
-    "status_typing": "Gerando anotações...",
-    "chat_header": "Insights de Pesquisa",
-    "chat_placeholder": "Interagir com o PDF...",
-    "reload": "Recarregar",
-    "save_all": "Salvar Tudo",
-    "paste_link": "Colar Link",
-    "suggest": "Sugerir"
-  },
-  "encryption": {
-    "title": "Agentes de IA para universitários.",
-    "subtitle": "Eles vieram para mudar sua vida.",
-    "button": "Saiba mais"
-  },
-  "study_rooms": {
-    "system": "SISTEMA_IDEAL",
-    "secure": "CANAL_SEGURO",
-    "encrypted": "ENCRIPTADO",
-    "highlight": "Encontre seu time. Pesquisem. Publiquem.",
-    "together": "JUNTOS.",
-    "lobby_status": "STATUS_LOBBY: AO VIVO",
-    "find_party": "Encontre sua Equipe",
-    "select_cluster": "Selecione um grupo de pesquisa",
-    "join": "Entrar na Sessão",
-    "select": "Selecione uma Sala",
-    "rooms": {
-      "cyber_name": "Hall Cibernético",
-      "cyber_topic": "Ciência da Computação",
-      "bio_name": "Bio-Lab Alpha",
-      "bio_topic": "Medicina e Saúde",
-      "quantum_name": "Campo Quântico",
-      "quantum_topic": "Matemática",
-      "global_name": "Lounge Global",
-      "global_topic": "Estudos Gerais"
-    }
-  },
-  "workstation": {
-    "focus_mode": "Modo Foco",
-    "system_init": "Sistema iniciado. Agentes prontos.",
-    "connected": "Logado",
-    "welcome": "Bem-vindo",
-    "login": "Entrar",
-    "active_agent": "Agente Ativo",
-    "clear_history": "Limpar Histórico",
-    "send": "ENVIAR",
-    "generate": "GERAR",
-    "processing": "Processando...",
-    "session_save": "Salvar Sessão",
-    "auto_fix": "CORRIGIR",
-    "no_wallet": "Conectar Carteira",
-    "doc_title_placeholder": "Título do Doc...",
-    "doc_content_placeholder": "Aguardando saída...",
-    "chat_placeholder": "Pergunte à Zaeon sobre {{role}}...",
-    "logs": {
-      "switched": "Alterado para {{name}}",
-      "gen_protocol": "Protocolo iniciado via {{name}}",
-      "content_gen": "Conteúdo gerado.",
-      "ipfs_success": "IPFS Sucesso: {{hash}}",
-      "blockchain_init": "Assegurando na Movement...",
-      "success": "Sucesso!",
-      "error": "Erro."
-    }
-  },
-  "agents": {
-    "zenita": {
-      "role": "Tecnologia"
+    "navbar": {
+        "about": "Sobre nós",
+        "homework": "Laboratório de Pesquisa",
+        "workstation": "Estação de trabalho",
+        "study_rooms": "Salas de estudo"
     },
-    "ballena": {
-      "role": "Saúde"
+    "intro": {
+        "line1": "ESTUDAR, APRENDER = PESQUISAR...",
+        "line2": "PUBLICAR = MONETIZAR"
     },
-    "ethernaut": {
-      "role": "Matemática"
+    "menu": {
+        "new": "Nova conta",
+        "load": "Carregar conta",
+        "options": "Opções",
+        "manual": "Manual",
+        "back": "Voltar",
+        "identity": "Identidade",
+        "custom_profile": "Perfil personalizado",
+        "connected_as": "Conectado como",
+        "google_save": "Google Salvar",
+        "dev_hack": "MODO CEO"
+    },
+    "roles": {
+        "student": "Estudante",
+        "researcher": "Pesquisador",
+        "professional": "Professor",
+        "entrepreneur": "Empreendedor"
+    },
+    "hints": {
+        "new_game": "DICA: Comece com um novo perfil para conferir a tecnologia Zaeon.",
+        "save_progress": "DICA: Conecte sua conta do Google para salvar o progresso e as conquistas.",
+        "roles": "DICA: Cada turma (Aluno, Pesquisador) desbloqueia ferramentas exclusivas.",
+        "wallet": "DICA: carregue seu progresso salvo para continuar sua jornada.",
+        "options": "DICA: Acesse opções para personalizar seu perfil e configurações."
+    },
+    "options": {
+        "language": "Linguagem",
+        "node": "Nó",
+        "tutorials": "Tutoriais",
+        "on": "SOBRE",
+        "off": "DESLIGADO"
+    },
+    "footer": {
+        "powered": "Ajude-nos a seguir em cadeia! - Financie nossa pesquisa aqui.",
+        "version": "Zaeon OS - v1.0"
+    },
+    "modal": {
+        "title": "Nova conta",
+        "name": "Nome completo",
+        "email": "E-mail",
+        "phone": "Telefone",
+        "continue": "Continuar",
+        "cancel": "Cancelar",
+        "use_wallet": "Usar carteira",
+        "use_id": "Usar ID",
+        "wallet_label": "Carteira Manto",
+        "wallet_placeholder": "0x...",
+        "lbl_student": "ID de estudante",
+        "ph_student": "000...",
+        "lbl_researcher": "ID ORCIDA",
+        "ph_researcher": "EU IA...",
+        "lbl_professional": "ID fiscal",
+        "ph_professional": null,
+        "lbl_entrepreneur": "ID da empresa",
+        "ph_entrepreneur": null,
+        "name_ph": "John Doe",
+        "email_ph": "você@email.com",
+        "phone_ph": "(00) 00000-0000",
+        "docs_label": "Documentos de verificação",
+        "pdf_placeholder": "Carregar PDF",
+        "upload_placeholder": "Carregar prova institucional (PDF)",
+        "or_manual": "OU Manualmente",
+        "attention_title": "Atenção:",
+        "attention_desc": "Ignorar a documentação sinalizará sua conta como Não verificada. Você será solicitado a fornecer credenciais posteriormente.",
+        "finish": "Concluir registro",
+        "skip": "Continuar sem o Documentos"
+    },
+    "homework": {
+        "mode_study": "Modo de estudo",
+        "mode_work": "Modo de trabalho",
+        "switch_hint": "Clique para mudar para {{mode}}",
+        "switching": "Trocando...",
+        "study_title": "Modo de estudo",
+        "add_files": "Adicionar PDF",
+        "citations_title": "Citações",
+        "citations_empty": "Aguardando análise...",
+        "citations_ready": "Contexto carregado. Pronto para citar.",
+        "videos_title": "Vídeos",
+        "status_digesting": "Digerindo Documento",
+        "status_typing": "Gerando notas...",
+        "chat_header": "Insights de pesquisa",
+        "chat_placeholder": "Interagir...",
+        "chat_empty": "Adicione um PDF e pressione Play para começar.",
+        "chat_context_active": "Contexto Ativo",
+        "reload": "Recarregar",
+        "save_all": "Salvar tudo",
+        "paste_link": "Colar link",
+        "suggest": "Sugerir",
+        "specialist_1": "Apoio Acadêmico",
+        "specialist_2": "Revisor técnico",
+        "specialist_label": "Especialista",
+        "specialist_start": "Inicie uma conversa com especialista",
+        "specialist_placeholder": "Digite sua mensagem..."
+    },
+    "workstation": {
+        "focus_mode": "Modo de foco",
+        "system_init": "Sistema inicializado. Agentes prontos.",
+        "connected": "Conectado",
+        "welcome": "Bem-vindo",
+        "login": "Conecte-se",
+        "active_agent": "Agente Ativo",
+        "clear_history": "Limpar histórico",
+        "send": "ENVIAR",
+        "generate": "GERAR",
+        "processing": "Processamento...",
+        "session_save": "Salvar sessão",
+        "auto_fix": "CORREÇÃO AUTOMÁTICA",
+        "no_wallet": "Conectar carteira",
+        "doc_title_placeholder": "Título do documento...",
+        "doc_content_placeholder": "Aguardando saída...",
+        "chat_placeholder": "Pergunte a Zaeon sobre {{role}}...",
+        "logs": {
+            "switched": "Mudou para {{nome}}",
+            "gen_protocol": "Protocolo iniciado por {{name}}",
+            "content_gen": "Conteúdo gerado.",
+            "ipfs_success": "Sucesso do IPFS: {{hash}}",
+            "blockchain_init": "Protegendo no Manto...",
+            "success": "Sucesso!",
+            "error": "Erro."
+        }
+    },
+    "agents": {
+        "zenita": {
+            "role": "Tecnologia"
+        },
+        "ballena": {
+            "role": "Saúde"
+        },
+        "ethernaut": {
+            "role": "Matemática"
+        }
+    },
+    "encryption": {
+        "title": "Agentes de IA de outra dimensão.",
+        "subtitle": "Eles vieram para ajudá-lo a ser o melhor.",
+        "button": "Saber mais",
+        "typing_title": "Uma nova forma de produzir ciência.",
+        "pipeline_title": "O gasoduto Zaeon",
+        "steps": {
+            "vertex": {
+                "title": "Vértice AI",
+                "full": "Google Vertex AI",
+                "desc": "Modelagem Preditiva"
+            },
+            "students": {
+                "title": "Alunos",
+                "full": "Rede Acadêmica",
+                "desc": "Coleção e Curadoria"
+            },
+            "research": {
+                "title": "Pesquisar",
+                "full": "Laboratórios",
+                "desc": "Validação Científica"
+            },
+            "publish": {
+                "title": "Publicação",
+                "full": "Disseminação",
+                "desc": "Artigos Técnicos"
+            },
+            "compliance": {
+                "title": "Conformidade",
+                "full": "Auditoria",
+                "desc": "Ética e Jurídico"
+            },
+            "blockchain": {
+                "title": "Blockchain",
+                "full": "Muito Rede",
+                "desc": "Registro Imutável"
+            },
+            "ip": {
+                "title": "PI",
+                "full": "Propriedade",
+                "desc": "Direitos autorais"
+            },
+            "token": {
+                "title": "Símbolo",
+                "full": "Tokenização",
+                "desc": "Ativos Digitais"
+            }
+        }
+    },
+    "study_rooms": {
+        "system": "SISTEMA_OPTIMAL",
+        "secure": "SECURE_CHANNEL",
+        "encrypted": "CRIPTOGRAFADO",
+        "highlight": "Encontre seu esquadrão. Pesquisar. Publicar.",
+        "together": "JUNTO.",
+        "lobby_status": "LOBBY_STATUS: AO VIVO",
+        "find_party": "Ciência Coletiva é mais engraçada",
+        "select_cluster": "Selecione um cluster de pesquisa",
+        "join": "Entrar na sessão",
+        "select": "Selecione um quarto",
+        "rooms": {
+            "cyber_name": "Salão Cibernético",
+            "cyber_topic": "Tecnologia e Inovação",
+            "bio_name": "Bio-Lab Alfa",
+            "bio_topic": "Bio, Medicina e Saúde",
+            "quantum_name": "Campo Quântico",
+            "quantum_topic": "Matemática e física",
+            "global_name": "Salão Global",
+            "global_topic": "Estudos Gerais"
+        }
+    },
+    "lounge_chat": {
+        "system_restricted": "Sistema restrito",
+        "chat_offline": "Bate-papo off-line",
+        "access_denied": "Acesso negado",
+        "no_credentials": "Você não tem credenciais suficientes para acessar o chat global."
+    },
+    "research_module": {
+        "active_projects": "{{count}} PROJETOS ATIVOS",
+        "credentials_error": "Você não tem credenciais suficientes para acessar o chat",
+        "api_connected": "API conectada",
+        "rank": "Classificação",
+        "negotiate_ip": "Negociar IP",
+        "not_available": "Ainda não disponível",
+        "phds": "Doutorados",
+        "masters": "Mestres",
+        "undergrads": "Graduação",
+        "exploring": "Explorando",
+        "validating": "Validando",
+        "building": "Prédio",
+        "review": "Aguardando Revisão Humana por Pares",
+        "completed": "Concluído",
+        "agents_production": "Agentes em Produção",
+        "commercial": "Aplicativo comercial",
+        "research": "Aplicativo de pesquisa",
+        "social": "Impacto social",
+        "profitability": "Rentabilidade",
+        "project_rank": "Classificação do projeto"
+    },
+    "about": {
+        "back": "Voltar",
+        "scroll_down": "role para baixo para aprender tudo",
+        "title_secondary": "A escola do futuro.",
+        "title_main": "ACONTECENDO AGORA.",
+        "genesis": {
+            "title": "A Gênese do Protocolo",
+            "p1": "Hoje, a nossa atenção é roubada por grandes corporações que procuram apenas o lucro, capturando o foco de milhões de pessoas enquanto os seus algoritmos corroem a inteligência humana.",
+            "p2": "A Zaeon surge para mudar isso: viemos resgatar novamente a alegria de aprender: com profundidade, modernidade e diversão. Embora a educação tradicional tenha parado no tempo, nós desbloqueamos o seu verdadeiro potencial através de poderosos agentes de IA. Aqui, humanos e máquinas trabalham por um mundo melhor",
+            "p2_highlight": "dentro do Blockchain."
+        },
+        "mission": {
+            "title": "Nossa Missão",
+            "p1": "Capacitar a próxima geração de estudantes, pesquisadores e professores, oferecendo ferramentas simples de usar para o dia a dia na educação de alto desempenho.",
+            "p2": "Levando-os a uma plataforma completa de monetização para sua resistência acadêmica."
+        },
+        "architecture": {
+            "title": "A Arquitetura Zaeon",
+            "subtitle": "Tecnologia inovadora criada para impactar milhões de estudantes em todo o mundo.",
+            "card_title": "MOTOR RWA DA REDE MANTO",
+            "card_desc": "Monetize sua pesquisa com a ajuda de agentes de IA. Patrimônio IP e rendimento real.",
+            "flow": {
+                "step1": "PESQUISAR",
+                "step2": "VALIDAÇÃO",
+                "step3": "REDE MANTO",
+                "step4": "MOTOR RWA",
+                "step5": "ATIVO INTELECTUAL",
+                "step6": "MONETIZAÇÃO DE PESQUISA",
+                "step7": "PISCINA DE LUCRO"
+            }
+        },
+        "cta": {
+            "tour_title": "PRONTO PARA IR MAIS PROFUNDO? NÓS PEGUEMOS VOCÊ.",
+            "button_go": "IR !"
+        }
+    },
+    "tech_room": {
+        "gateway_title": "SECURE_GATEWAY_V3",
+        "access_denied_code": "ACESSO_DENIED",
+        "restricted_title": "ACESSO RESTRITO",
+        "student_area": "área estudantil",
+        "msg_denied": "Acesso negado.",
+        "msg_id_req": "Identificação necessária.",
+        "key_label": "Chave de acesso",
+        "btn_auth": "AUTENTICAR",
+        "btn_wrong": "CHAVE ERRADA",
+        "tunnel": "Túnel criptografado: ZAEON-NET",
+        "status_fail": "Estado: ERR_AUTH_FAIL",
+        "status_wait": "Status: AWAITING_KEY",
+        "courses": {
+            "cs": "Ciência da Computação",
+            "se": "Engenharia de Software",
+            "is": "Sistemas de Informação",
+            "ce": "Engenharia Informática",
+            "ads": "Análise e Desenvolvimento de Sistemas",
+            "net": "Redes de Computadores",
+            "infosec": "Segurança da informação",
+            "db": "Bancos de dados",
+            "it_mgmt": "Gestão de TI",
+            "games": "Jogos Digitais",
+            "ai": "Inteligência artificial",
+            "ds": "Ciência de Dados",
+            "cloud": "Computação em nuvem",
+            "devops": "DevOps",
+            "cyber": "Cibersegurança",
+            "block": "Blockchain",
+            "bigdata": "Análise de Big Data",
+            "mba": "MBA Gerenciamento de Projetos de TI"
+        }
+    },
+    "hero": {
+        "powered": "Zaeon",
+        "version": "Zaeon OS - v1.0",
+        "sponsors_title": "PATROCINADORES:",
+        "alt_workstation": "Visualização da estação de trabalho",
+        "alt_onboard": "Assistente de integração"
+    },
+    "feed": {
+        "header_community": "Rede Global Zaeon",
+        "header_section": "Protocolo Zaeon // {{seção}}",
+        "tooltip_uplink": "Link ascendente: Sincronizando...",
+        "tooltip_ready": "Sistema: Pronto para Uplink",
+        "tooltip_online": "ON-LINE",
+        "tooltip_offline": "OFF-LINE",
+        "btn_enter": "ENTRE NA COMUNIDADE",
+        "btn_back": "Voltar",
+        "live_stream": "Fluxo de dados",
+        "input_placeholder": "Mensagem de transmissão...",
+        "thread_view": "Visualização do tópico",
+        "responses": "Respostas",
+        "reply_placeholder": "Responder...",
+        "empty_state": "Nenhuma transmissão detectada neste setor.",
+        "delete_confirm": "Excluir esta transmissão?",
+        "static_rules": "⚠️ Regras: Zaeon é um ambiente de colaboração acadêmica. Respeite os outros.",
+        "static_welcome": "Iniciando o monitoramento do cluster. Bem-vindos, exploradores."
+    },
+    "profile": {
+        "back_options": "Voltar para Opções",
+        "tap_avatar": "Toque para alterar o avatar",
+        "display_name": "Nome de exibição",
+        "name_placeholder": "Digite seu alias...",
+        "course_label": "Curso Acadêmico",
+        "course_placeholder": "Ex: Ciência da Computação",
+        "verification_title": "Verificação necessária:",
+        "verification_desc": "Posteriormente, você será solicitado a fornecer um comprovante de inscrição no {{curso}} para desbloquear os recursos acadêmicos.",
+        "default_course": "este curso",
+        "saving": "Salvando...",
+        "save": "Salvar alterações",
+        "success": "Perfil salvo!",
+        "session_label": "Controle de Sessão",
+        "logout_action": "Desconectar (Sair)",
+        "success_message": "Credenciais atualizadas"
     }
-  },
-  "about": {
-    "back": "Voltar",
-    "scroll_down": "deslize para baixo pra saber tudo",
-    "title_secondary": "A escola do futuro.",
-    "title_main": "ACONTECENDO AGORA.",
-    "genesis": {
-      "title": "A Gênese do Protocolo",
-      "p1": "Hoje, nossa atenção é roubada por grandes empresas que buscam apenas o lucro, roubando a atenção de milhões enquanto seus algoritmos destróem a inteligência humana.",
-      "p2": "A Zaeon surge para mudar isso: viemos resgatar o prazer de aprender novamente: Com profundidade, modernidade e diversão. Enquanto o ensino tradicional parou no tempo e não acompanha a tecnologia, nós destravamos o seu verdadeiro potencial através de Agentes de IA poderosos. Aqui, humanos e máquinas irão trabalhar por um mundo melhor ",
-      "p2_highlight": "dentro da Blockchain."
-    },
-    "mission": {
-      "title": "Nossa Missão",
-      "p1": "Capacitar a próxima geração de estudantes, pesquisadores e professores, oferecendo ferramentas de alto nivel para o dia-a-dia de quem busca produtividade, tecnologia e inovação.",
-      "p2": "Usamos a tecnologia da Cronos para gravar sua evolução de um jeito que ninguém pode apagar ou alterar. Aqui, sua pesquisa não é um texto copiado e colado, é um registro digital eterno e seguro, que prova para o mundo tudo o que você aprendeu e está desenvolvendo.",
-      "quote": "O conhecimento não deve apenas ser adquirido, deve ser preservado e assegurado."
-    },
-    "architecture": {
-      "title": "A Arquitetura Zaeon",
-      "subtitle": "A inovadora tecnologia que vai impactar milhões de estudantes no mundo todo.",
-      "card1_t": "Agentes Inteligentes",
-      "card1_d": "Oferecemos mentores especialistas com conhecimento refinado de acordo com cada país, estado, instituição e área do conhecimento. tudo personalizável e específico, feito para você.",
-      "card2_t": "Blockchain confiável",
-      "card2_d": "A cronos como banco de dados de alta performance, garantindo que cada documento gerado seja sua propriedade intelectual, além de atuar como validador de credenciais escolares.",
-      "card3_t": "Estudo Híbrido",
-      "card3_d": "Agentes incentivam grupos de estudo regionais, ao mesmo tempo que controlam ambientes digitais onde a colaboração acontece em tempo real, com estudantes do mundo todo, sem barreiras de linguagem."
-    },
-    "cta": {
-      "wait": "O futuro aguarda sua conexão",
-      "join": "Junte-se à Zaeon",
-      "button": "Iniciar Protocolo"
-    }
-  },
-  "tech_room": {
-    "gateway_title": "SECURE_GATEWAY_V3",
-    "access_denied_code": "ACCESS_DENIED",
-    "restricted_title": "ACESSO RESTRITO",
-    "student_area": "área para alunos",
-    "msg_denied": "Acesso Negado.",
-    "msg_id_req": "Identificação necessária.",
-    "key_label": "Chave de Acesso",
-    "btn_auth": "AUTENTICAR",
-    "btn_wrong": "CHAVE ERRADA",
-    "tunnel": "Túnel Encriptado: ZAEON-NET",
-    "status_fail": "Status: ERR_AUTH_FAIL",
-    "status_wait": "Status: AWAITING_KEY",
-    "courses": {
-      "cs": "Ciência da Computação",
-      "se": "Engenharia de Software",
-      "is": "Sistemas de Informação",
-      "ce": "Engenharia da Computação",
-      "ads": "Análise e Desenv. de Sistemas",
-      "net": "Redes de Computadores",
-      "infosec": "Segurança da Informação",
-      "db": "Banco de Dados",
-      "it_mgmt": "Gestão de TI",
-      "games": "Jogos Digitais",
-      "ai": "Inteligência Artificial",
-      "ds": "Data Science",
-      "cloud": "Computação em Nuvem",
-      "devops": "DevOps",
-      "cyber": "Cibersegurança",
-      "block": "Blockchain",
-      "bigdata": "Big Data Analytics",
-      "mba": "MBA Gestão de Projetos TI"
-    }
-  }
 }
