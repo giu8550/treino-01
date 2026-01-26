@@ -11,7 +11,7 @@
   "author": {
     "name": "Zaeon Team"
   },
-  "description": "Zaeon OS - Next Generation Blockchain Operating System",
+  "description": "The Research Operating System",
   "keywords": [
     "reactjs",
     "nextjs",
@@ -41,11 +41,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/zaeon-os"
+    "url": "https://github.com/web3-engineer/zaeon-os"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/zaeon-os#readme",
+  "homepage": "https://github.com/web3-engineer/zaeon-os#readme",
   "bugs": {
-    "url": "https://github.com/YOUR_USERNAME/zaeon-os/issues"
+    "url": "https://github.com/web3-engineer/zaeon-os/issues"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^5.2.0",
