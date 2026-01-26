@@ -6,8 +6,8 @@
         "study_rooms": "Salas de estudo"
     },
     "intro": {
-        "line1": "ESTUDAR, APRENDER = PESQUISAR...",
-        "line2": "PUBLICAR = MONETIZAR"
+        "line1": "ESTUDE, APRENDA = PESQUISE...",
+        "line2": "PUBLIQUE = MONETIZE."
     },
     "menu": {
         "new": "Nova conta",
@@ -28,11 +28,11 @@
         "entrepreneur": "Empreendedor"
     },
     "hints": {
-        "new_game": "DICA: Comece com um novo perfil para conferir a tecnologia Zaeon.",
-        "save_progress": "DICA: Conecte sua conta do Google para salvar o progresso e as conquistas.",
+        "new_game": "DICA: Comece com um novo perfil para conferir a tecnologia Zaeon, temos tudo o que você precisa para estudar, ensinar e pesquisar --  seja qual for sua área de formação..",
+        "save_progress": "DICA: Conecte sua conta do Google para salvar o progresso e as conquistas, além de liberar todos os agentes disponíveis para trabalhar por você.",
         "roles": "DICA: Cada turma (Aluno, Pesquisador) desbloqueia ferramentas exclusivas.",
         "wallet": "DICA: carregue seu progresso salvo para continuar sua jornada.",
-        "options": "DICA: Acesse opções para personalizar seu perfil e configurações."
+        "options": "DICA: Acesse opções para personalizar seu perfil e configurações de idioma, etc.."
     },
     "options": {
         "language": "Linguagem",
@@ -42,7 +42,7 @@
         "off": "DESLIGADO"
     },
     "footer": {
-        "powered": "Ajude-nos a seguir em cadeia! - Financie nossa pesquisa aqui.",
+        "powered": "ATENÇÃO: ATUALIZANDO A PLATAFORMA...",
         "version": "Zaeon OS - v1.0"
     },
     "modal": {
