@@ -142,20 +142,49 @@
     }
   },
   "encryption": {
-    "title": "AI Agents from Another Dimension.",
-    "subtitle": "They came to help you be the best.",
-    "button": "Learn more",
     "typing_title": "A new way to produce science.",
-    "pipeline_title": "The Zaeon Pipeline",
+    "pipeline_title": "One Goal, Multiple Agents",
     "steps": {
-      "vertex": { "title": "Vertex AI", "full": "Google Vertex AI", "desc": "Predictive Modeling" },
-      "students": { "title": "Students", "full": "Academic Network", "desc": "Collection & Curatorship" },
-      "research": { "title": "Research", "full": "Laboratories", "desc": "Scientific Validation" },
-      "publish": { "title": "Publishing", "full": "Dissemination", "desc": "Technical Papers" },
-      "compliance": { "title": "Compliance", "full": "Auditing", "desc": "Ethics & Legal" },
-      "blockchain": { "title": "Blockchain", "full": "Very Network", "desc": "Immutable Record" },
-      "ip": { "title": "IP", "full": "Property", "desc": "Copyrights" },
-      "token": { "title": "Token", "full": "Tokenization", "desc": "Digital Assets" }
+      "vertex": {
+        "title": "Vertex AI",
+        "full": "Google Vertex AI",
+        "desc": "The best AI Agents specifically tailored for education, research, and institutions."
+      },
+      "students": {
+        "title": "Students",
+        "full": "Academic Network",
+        "desc": "We connect students, researchers and teachers around the world without language barriers."
+      },
+      "research": {
+        "title": "Research",
+        "full": "Laboratories",
+        "desc": "Scientific Validation happening inside academic instituitions, with a real community being built by real people."
+      },
+      "publish": {
+        "title": "Publishing",
+        "full": "Dissemination",
+        "desc": "The best tools to help you publish your work, from initial drafting to a full research paper, we got everything. "
+      },
+      "compliance": {
+        "title": "Compliance",
+        "full": "Auditing",
+        "desc": "From Ethics to Legal Compliance for produce science on the blockchain? We got you covered through all processes."
+      },
+      "blockchain": {
+        "title": "Blockchain",
+        "full": "Very Network",
+        "desc": "Immutable Record, Transparent Data, Secure Storage, certified credentials, IP protection, Tokenization."
+      },
+      "ip": {
+        "title": "IP",
+        "full": "Property",
+        "desc": "Copyrights are owned by you and protected by the blockchain. Your work is yours."
+      },
+      "token": {
+        "title": "Token",
+        "full": "Tokenization",
+        "desc": "Tokenize your work and sell it on the blockchain, or use it to raise funds for your research, the negotiation is up to you."
+      }
     }
   },
   "study_rooms": {
