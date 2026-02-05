@@ -12,8 +12,7 @@ export default function HeroSceneController() {
   const lastScrollY = useRef(0);
 
   // LARGURA FIXA PARA EVITAR DISCREPÂNCIA ENTRE IDIOMAS
-  const fixedWidth = "w-[520px]"; 
-
+const fixedWidth = "w-[520px] min-w-[520px] max-w-[820px]";
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
