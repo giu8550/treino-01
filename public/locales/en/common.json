@@ -42,7 +42,7 @@
     "off": "OFF"
   },
   "footer": {
-    "powered": "The Platform is being updated... ",
+    "powered": "    Powered by Google Vertex AI.   ",
     "version": "Zaeon OS - v1.0"
   },
   "modal": {
