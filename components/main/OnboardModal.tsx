@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom"; // 1. Importação necessária
 import { 
   XMarkIcon, DocumentArrowUpIcon, ExclamationTriangleIcon, 
   LockClosedIcon, ChevronRightIcon 
@@ -15,12 +16,24 @@ export default function OnboardModal({ open, onClose, role }: { open: boolean; o
   const { t } = useTranslation();
   const [betaCode, setBetaCode] = useState("");
   const [betaError, setBetaError] = useState(false);
+  const [mounted, setMounted] = useState(false); // 2. Estado para verificar se carregou no navegador
 
   useEffect(() => {
-    if (open) { setBetaCode(""); setBetaError(false); }
+    setMounted(true);
+    
+    if (open) { 
+      setBetaCode(""); 
+      setBetaError(false);
+      // 3. Trava o scroll da página de trás
+      document.body.style.overflow = "hidden";
+    }
+
+    // Destrava o scroll quando fecha
+    return () => { document.body.style.overflow = "auto"; };
   }, [open]);
 
-  if (!open) return null;
+  // Se não estiver montado ou não estiver aberto, não renderiza nada
+  if (!mounted || !open) return null;
 
   const handleBetaSubmit = () => {
     if (betaCode !== "ZAEON-ALPHA-KEY") {
@@ -39,8 +52,10 @@ export default function OnboardModal({ open, onClose, role }: { open: boolean; o
     { key: "docs", label: t("modal.docs_label"), placeholder: t("modal.pdf_placeholder"), type: "file" },
   ];
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+  // 4. Isolamos o JSX do seu layout original nesta variável
+  const modalContent = (
+    // Alterado z-[100] para z-[9999] para garantir que fique acima de tudo
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }} 
@@ -71,7 +86,7 @@ export default function OnboardModal({ open, onClose, role }: { open: boolean; o
             </div>
             <div className="absolute bottom-6 left-8 right-8">
                <button disabled className="w-full h-10 rounded-xl bg-white/5 text-white/20 text-sm font-semibold border border-white/5 cursor-not-allowed">
-                  Awaiting Access Code...
+                  Enter Access Code...
                </button>
             </div>
           </div>
@@ -103,4 +118,7 @@ export default function OnboardModal({ open, onClose, role }: { open: boolean; o
       </motion.div>
     </div>
   );
+
+  // 5. Renderiza via Portal direto no Body
+  return createPortal(modalContent, document.body);
 }

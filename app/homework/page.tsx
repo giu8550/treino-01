@@ -8,7 +8,11 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import "@/src/i18n";
 
-// --- IMPORTS DA WORKSTATION (INTEGRAÇÃO) ---
+// --- IMPORTS ---
+import { Navbar } from "@/components/main/navbar";
+// ThemeToggle removido conforme solicitado
+
+// --- IMPORTS DA WORKSTATION ---
 import { uploadToPinata } from "@/src/utils/ipfs";
 import zoxImage from "@/app/workstation/zox.png";
 import ethernautImage from "@/app/workstation/ethernaut.png";
@@ -20,7 +24,7 @@ import {
     EyeIcon, PowerIcon, PaperAirplaneIcon, UserCircleIcon,
     ArrowPathIcon, CommandLineIcon, HeartIcon, CalculatorIcon,
     ChevronUpIcon, ArrowDownTrayIcon, PlayIcon, DocumentDuplicateIcon,
-    RocketLaunchIcon, XMarkIcon
+    RocketLaunchIcon, XMarkIcon, ArrowsRightLeftIcon // Adicionado ícone de troca
 } from "@heroicons/react/24/outline";
 
 import MatrixRain from "@/components/main/star-background";
@@ -29,7 +33,7 @@ import ResearchCardPDF from "@/components/ui/ResearchCardPDF";
 interface StudyDoc { id: string; title: string; url: string; file?: File; }
 interface VideoItem { id: string; youtubeId: string; }
 
-// --- CONFIGURAÇÃO DE AGENTES (WORKSTATION) ---
+// --- CONFIGURAÇÃO DE AGENTES ---
 const AGENTS = {
     zenita: {
         name: "Zenita",
@@ -116,11 +120,11 @@ export default function HomeworkPage() {
     const router = useRouter();
     const { data: session, status } = useSession();
 
-    // REMOVIDO: Workstation Hooks (usePrivy, useWallets)
-    // O sistema agora confia puramente na sessão do NextAuth (session)
-
     const [mounted, setMounted] = useState(false);
     const [isFocusMode, setIsFocusMode] = useState(false);
+    
+    // NOVO ESTADO: Controla se o layout está invertido (Chat na Esquerda)
+    const [isChatLeft, setIsChatLeft] = useState(false);
 
     // --- ESTADO DE MODO (STUDY vs WORK) ---
     const [viewMode, setViewMode] = useState<"study" | "work">("study");
@@ -148,7 +152,7 @@ export default function HomeworkPage() {
     const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
     const [isImageLoading, setIsImageLoading] = useState(false);
     const [isBoosterOpen, setIsBoosterOpen] = useState(false);
-    const [isSystemProcessing, setIsSystemProcessing] = useState(false); // Renomeado de isBlockchainProcessing
+    const [isSystemProcessing, setIsSystemProcessing] = useState(false);
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -277,12 +281,10 @@ export default function HomeworkPage() {
     };
 
     const handleBoostAndSave = async () => {
-        // NÃO requer mais wallet, apenas sessão do usuário
         setIsSystemProcessing(true);
         addLog("🚀 Initiating System Synchronization...");
 
         try {
-            // Simulando um delay de processamento para UX
             await new Promise(r => setTimeout(r, 1500));
             addLog("✅ Data Integrity Verified.");
 
@@ -307,7 +309,6 @@ export default function HomeworkPage() {
     };
 
     const handleGenerateProtocol = async () => {
-        // Removida verificação de wallet
         const agent = AGENTS[selectedAgent];
         setIsSystemProcessing(true);
         addLog(t("workstation.logs.gen_protocol", { name: agent.name }));
@@ -341,6 +342,24 @@ export default function HomeworkPage() {
         >
             <div className="absolute inset-0 z-0 pointer-events-none opacity-20"><MatrixRain /></div>
 
+            {/* NAVBAR (REMOVIDA SE FOCUS MODE ESTIVER ATIVO) */}
+            {!isFocusMode && (
+                <div className="absolute top-0 w-full z-50">
+                    <Navbar />
+                </div>
+            )}
+
+            {/* BOTÃO DE INVERSÃO DE LAYOUT (SUBSTITUINDO O THEMETOGGLE) */}
+            <div className="fixed top-4 right-4 z-[250]">
+                <button 
+                    onClick={() => setIsChatLeft(!isChatLeft)} 
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-md hover:scale-105 transition-all shadow-lg group"
+                    title={isChatLeft ? "Mover chat para direita" : "Mover chat para esquerda"}
+                >
+                    <ArrowsRightLeftIcon className="w-5 h-5 text-slate-600 dark:text-white group-hover:text-cyan-500 transition-colors" />
+                </button>
+            </div>
+
             {/* LOADER DE TRANSIÇÃO (MAC SPLASH) */}
             <AnimatePresence>
                 {isTransitioning && (
@@ -368,7 +387,16 @@ export default function HomeworkPage() {
 
                     <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf" multiple onChange={(e) => handleFiles(e.target.files)} />
 
-                    <main ref={mainScrollRef} onClick={() => setActiveSection(null)} className={`relative z-20 flex-1 h-full overflow-y-auto pb-40 custom-scrollbar pr-[460px] space-y-12 transition-all duration-700 ${isFocusMode ? 'pt-10' : 'pt-[120px]'} ${isProcessing ? 'blur-[4px] opacity-40' : ''}`}>
+                    <main 
+                        ref={mainScrollRef} 
+                        onClick={() => setActiveSection(null)} 
+                        // LÓGICA DE INVERSÃO: Se isChatLeft for true, usamos padding-left, senão padding-right
+                        className={`relative z-20 flex-1 h-full overflow-y-auto pb-40 custom-scrollbar space-y-12 transition-all duration-700 
+                        ${isFocusMode ? 'pt-10' : 'pt-[120px]'} 
+                        ${isProcessing ? 'blur-[4px] opacity-40' : ''}
+                        ${isChatLeft ? 'pl-[460px] pr-8' : 'pr-[460px] pl-8'} 
+                        `}
+                    >
 
                         {/* 1. STUDY FILES */}
                         <section onClick={(e) => { e.stopPropagation(); setActiveSection('study'); }} className={`relative rounded-[41px] p-[1px] transition-all ${activeSection === 'study' ? 'z-[30]' : 'z-[10]'}`}>
@@ -470,7 +498,13 @@ export default function HomeworkPage() {
                     </main>
 
                     {/* CHAT ASIDE (STUDY MODE) */}
-                    <aside className={`fixed right-6 z-[60] w-[420px] bg-slate-50 shadow-2xl rounded-[40px] flex flex-col border border-slate-200 transition-all duration-700 ${isFocusMode ? 'top-6 h-[calc(100vh-48px)]' : 'top-[123px] h-[calc(100vh-155px)]'}`}>
+                    <aside 
+                        // LÓGICA DE INVERSÃO: left-6 se invertido, right-6 se normal
+                        className={`fixed z-[60] w-[420px] bg-slate-50 shadow-2xl rounded-[40px] flex flex-col border border-slate-200 transition-all duration-700 
+                        ${isChatLeft ? 'left-6' : 'right-6'}
+                        ${isFocusMode ? 'top-6 h-[calc(100vh-48px)]' : 'top-[123px] h-[calc(100vh-155px)]'}
+                        `}
+                    >
                         <div className="p-8 border-b border-slate-200 flex items-center gap-2 justify-between">
                             <div className="flex items-center gap-2">
                                 <div className={`w-2 h-2 rounded-full ${isProcessing || isTyping ? 'bg-cyan-500 animate-pulse' : 'bg-slate-300'}`} />
@@ -505,7 +539,14 @@ export default function HomeworkPage() {
             {viewMode === "work" && (
                 <div className="z-20 w-full max-w-[1700px] h-[88vh] grid grid-cols-12 gap-6 pt-20 px-4">
                     {/* CHAT WINDOW */}
-                    <div onClick={() => setActiveWorkSection('chat')} className={`col-span-7 ${panelStyle} flex flex-col ${activeWorkSection === 'chat' ? 'ring-1 ring-cyan-400/50' : ''} relative h-full`}>
+                    <div 
+                        onClick={() => setActiveWorkSection('chat')} 
+                        // LÓGICA DE INVERSÃO: 'order-last' joga para direita se isChatLeft for false (o padrão no Work Mode seria esquerda, mas estamos espelhando)
+                        // Ajuste: Originalmente Chat era col-span-7 (primeiro). Se invertermos, ele vai pra direita.
+                        className={`col-span-7 ${panelStyle} flex flex-col ${activeWorkSection === 'chat' ? 'ring-1 ring-cyan-400/50' : ''} relative h-full 
+                        ${isChatLeft ? 'order-first' : 'order-last'}
+                        `}
+                    >
                         {/* TOGGLE BUTTON DENTRO DO WORK MODE */}
                         <div className="absolute top-4 left-4 z-40 flex gap-3">
                             <button onClick={handleToggleMode} className="flex items-center gap-2 bg-white/5 border border-white/20 px-4 py-2 rounded-2xl hover:bg-white/10 transition-all backdrop-blur-md">
