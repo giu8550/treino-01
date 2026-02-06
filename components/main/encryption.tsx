@@ -129,12 +129,6 @@ const ProcessFlowchart = () => {
                 <div className="flex flex-col gap-6 flex-1 text-center md:text-left items-center md:items-start z-10">
                     <div className="inline-flex items-center gap-3">
                         {/* Troféu Amarelo */}
-                        <div className="p-3 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)] group-hover:scale-110 transition-transform duration-300">
-                            <TrophyIcon className="w-8 h-8" />
-                        </div>
-                        <span className="text-xs font-bold text-yellow-400 uppercase tracking-widest drop-shadow-sm">
-                            Award Winning
-                        </span>
                     </div>
 
                     {/* Texto Branco (Já que o fundo é preto ou azul escuro) */}
