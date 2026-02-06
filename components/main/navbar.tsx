@@ -23,7 +23,6 @@ const NavbarComponent = () => {
     setMounted(true);
   }, []);
 
-  // Previne que a Navbar fique invisível caso o i18n demore a responder em rotas específicas
   if (!mounted) {
     return <div className="w-full h-[90px] fixed top-0 z-[100]" />;
   }
@@ -37,10 +36,12 @@ const NavbarComponent = () => {
   const isSessionAdmin = user?.isAdmin === true;
   const isSuperUser = isFounder || isSessionAdmin;
 
-  const isStudentGroup = role === "student" || role === "researcher";
   const isProGroup = role === "professional" || role === "entrepreneur";
 
-  const showHomework = isSuperUser || isStudentGroup;
+  // --- ALTERADO: Botão Homework sempre visível para todos ---
+  const showHomework = true; 
+  
+  // Workstation continua restrita (ou mude para true se quiser liberar também)
   const showWorkstation = isSuperUser || isProGroup;
 
   const isActive = (path: string) => {
@@ -74,7 +75,6 @@ const NavbarComponent = () => {
           </Link>
 
           <nav className="hidden md:flex justify-center flex-1 gap-12 text-[14px] font-medium tracking-wide">
-            {/* Ajustado para o path /about conforme solicitado */}
             <Link href="/about" className={getLinkClassName("/about")}>
               {t("navbar.about")}
             </Link>
@@ -82,6 +82,7 @@ const NavbarComponent = () => {
               {t("navbar.study_rooms")}
             </Link>
 
+            {/* Link Homework agora sempre renderiza porque showHomework é true */}
             {showHomework && (
                 <Link href="/homework" className={getLinkClassName("/homework")}>
                   {t("navbar.homework")}

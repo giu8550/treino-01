@@ -29,7 +29,6 @@ import {
 
 import MatrixRain from "@/components/main/star-background";
 import ResearchCardPDF from "@/components/ui/ResearchCardPDF";
-// import router from "next/router"; // Removido pois conflita com 'next/navigation' em App Router
 
 interface StudyDoc { id: string; title: string; url: string; file?: File; }
 interface VideoItem { id: string; youtubeId: string; }
@@ -123,7 +122,6 @@ const WorkstationMenuButton = ({ icon: Icon, label, isActive, onClick }: any) =>
         className={`group relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${isActive ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
     >
         <Icon className="w-5 h-5" />
-        {/* Tooltip agora com z-50 relativo ao botão, mas o botão está num container z-100 */}
         <span className="absolute left-full ml-4 px-3 py-1.5 bg-[#0a0a0a] border border-white/20 rounded-lg text-[10px] uppercase font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-xl backdrop-blur-md">
             {label}
         </span>
@@ -137,8 +135,6 @@ export default function HomeworkPage() {
 
     const [mounted, setMounted] = useState(false);
     const [isFocusMode, setIsFocusMode] = useState(false);
-    
-    // Configuração Inicial: false = Chat na Direita (Padrão)
     const [isChatLeft, setIsChatLeft] = useState(false);
 
     // --- ESTADO DE MODO (STUDY vs WORK) ---
@@ -177,18 +173,11 @@ export default function HomeworkPage() {
     const workChatRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
 
-    // --- BLINDAGEM DA PÁGINA (MODIFICADO: Acesso Liberado) ---
+    // --- BLINDAGEM DA PÁGINA: DESATIVADA (Acesso Público) ---
     useEffect(() => {
-        if (status === "loading") return;
-
-        if (status === "unauthenticated") {
-            router.replace("/");
-            return;
-        }
-
-        // REMOVIDO: O bloco que redirecionava profissionais/empreendedores para fora.
-        // Agora todos permanecem aqui se estiverem logados.
-    }, [status, session, router]);
+        // Não fazemos nada aqui, permitindo que a página carregue para todos.
+        // O status "loading" é tratado no render condicional abaixo para evitar flicker.
+    }, []);
 
     useEffect(() => { setMounted(true); }, []);
 
@@ -198,7 +187,6 @@ export default function HomeworkPage() {
         if (workChatRef.current) workChatRef.current.scrollTo({ top: workChatRef.current.scrollHeight, behavior: 'smooth' });
     }, [chatHistory, isTyping, isProcessing, viewMode]);
 
-    // --- LÓGICA DE ALTERNÂNCIA (TOGGLE) ---
     const handleToggleMode = () => {
         setIsTransitioning(true);
         setTimeout(() => {
@@ -207,7 +195,6 @@ export default function HomeworkPage() {
         }, 1500);
     };
 
-    // --- FUNÇÕES COMPARTILHADAS ---
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -219,7 +206,6 @@ export default function HomeworkPage() {
 
     const addLog = (msg: string) => setTerminalLogs(prev => [...prev, `zaeon@root:~$ ${msg}`]);
 
-    // --- LÓGICA STUDY MODE ---
     const handleFiles = (files: FileList | null) => {
         if (!files) return;
         const newFiles = Array.from(files).filter(f => f.type === 'application/pdf').map(file => ({
@@ -286,6 +272,7 @@ export default function HomeworkPage() {
             await new Promise(r => setTimeout(r, 1500));
             addLog("✅ Data Integrity Verified.");
 
+            // Se não tiver sessão (público), usa "anonymous_user"
             const userId = session?.user?.email || "anonymous_user";
             const res = await fetch('/api/workspace', {
                 method: 'POST',
@@ -320,14 +307,10 @@ export default function HomeworkPage() {
 
     // --- RENDERIZAÇÃO CONDICIONAL ---
     if (!mounted || status === "loading") {
-        return ( <div className="w-full h-screen bg-[#030014] flex items-center justify-center z-[999]"> <IosLoader status="VALIDANDO ACESSO ADMIN..." /> </div> );
+        return ( <div className="w-full h-screen bg-[#030014] flex items-center justify-center z-[999]"> <IosLoader status="LOADING ZAEON OS..." /> </div> );
     }
 
-    // --- MODIFICADO: PERMISSÃO TOTAL ---
-    // Removemos a checagem de role. Se está logado, entra.
-    const isAuthorized = true; 
-
-    if (status === "unauthenticated" || !isAuthorized) return null;
+    // Removido o bloqueio "unauthenticated" aqui para liberar a página.
 
     const activeConfig = AGENTS[selectedAgent];
     const panelStyle = "relative overflow-hidden backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(34,211,238,0.12)] bg-[linear-gradient(135deg,rgba(7,38,77,0.4),rgba(11,58,164,0.3),rgba(7,38,77,0.4))] rounded-[24px] transition-all duration-300";
@@ -340,7 +323,7 @@ export default function HomeworkPage() {
         >
             <div className="absolute inset-0 z-0 pointer-events-none opacity-20"><MatrixRain /></div>
 
-            {/* NAVBAR (REMOVIDA SE FOCUS MODE ESTIVER ATIVO) */}
+            {/* NAVBAR (Sempre mostra, removida apenas em Focus Mode) */}
             {!isFocusMode && (
                 <div className="absolute top-0 w-full z-50">
                     <Navbar />
@@ -534,10 +517,9 @@ export default function HomeworkPage() {
 
             {/* --- MODO WORK (WORKSTATION INTEGRADO) --- */}
             {viewMode === "work" && (
-                // Alterado para FLEX para acomodar a sidebar, e aumentado padding-top
                 <div className="z-20 w-full max-w-[1700px] h-[88vh] flex pt-28 px-4 gap-6"> 
                     
-                    {/* NOVO: MENU LATERAL (SIDEBAR) CORRIGIDO Z-INDEX */}
+                    {/* MENU LATERAL (SIDEBAR) */}
                     <div className="relative w-16 flex flex-col items-center gap-6 py-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl shrink-0 h-full z-[100]">
                         <WorkstationMenuButton 
                             icon={DocumentTextIcon} 
@@ -591,7 +573,6 @@ export default function HomeworkPage() {
                                         )}
                                     </AnimatePresence>
                                 </div>
-                                {/* SELETOR DE AGENTES REMOVIDO DAQUI */}
                             </div>
 
                             <div ref={workChatRef} className="flex-1 relative p-6 overflow-y-auto custom-scrollbar flex flex-col z-0 pt-16">
