@@ -29,6 +29,7 @@ import {
 
 import MatrixRain from "@/components/main/star-background";
 import ResearchCardPDF from "@/components/ui/ResearchCardPDF";
+// import router from "next/router"; // Removido pois conflita com 'next/navigation' em App Router
 
 interface StudyDoc { id: string; title: string; url: string; file?: File; }
 interface VideoItem { id: string; youtubeId: string; }
@@ -176,7 +177,7 @@ export default function HomeworkPage() {
     const workChatRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
 
-    // --- BLINDAGEM DA PÁGINA ---
+    // --- BLINDAGEM DA PÁGINA (MODIFICADO: Acesso Liberado) ---
     useEffect(() => {
         if (status === "loading") return;
 
@@ -185,16 +186,8 @@ export default function HomeworkPage() {
             return;
         }
 
-        if (status === "authenticated") {
-            const isAdmin = (session?.user as any)?.isAdmin;
-            const userRole = (session?.user as any)?.role;
-
-            if (isAdmin) return;
-
-            if (userRole === "professional" || userRole === "entrepreneur") {
-                router.replace("/workstation");
-            }
-        }
+        // REMOVIDO: O bloco que redirecionava profissionais/empreendedores para fora.
+        // Agora todos permanecem aqui se estiverem logados.
     }, [status, session, router]);
 
     useEffect(() => { setMounted(true); }, []);
@@ -330,9 +323,9 @@ export default function HomeworkPage() {
         return ( <div className="w-full h-screen bg-[#030014] flex items-center justify-center z-[999]"> <IosLoader status="VALIDANDO ACESSO ADMIN..." /> </div> );
     }
 
-    const isAdmin = (session?.user as any)?.isAdmin;
-    const userRole = (session?.user as any)?.role;
-    const isAuthorized = isAdmin || !userRole || userRole === "student" || userRole === "researcher";
+    // --- MODIFICADO: PERMISSÃO TOTAL ---
+    // Removemos a checagem de role. Se está logado, entra.
+    const isAuthorized = true; 
 
     if (status === "unauthenticated" || !isAuthorized) return null;
 

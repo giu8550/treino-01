@@ -243,7 +243,7 @@ export default function ExamsModule() {
                                     <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Feedback</span>
                                 </div>
                                 <p className="text-xs text-white/80 leading-relaxed font-medium">
-                                    "{exam.comment}"
+                                    &quot;{exam.comment}&quot;
                                 </p>
                             </div>
                         </div>
