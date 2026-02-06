@@ -12,7 +12,8 @@ import {
     ScaleIcon, 
     LinkIcon, 
     LightBulbIcon, 
-    CurrencyDollarIcon 
+    CurrencyDollarIcon,
+    TrophyIcon
 } from "@heroicons/react/24/solid";
 import { useTranslation } from "react-i18next";
 
@@ -20,18 +21,19 @@ import { useTranslation } from "react-i18next";
 const SponsorsTicker = ({ opacity }: { opacity: any }) => {
   const { t } = useTranslation();
   const sponsors = [
-    { name: "Funcap", src: "/sponsors/funcap.jpg", url: "https://www.funcap.ce.gov.br/" },
+    { name: "Funcap", src: "/sponsors/funcap.png", url: "https://www.funcap.ce.gov.br/" },
     { name: "Centelha", src: "/sponsors/centelha.png", url: "https://programacentelha.com.br/ce/" },
     { name: "Sudene", src: "/sponsors/sudene.png", url: "https://www.gov.br/sudene" },
     { name: "Finep", src: "/sponsors/finep.png", url: "http://www.finep.gov.br/" },
-    { name: "Governo", src: "/sponsors/gov.svg", url: "https://www.gov.br/" },
+    { name: "Cnpq", src: "/sponsors/cnpq.png", url: "https://www.gov.br/cnpq/pt-br" },
+
   ];
   const tickerItems = [...sponsors, ...sponsors, ...sponsors];
 
   return (
     <motion.div style={{ opacity }} className="w-full py-8 overflow-hidden relative z-50">
      <div className="w-full flex justify-center mb-8">
-      <h3 className="text-center text-[10px] font-black tracking-[0.4em] text-cyan-600 dark:text-cyan-400 uppercase opacity-70">     
+      <h3 className="text-center text-[10px] font-black tracking-[0.4em] text-cyan-600 dark:text-cyan-400 uppercase opacity-0">     
         {t("hero.sponsors_title", "SPONSORS:")}
       </h3>
     </div>
@@ -61,7 +63,7 @@ const SponsorCard = ({ item }: { item: { name: string; src: string; url: string 
     >
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12)_0%,transparent_70%)]" />
       <div className="relative w-full h-full p-6 flex items-center justify-center">
-        <img src={item.src} alt={item.name} className="max-w-full max-h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 grayscale group-hover:grayscale-0" />
+        <img src={item.src} alt={item.name} className="max-w-full max-h-full object-contain opacity-100 transition-all duration-500" />
       </div>
     </motion.a>
   );
@@ -81,95 +83,102 @@ const TypingEffect = ({ text, className }: { text: string; className: string }) 
 // --- FLUXOGRAMA "LIQUID GLASS" ---
 const ProcessFlowchart = () => {
     const { t } = useTranslation();
-    const [activeId, setActiveId] = useState<number | null>(null);
-
-    // Mapeamento dinâmico usando as chaves de tradução
-    const steps = [
-        { id: 1, title: t("encryption.steps.vertex.title"), fullTitle: t("encryption.steps.vertex.full"), icon: <CpuChipIcon className="w-5 h-5" />, desc: t("encryption.steps.vertex.desc"), color: "text-blue-400", border: "border-blue-500/30" },
-        { id: 2, title: t("encryption.steps.students.title"), fullTitle: t("encryption.steps.students.full"), icon: <AcademicCapIcon className="w-5 h-5" />, desc: t("encryption.steps.students.desc"), color: "text-green-400", border: "border-green-500/30" },
-        { id: 3, title: t("encryption.steps.research.title"), fullTitle: t("encryption.steps.research.full"), icon: <BeakerIcon className="w-5 h-5" />, desc: t("encryption.steps.research.desc"), color: "text-purple-400", border: "border-purple-500/30" },
-        { id: 4, title: t("encryption.steps.publish.title"), fullTitle: t("encryption.steps.publish.full"), icon: <DocumentTextIcon className="w-5 h-5" />, desc: t("encryption.steps.publish.desc"), color: "text-yellow-400", border: "border-yellow-500/30" },
-        { id: 5, title: t("encryption.steps.compliance.title"), fullTitle: t("encryption.steps.compliance.full"), icon: <ScaleIcon className="w-5 h-5" />, desc: t("encryption.steps.compliance.desc"), color: "text-red-400", border: "border-red-500/30" },
-        { id: 6, title: t("encryption.steps.blockchain.title"), fullTitle: t("encryption.steps.blockchain.full"), icon: <LinkIcon className="w-5 h-5" />, desc: t("encryption.steps.blockchain.desc"), color: "text-cyan-400", border: "border-cyan-500/30" },
-        { id: 7, title: t("encryption.steps.ip.title"), fullTitle: t("encryption.steps.ip.full"), icon: <LightBulbIcon className="w-5 h-5" />, desc: t("encryption.steps.ip.desc"), color: "text-orange-400", border: "border-orange-500/30" },
-        { id: 8, title: t("encryption.steps.token.title"), fullTitle: t("encryption.steps.token.full"), icon: <CurrencyDollarIcon className="w-5 h-5" />, desc: t("encryption.steps.token.desc"), color: "text-emerald-400", border: "border-emerald-500/30" },
-    ];
 
     return (
-        <div className="w-full pt-20 pb-40 px-4 flex flex-col items-center justify-end bg-transparent relative z-40">
-            <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 mb-10">
-                {t("encryption.pipeline_title", "The Zaeon Pipeline")}
+        <div className="w-full pt-20 pb-40 px-4 flex flex-col items-center justify-center bg-transparent relative z-40">
+            {/* Título */}
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-white/40 mb-10 transition-colors duration-300">
+                {t("encryption.recognition", "Recognition")}
             </h4>
             
-            <LayoutGroup>
-                <div className="flex items-center justify-center w-full max-w-[1200px] h-[260px] gap-2">
-                    {steps.map((step) => {
-                        const isActive = activeId === step.id;
-                        return (
-                            <motion.div
-                                layout
-                                key={step.id}
-                                onClick={() => setActiveId(isActive ? null : step.id)}
-                                onHoverStart={() => setActiveId(step.id)}
-                                className={`
-                                    relative h-full rounded-2xl cursor-pointer overflow-hidden 
-                                    transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]
-                                    backdrop-blur-md border border-white/5
-                                    bg-black/20 hover:bg-black/40
-                                    dark:bg-cyan-900/10 dark:hover:bg-cyan-900/30 dark:border-cyan-500/20
-                                    ${isActive 
-                                        ? `flex-[3.5] z-10 bg-black/60 border-white/20 dark:bg-cyan-900/40 dark:border-cyan-400/50 shadow-[0_10px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_0_30px_rgba(34,211,238,0.15)]` 
-                                        : `flex-[1] z-0 opacity-70 hover:opacity-100`
-                                    }
-                                `}
-                            >
-                                <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                                    <motion.div 
-                                        layout
-                                        className={`
-                                            p-2 rounded-xl mb-3 transition-colors duration-300
-                                            ${isActive ? `bg-white/10 ${step.color}` : "bg-transparent text-white/30"}
-                                        `}
-                                    >
-                                        {step.icon}
-                                    </motion.div>
-
-                                    <motion.h3 
-                                        layout
-                                        className={`
-                                            font-bold uppercase tracking-widest whitespace-nowrap transition-all duration-300
-                                            ${isActive ? "text-xs text-white mb-2 rotate-0" : "text-[9px] text-white/40 -rotate-90 mt-4"}
-                                        `}
-                                    >
-                                        {isActive ? step.fullTitle : step.title}
-                                    </motion.h3>
-
-                                    <AnimatePresence>
-                                        {isActive && (
-                                            <motion.div 
-                                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.9, y: 5 }}
-                                                transition={{ duration: 0.3, delay: 0.1 }}
-                                                className="text-center"
-                                            >
-                                                <div className={`w-8 h-[2px] mx-auto my-2 bg-gradient-to-r from-transparent via-${step.color.split('-')[1]}-400 to-transparent opacity-50`} />
-                                                <p className="text-[10px] text-slate-300 font-light leading-relaxed max-w-[180px] mx-auto">
-                                                    {step.desc}
-                                                </p>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="
+                    relative w-full max-w-4xl rounded-[2rem] 
+                    
+                    /* --- MODO CLARO (Preto Transparente) --- */
+                    border border-white/10 bg-[#0a0a0f]/80 backdrop-blur-xl shadow-xl
+                    
+                    /* --- MODO ESCURO (Azul Transparente) --- */
+                    dark:border-cyan-500/50 dark:bg-[#1e3a8a]/40 dark:shadow-[0_0_30px_rgba(6,182,212,0.15)]
+                    
+                    flex flex-col md:flex-row items-center justify-between
+                    p-8 md:p-12 gap-8 group overflow-hidden
+                    hover:border-yellow-500/50 transition-all duration-500
+                "
+            >
+                {/* --- EFEITO DE FLASH / BRILHO PASSANDO --- */}
+                <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none z-0">
+                    <motion.div
+                        className="absolute top-0 bottom-0 w-32 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg]"
+                        initial={{ left: "-100%" }}
+                        animate={{ left: "200%" }}
+                        transition={{
+                            repeat: Infinity,
+                            duration: 2.5,    
+                            repeatDelay: 1,  
+                            ease: "linear"
+                        }}
+                    />
                 </div>
-            </LayoutGroup>
+
+                {/* Coluna da Esquerda: Ícone e Texto */}
+                <div className="flex flex-col gap-6 flex-1 text-center md:text-left items-center md:items-start z-10">
+                    <div className="inline-flex items-center gap-3">
+                        {/* Troféu Amarelo */}
+                        <div className="p-3 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)] group-hover:scale-110 transition-transform duration-300">
+                            <TrophyIcon className="w-8 h-8" />
+                        </div>
+                        <span className="text-xs font-bold text-yellow-400 uppercase tracking-widest drop-shadow-sm">
+                            Award Winning
+                        </span>
+                    </div>
+
+                    {/* Texto Branco (Já que o fundo é preto ou azul escuro) */}
+                    <h3 className="text-2xl md:text-3xl font-light text-white leading-tight">
+                        <span className="font-bold text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">Blockchain</span> como Tecnologia de Uso Inteligente no Ceará
+                    </h3>
+                    
+                    <p className="text-sm text-white/90 font-medium leading-relaxed max-w-lg">
+                        Selecionado pelo programa{" "}
+                        <a 
+                            href="https://programacentelha.com.br/wp-content/uploads/2025/01/CE-Lista-Final-Empresas-Contratadas.pdf" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-cyan-400 hover:text-cyan-300 font-bold underline underline-offset-4 decoration-cyan-500/50 hover:decoration-cyan-300 transition-all cursor-pointer relative z-50"
+                        >
+                            Centelha (2ª Edição)
+                        </a>
+                        , financiado diretamente pelo Ministério da Ciência, Tecnologia e Inovação do Governo Federal Brasileiro.
+                    </p>
+                </div>
+
+                {/* Coluna da Direita: Logos MCTI */}
+                <div className="w-full md:w-auto flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-white/10 pt-8 md:pt-0 md:pl-12 mt-2 md:mt-0 z-10">
+                    <span className="text-[10px] text-white/50 uppercase tracking-widest mb-6 font-semibold">Apoio Oficial</span>
+                    
+                    <div className="relative h-24 w-64 transition-all duration-300 group-hover:scale-105 opacity-90 group-hover:opacity-100">
+                        {/* Imagem para modo CLARO (hidden no dark) */}
+                        <img 
+                            src="/sponsors/MCTI_light.png" 
+                            alt="MCTI Logo" 
+                            className="w-full h-full object-contain block dark:hidden" 
+                        />
+                        {/* Imagem para modo ESCURO (hidden no light) */}
+                        <img 
+                            src="/sponsors/MCTI_dark.png" 
+                            alt="MCTI Logo" 
+                            className="w-full h-full object-contain hidden dark:block" 
+                        />
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
 };
-
 // --- COMPONENTE PRINCIPAL (PÁGINA) ---
 export default function Encryption() {
     const { t } = useTranslation();
