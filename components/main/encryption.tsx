@@ -137,16 +137,16 @@ const ProcessFlowchart = () => {
                     </h3>
                     
                     <p className="text-sm text-white/90 font-medium leading-relaxed max-w-lg">
-                        Selecionado pelo programa{" "}
+                        Projeto contemplado com fomento financeiro concedido pelo{" "}
                         <a 
                             href="https://programacentelha.com.br/wp-content/uploads/2025/01/CE-Lista-Final-Empresas-Contratadas.pdf" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-cyan-400 hover:text-cyan-300 font-bold underline underline-offset-4 decoration-cyan-500/50 hover:decoration-cyan-300 transition-all cursor-pointer relative z-50"
                         >
-                            Centelha (2ª Edição)
+                            Programa Centelha (2ª Edição)
                         </a>
-                        , financiado diretamente pelo Ministério da Ciência, Tecnologia e Inovação do Governo Federal Brasileiro.
+                        , financiado diretamente pelo Ministério da Ciência, Tecnologia e Inovação do Governo Federal.
                     </p>
                 </div>
 
@@ -154,7 +154,7 @@ const ProcessFlowchart = () => {
                 <div className="w-full md:w-auto flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-white/10 pt-8 md:pt-0 md:pl-12 mt-2 md:mt-0 z-10">
                     <span className="text-[10px] text-white/50 uppercase tracking-widest mb-6 font-semibold">Apoio Oficial</span>
                     
-                    <div className="relative h-24 w-64 transition-all duration-300 group-hover:scale-105 opacity-90 group-hover:opacity-100">
+                    <div className="relative h-26 w-64 transition-all duration-300 group-hover:scale-105 opacity-90 group-hover:opacity-100">
                         {/* Imagem para modo CLARO (hidden no dark) */}
                         <img 
                             src="/sponsors/MCTI_light.png" 

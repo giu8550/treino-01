@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 
 const OnboardModal = dynamic(() => import("@/components/main/OnboardModal"), { ssr: false });
 
+// Mantemos a lista completa aqui, mas vamos filtrá-la dentro do componente
 const MENU_ITEMS = [
   { labelKey: "menu.new", href: "/signup" },
   { labelKey: "menu.load", href: "#" },
@@ -40,10 +41,20 @@ export default function MenuNavigation() {
 
   const isLoggedIn = status === "authenticated";
 
-  // CORREÇÃO: panelClass agora usa w-full para preencher os 520px do pai
+  // --- LÓGICA DE ADMINISTRAÇÃO ---
+  // Verifica se o email logado é EXATAMENTE o do admin
+  const isAdmin = session?.user?.email === "zaeondao@gmail.com";
+
+  // Filtra os itens do menu. Se for o manual, só passa se for admin.
+  const visibleMenuItems = MENU_ITEMS.filter(item => {
+    if (item.labelKey === "menu.manual") {
+      return isAdmin;
+    }
+    return true;
+  });
+
   const panelClass = "w-full mt-24 rounded-3xl overflow-hidden backdrop-blur-xl transition-all duration-500 bg-black/60 border border-white/10 dark:bg-cyan-900/20 dark:border-cyan-400/30 shadow-2xl flex flex-col";
   
-  // CORREÇÃO: cardBase garante layout fixo
   const cardBase = "group relative overflow-hidden flex items-center justify-between rounded-xl px-5 min-h-[64px] w-full transition-all duration-300 cursor-pointer font-bold text-white bg-black/40 hover:bg-black/60 border border-white/5 hover:border-white/20 dark:bg-cyan-950/30 hover:scale-[1.01]";
   
   const cardSelected = "ring-1 ring-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.3)] bg-black/50 dark:bg-cyan-900/40";
@@ -51,8 +62,6 @@ export default function MenuNavigation() {
 
   return (
     <div className={panelClass}>
-      {/* Texto Powered removido conforme solicitado */}
-
       <nav className="px-4 sm:px-6 py-8 min-h-[350px] w-full flex flex-col">
         <AnimatePresence mode="wait">
           {!isOptionsOpen ? (
@@ -64,11 +73,10 @@ export default function MenuNavigation() {
               className="flex flex-col gap-3 w-full"
             >
               
-              {/* ITEM NEW / ROLE PICKER */}
+              {/* ITEM 0: PERFIL / NEW (Sempre visível) */}
               <li className="w-full" onMouseEnter={() => setIndex(0)} onClick={() => !isLoggedIn && setPickerOpen(true)}>
                 <div className={`${cardBase} ${index === 0 ? cardSelected : ""}`}>
                   <div className={accentBar(index === 0)} />
-                  {/* flex-1 empurra o ícone para a direita */}
                   <span className="truncate pr-2 flex-1">{isLoggedIn ? `${session?.user?.name || 'User'} Lv.1` : t("menu.new")}</span>
                   
                   {!isLoggedIn && pickerOpen ? (
@@ -81,8 +89,9 @@ export default function MenuNavigation() {
                 </div>
               </li>
 
-              {/* OUTROS ITENS DO MENU PRINCIPAL */}
-              {MENU_ITEMS.slice(1).map((item, i) => {
+              {/* OUTROS ITENS (Filtrados dinamicamente) */}
+              {/* Usamos visibleMenuItems ao invés de MENU_ITEMS */}
+              {visibleMenuItems.slice(1).map((item, i) => {
                 const isSel = index === i + 1;
                 return (
                   <li key={item.labelKey} className="w-full" onMouseEnter={() => setIndex(i + 1)} onClick={() => {
@@ -92,7 +101,6 @@ export default function MenuNavigation() {
                   }}>
                     <div className={`${cardBase} ${isSel ? cardSelected : ""}`}>
                       <div className={accentBar(isSel)} />
-                      {/* flex-1 empurra o ícone para a direita */}
                       <span className="truncate pr-2 flex-1">{t(item.labelKey)}</span>
                       <ChevronRightIcon className="h-5 w-5 opacity-40 shrink-0" />
                     </div>
@@ -113,7 +121,6 @@ export default function MenuNavigation() {
 
                {/* IDIOMA */}
                <div className={cardBase}>
-                 {/* CORREÇÃO CRÍTICA: flex-1 aqui obriga o card a manter a largura total */}
                  <div className="flex flex-col flex-1">
                    <span className="text-[10px] opacity-60 uppercase">{t("options.language")}</span>
                    <span className="text-[15px]">{i18n.language.toUpperCase()}</span>
@@ -132,7 +139,6 @@ export default function MenuNavigation() {
 
                {/* LOGOUT */}
                <div className={`${cardBase} hover:bg-red-500/10`} onClick={() => signOut()}>
-                 {/* CORREÇÃO CRÍTICA: flex-1 aqui também */}
                  <div className="flex flex-col flex-1">
                    <span className="text-[10px] opacity-60 uppercase">Session</span>
                    <span className="text-[15px]">{t("menu.logout", "Disconnect")}</span>

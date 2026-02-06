@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     BookOpenIcon, UsersIcon, BeakerIcon,
     XMarkIcon, NewspaperIcon, GlobeAmericasIcon,
-    LockClosedIcon, CpuChipIcon, ClipboardDocumentCheckIcon
+    CpuChipIcon, ClipboardDocumentCheckIcon
 } from "@heroicons/react/24/outline";
 
 import { Navbar } from "@/components/main/navbar";
@@ -36,17 +36,17 @@ const LoungeEarth = dynamic(() => import("@/components/sub/LoungeEarth"), {
 
 // ALTERAÇÃO 2: Caminhos e Pastas em Inglês (lounge-us)
 // Módulos Privados
-const ProjectsModule = dynamic(() => import("./lounge-us/projects/page"), { loading: LoadingIcon });
-const ExamsModule = dynamic(() => import("./lounge-us/exams/page"), { loading: LoadingIcon });
-const LessonsModule = dynamic(() => import("./lounge-us/lessons/page"), { loading: LoadingIcon }); 
+const ProjectsModule = dynamic(() => import("./main-lounge/projects/page"), { loading: LoadingIcon });
+const ExamsModule = dynamic(() => import("./main-lounge/exams/page"), { loading: LoadingIcon });
+const LessonsModule = dynamic(() => import("./main-lounge/lessons/page"), { loading: LoadingIcon }); 
 
 // Módulos Públicos
-const ResearchModule = dynamic(() => import("./lounge-us/research/page"), { loading: LoadingIcon });
-const NewsModule = dynamic(() => import("./lounge-us/news/page"), { loading: LoadingIcon });
+const ResearchModule = dynamic(() => import("./main-lounge/research/page"), { loading: LoadingIcon });
+const NewsModule = dynamic(() => import("./main-lounge/news/page"), { loading: LoadingIcon });
 
 export default function LoungePageUS() {
-    // Simulação de Login
-    const isLoggedIn = false; 
+    // Simulação de Login (Logic removed for direct access)
+    // const isLoggedIn = false; 
 
     const [activeTab, setActiveTab] = useState("community");
     const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
@@ -106,40 +106,13 @@ export default function LoungePageUS() {
             case "news":
                 return <NewsModule />;
 
-            // --- PRIVATE MODULES ---
+            // --- FORMERLY PRIVATE MODULES (Restrictions Removed) ---
             case "projects":
+                return <ProjectsModule />;
             case "exams":
+                return <ExamsModule />;
             case "lessons":
-                if (!isLoggedIn) {
-                    let moduleName = '';
-                    if (activeTab === 'projects') moduleName = 'Projects';
-                    if (activeTab === 'exams') moduleName = 'Exams & Certifications';
-                    if (activeTab === 'lessons') moduleName = 'Classes';
-
-                    return (
-                        <motion.div 
-                            initial={{ opacity: 0, y: 10 }} 
-                            animate={{ opacity: 1, y: 0 }} 
-                            className="flex flex-col items-center justify-center p-12 text-center h-full"
-                        >
-                            <div className="w-16 h-16 rounded-full bg-[#0f172a]/10 dark:bg-white/5 flex items-center justify-center mb-6">
-                                <LockClosedIcon className="w-8 h-8 text-[#0f172a] dark:text-slate-400" />
-                            </div>
-                            <h3 className="text-xl font-bold text-[#0f172a] dark:text-white mb-2">Restricted Access</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
-                                Identity not verified. Please login to access the <span className="font-bold text-[#0f172a] dark:text-slate-200 capitalize">{moduleName}</span> module.
-                            </p>
-                            <button className="mt-8 px-8 py-2.5 bg-[#0f172a] dark:bg-white text-white dark:text-black text-[10px] font-black uppercase tracking-widest rounded-full hover:opacity-90 transition-all">
-                                Authenticate Now
-                            </button>
-                        </motion.div>
-                    );
-                }
-                
-                if (activeTab === 'projects') return <ProjectsModule />;
-                if (activeTab === 'exams') return <ExamsModule />;
-                if (activeTab === 'lessons') return <LessonsModule />;
-                return null;
+                return <LessonsModule />;
 
             default:
                 return null;
