@@ -1,127 +1,153 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { ethers } from "ethers";
-import { motion } from "framer-motion";
-import { BanknotesIcon, ArrowPathIcon, NewspaperIcon } from "@heroicons/react/24/outline"; // Adicionei NewspaperIcon se quiser variar
-import { ZAEON_CONFIG, ABIS } from "src/config/contracts";
 
-// --- CORREÇÃO AQUI ---
-// Removemos o 'null' e colocamos objetos com a estrutura correta.
-const NEWS_DATA = [
-    {
-        id: "static-1",
-        date: "JAN 2026",
-        category: "System Update",
-        title: "Protocol Initialization",
-        description: "Zaeon Protocol contracts deployed on Cronos chain.",
-        location: "Global",
-        // Note: Como é um dado estático, passamos o componente do ícone diretamente
-        icon: <ArrowPathIcon className="w-4 h-4" />, 
-        isLive: false // Importante ser false para pegar o estilo cinza/branco
-    },
-    {
-        id: "static-2",
-        date: "DEC 2025",
-        category: "Governance",
-        title: "Treasury Module V1",
-        description: "Implementation of algorithmic governance rules.",
-        location: "On-Chain",
-        icon: <BanknotesIcon className="w-4 h-4" />,
-        isLive: false
-    }
-];
-// Se não quiser dados iniciais, use apenas: const NEWS_DATA = [];
+import { useEffect, useState } from "react";
+import { CalendarDaysIcon, ArrowRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface NewsPost {
+    id: string;
+    title: string;
+    subtitle?: string;
+    content: string;
+    imageUrl?: string;
+    publishDate: string;
+    status: string;
+}
 
 export default function NewsModule() {
-    const [liveEvents, setLiveEvents] = useState<any[]>([]);
+    const [news, setNews] = useState<NewsPost[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [expandedNews, setExpandedNews] = useState<string | null>(null);
 
     useEffect(() => {
-        // Setup a Read-Only Provider (No wallet needed to view news)
-        // Nota: Certifique-se que ZAEON_CONFIG.RPC_URL está definido no seu config
-        const provider = new ethers.JsonRpcProvider(ZAEON_CONFIG.RPC_URL);
-        const treasury = new ethers.Contract(ZAEON_CONFIG.ADDRESSES.TREASURY, ABIS.TREASURY, provider);
-
-        const fetchEvents = async () => {
-            // Get events from the last blocks
+        const fetchNews = async () => {
             try {
-                // Nota: queryFilter pode ser pesado dependendo do RPC. 
-                // Às vezes é bom limitar blocos: queryFilter("FundsAllocated", -10000, "latest")
-                const events = await treasury.queryFilter("FundsAllocated"); 
-                const formattedEvents = events.reverse().map((e: any, i) => ({
-                    id: `live-${i}`,
-                    date: "LIVE NOW",
-                    category: "Autonomous Funding",
-                    title: `Treasury Allocation: Token #${e.args[1]}`,
-                    description: `Agent ${e.args[0].slice(0,6)}... received ${ethers.formatEther(e.args[2])} CRO via Algorithmic Governance.`,
-                    location: "On-Chain (Cronos)",
-                    icon: <BanknotesIcon className="w-4 h-4" />,
-                    isLive: true
-                }));
-                setLiveEvents(formattedEvents);
-            } catch(err) { console.log("Error fetching treasury events", err); }
+                const response = await fetch('/api/news');
+                const data = await response.json();
+                
+                // ORDENAÇÃO INTELIGENTE:
+                // Garante que o mais recente (maior timestamp) fique no topo (índice 0)
+                const sortedData = data.sort((a: NewsPost, b: NewsPost) => 
+                    new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
+                );
+
+                setNews(sortedData);
+            } catch (error) {
+                console.error("Erro ao carregar notícias:", error);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        fetchEvents();
-
-        // Setup Listener
-        const listener = (agent: string, tokenId: bigint, amount: bigint) => {
-             const newEvent = {
-                id: `live-new-${Date.now()}`,
-                date: "JUST NOW",
-                category: "Autonomous Funding",
-                title: `Treasury Allocation: Token #${tokenId}`,
-                description: `Agent ${agent.slice(0,6)}... received ${ethers.formatEther(amount)} CRO.`,
-                location: "On-Chain (Cronos)",
-                icon: <BanknotesIcon className="w-4 h-4" />,
-                isLive: true
-             };
-             setLiveEvents(prev => [newEvent, ...prev]);
-        };
-        
-        treasury.on("FundsAllocated", listener);
-        return () => { treasury.off("FundsAllocated", listener); };
+        fetchNews();
     }, []);
 
-    // Merge Live Data + Historical Data
-    // O erro acontecia aqui ao renderizar porque NEWS_DATA tinha null
-    const combinedData = [...liveEvents, ...NEWS_DATA];
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center h-full pb-20 space-y-4">
+            <div className="w-5 h-5 border-2 border-slate-300 border-t-black dark:border-t-white rounded-full animate-spin"/>
+        </div>
+    );
 
     return (
-        <div className="w-full pb-20">
-             {/* Header */}
-            <div className="flex items-center justify-between mb-8 px-2">
-                <h3 className="text-sm font-black uppercase tracking-widest text-[#0f172a] dark:text-white/80 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                    Protocol Feed
-                </h3>
-            </div>
+        <div className="space-y-8 pb-10 pt-2">
+            {/* O Header foi removido conforme solicitado */}
 
-            <div className="space-y-4">
-                {combinedData.map((item, index) => (
-                    <motion.div
-                        key={item.id} // Certifique-se que o ID é único
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`group relative p-6 rounded-3xl border transition-all cursor-pointer hover:shadow-lg 
-                            ${item.isLive 
-                                ? 'bg-green-500/10 border-green-500/30' 
-                                : 'bg-white/40 dark:bg-white/[0.03] border-black/5 dark:border-white/5'
-                            }`}
-                    >
-                        <div className="flex justify-between items-start mb-3">
-                             <div className="flex items-center gap-3">
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${item.isLive ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
-                                    {item.date}
-                                </span>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                    {item.icon} {item.category}
-                                </span>
-                            </div>
-                        </div>
-                        <h4 className="text-sm font-bold dark:text-white mb-2">{item.title}</h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{item.description}</p>
-                    </motion.div>
-                ))}
+            <div className="grid gap-8">
+                {news.length > 0 ? (
+                    news.map((item, index) => {
+                        const isExpanded = expandedNews === item.id;
+                        
+                        // Verifica se é "Breaking News" (menos de 3 dias)
+                        const isNew = (new Date().getTime() - new Date(item.publishDate).getTime()) / (1000 * 3600 * 24) < 3;
+
+                        return (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                key={item.id} 
+                                className={`group relative overflow-hidden rounded-[2rem] bg-white/60 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 transition-all duration-500 ${isExpanded ? 'ring-2 ring-black/10 dark:ring-white/10 shadow-2xl' : 'hover:shadow-xl'}`}
+                            >
+                                {/* IMAGEM DE CAPA */}
+                                {item.imageUrl && (
+                                    <div className="relative w-full h-64 overflow-hidden">
+                                        <img 
+                                            src={item.imageUrl} 
+                                            alt={item.title}
+                                            className={`w-full h-full object-cover transition-transform duration-1000 ${isExpanded ? 'scale-110 blur-sm' : 'group-hover:scale-105'}`}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#050505] via-transparent to-transparent opacity-90" />
+                                        
+                                        {/* Badge de Data */}
+                                        <div className="absolute top-4 right-4 bg-black/60 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/10">
+                                            <CalendarDaysIcon className="w-3 h-3 text-white" />
+                                            <span className="text-[10px] font-bold text-white uppercase tracking-widest">
+                                                {new Date(item.publishDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            </span>
+                                        </div>
+
+                                        {/* Badge "NEW" se for recente */}
+                                        {isNew && (
+                                            <div className="absolute top-4 left-4 bg-blue-600 px-3 py-1.5 rounded-full shadow-lg shadow-blue-600/40">
+                                                <span className="text-[9px] font-black text-white uppercase tracking-widest">New</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="p-8 relative -mt-12">
+                                    {/* TÍTULO E SUBTÍTULO */}
+                                    <div className="mb-6">
+                                        <h4 className="text-2xl font-black text-[#0f172a] dark:text-white leading-tight mb-2 tracking-tight">
+                                            {item.title}
+                                        </h4>
+                                        {item.subtitle && (
+                                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                                                {item.subtitle}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* CONTEÚDO EXPANSÍVEL */}
+                                    <AnimatePresence>
+                                        {isExpanded && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="pt-4 pb-8 border-t border-black/5 dark:border-white/5 text-base text-slate-700 dark:text-slate-300 font-serif leading-loose whitespace-pre-wrap">
+                                                    {item.content}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {/* BOTÃO DE AÇÃO DESTACADO */}
+                                    <button 
+                                        onClick={() => setExpandedNews(isExpanded ? null : item.id)}
+                                        className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all duration-300 font-black text-xs uppercase tracking-[0.2em] shadow-lg
+                                            ${isExpanded 
+                                                ? 'bg-slate-200 dark:bg-white/10 text-slate-800 dark:text-white hover:bg-red-500/10 hover:text-red-500' 
+                                                : 'bg-[#0f172a] dark:bg-white text-white dark:text-black hover:scale-[1.02] hover:shadow-xl'
+                                            }`}
+                                    >
+                                        {isExpanded ? (
+                                            <>Close Article <XMarkIcon className="w-4 h-4" /></>
+                                        ) : (
+                                            <>Read Full Story <ArrowRightIcon className="w-4 h-4" /></>
+                                        )}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        );
+                    })
+                ) : (
+                    <div className="text-center py-20 opacity-50">
+                        <p className="text-xs font-bold uppercase tracking-widest">No signals detected.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

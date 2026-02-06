@@ -45,6 +45,19 @@ model User {
 }
 
 // --- MODELOS DE FEED (ATUALIZADOS PARA RELAÇÃO) ---
+
+model NewsPost {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  subtitle    String?
+  content     String
+  imageUrl    String?
+  publishDate DateTime
+  status      String   @default("draft") // "published" ou "draft"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Post {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   content   String
