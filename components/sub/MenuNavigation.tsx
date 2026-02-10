@@ -10,9 +10,9 @@ import { useTranslation } from "react-i18next";
 import { signIn, signOut, useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 
+// IMPORTANTE: Certifique-se que o caminho aqui aponta para o arquivo do MODAL que criamos
 const OnboardModal = dynamic(() => import("@/components/main/OnboardModal"), { ssr: false });
 
-// Mantemos a lista completa aqui, mas vamos filtrá-la dentro do componente
 const MENU_ITEMS = [
   { labelKey: "menu.new", href: "/signup" },
   { labelKey: "menu.load", href: "#" },
@@ -20,12 +20,12 @@ const MENU_ITEMS = [
   { labelKey: "menu.manual", href: "/workstation/admin" },
 ];
 
+// LISTA DE ROLES (Sem Cyber Hall)
 const ROLES = [
   { slug: "student", key: "roles.student" },
   { slug: "researcher", key: "roles.researcher" },
   { slug: "professional", key: "roles.professional" },
   { slug: "entrepreneur", key: "roles.entrepreneur" },
-  { slug: "cyber_hall", key: "Hall Cibernético" },
 ] as const;
 
 export default function MenuNavigation() {
@@ -34,22 +34,16 @@ export default function MenuNavigation() {
   const { data: session, status } = useSession();
   
   const [index, setIndex] = useState(0);
-  const [roleIndex, setRoleIndex] = useState(0);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [onboardOpen, setOnboardOpen] = useState(false);
+  const [roleIndex, setRoleIndex] = useState(0); 
+  const [pickerOpen, setPickerOpen] = useState(false); 
+  const [onboardOpen, setOnboardOpen] = useState(false); // Controla o Modal
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
 
   const isLoggedIn = status === "authenticated";
-
-  // --- LÓGICA DE ADMINISTRAÇÃO ---
-  // Verifica se o email logado é EXATAMENTE o do admin
   const isAdmin = session?.user?.email === "zaeondao@gmail.com";
 
-  // Filtra os itens do menu. Se for o manual, só passa se for admin.
   const visibleMenuItems = MENU_ITEMS.filter(item => {
-    if (item.labelKey === "menu.manual") {
-      return isAdmin;
-    }
+    if (item.labelKey === "menu.manual") return isAdmin;
     return true;
   });
 
@@ -73,24 +67,46 @@ export default function MenuNavigation() {
               className="flex flex-col gap-3 w-full"
             >
               
-              {/* ITEM 0: PERFIL / NEW (Sempre visível) */}
+              {/* ITEM 0: NEW ACCOUNT / SELETOR */}
               <li className="w-full" onMouseEnter={() => setIndex(0)} onClick={() => !isLoggedIn && setPickerOpen(true)}>
                 <div className={`${cardBase} ${index === 0 ? cardSelected : ""}`}>
                   <div className={accentBar(index === 0)} />
                   <span className="truncate pr-2 flex-1">{isLoggedIn ? `${session?.user?.name || 'User'} Lv.1` : t("menu.new")}</span>
                   
                   {!isLoggedIn && pickerOpen ? (
-                    <div className="flex items-center gap-2 bg-black/80 p-1 rounded-lg border border-white/10 shrink-0">
-                      <ChevronLeftIcon className="w-4 h-4 cursor-pointer" onClick={(e) => { e.stopPropagation(); setRoleIndex(r => (r - 1 + ROLES.length) % ROLES.length); }} />
-                      <span className="text-[11px] min-w-[110px] text-center uppercase tracking-tighter" onClick={() => setOnboardOpen(true)}>{t(ROLES[roleIndex].key)}</span>
-                      <ChevronRightIcon className="w-4 h-4 cursor-pointer" onClick={(e) => { e.stopPropagation(); setRoleIndex(r => (r + 1) % ROLES.length); }} />
+                    <div className="flex items-center gap-2 bg-black/80 p-1 rounded-lg border border-white/10 shrink-0 z-20">
+                      <ChevronLeftIcon 
+                        className="w-4 h-4 cursor-pointer hover:text-cyan-400 transition-colors" 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setRoleIndex(r => (r - 1 + ROLES.length) % ROLES.length); 
+                        }} 
+                      />
+                      
+                      {/* Ao clicar aqui, abre o MODAL */}
+                      <span 
+                        className="text-[11px] min-w-[110px] text-center uppercase tracking-tighter hover:text-cyan-400 cursor-pointer select-none" 
+                        onClick={(e) => {
+                            e.stopPropagation(); 
+                            setOnboardOpen(true); 
+                        }}
+                      >
+                        {t(ROLES[roleIndex].key)}
+                      </span>
+                      
+                      <ChevronRightIcon 
+                        className="w-4 h-4 cursor-pointer hover:text-cyan-400 transition-colors" 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setRoleIndex(r => (r + 1) % ROLES.length); 
+                        }} 
+                      />
                     </div>
                   ) : <ChevronRightIcon className="h-5 w-5 opacity-40 shrink-0" />}
                 </div>
               </li>
 
-              {/* OUTROS ITENS (Filtrados dinamicamente) */}
-              {/* Usamos visibleMenuItems ao invés de MENU_ITEMS */}
+              {/* OUTROS ITENS */}
               {visibleMenuItems.slice(1).map((item, i) => {
                 const isSel = index === i + 1;
                 return (
@@ -109,6 +125,7 @@ export default function MenuNavigation() {
               })}
             </motion.ul>
           ) : (
+            // OPÇÕES
             <motion.div 
               key="options" 
               initial={{ x: 20, opacity: 0 }} 
@@ -119,7 +136,6 @@ export default function MenuNavigation() {
                  <ArrowLeftIcon className="w-4 h-4" /> {t("menu.back")}
                </button>
 
-               {/* IDIOMA */}
                <div className={cardBase}>
                  <div className="flex flex-col flex-1">
                    <span className="text-[10px] opacity-60 uppercase">{t("options.language")}</span>
@@ -137,7 +153,6 @@ export default function MenuNavigation() {
                  <ChevronRightIcon className="h-5 w-5 opacity-40 shrink-0" />
                </div>
 
-               {/* LOGOUT */}
                <div className={`${cardBase} hover:bg-red-500/10`} onClick={() => signOut()}>
                  <div className="flex flex-col flex-1">
                    <span className="text-[10px] opacity-60 uppercase">Session</span>
@@ -151,7 +166,15 @@ export default function MenuNavigation() {
       </nav>
       
       <div className="px-6 pb-7 text-[11px] opacity-55 text-white tracking-widest">{t("footer.version")}</div>
-      {onboardOpen && <OnboardModal open={onboardOpen} onClose={() => setOnboardOpen(false)} role={ROLES[roleIndex].slug} />}
+      
+      {/* AQUI ESTÁ A CHAMADA PARA O MODAL */}
+      {onboardOpen && (
+        <OnboardModal 
+          isOpen={onboardOpen} 
+          onClose={() => setOnboardOpen(false)} 
+          role={ROLES[roleIndex].slug} 
+        />
+      )}
     </div>
   );
 }

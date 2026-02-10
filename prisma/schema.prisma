@@ -13,63 +13,71 @@ model User {
   name          String?
   email         String?   @unique
   emailVerified DateTime?
-  image         String?   // Aqui será salva a foto em Base64 ou URL
+  image         String?   // Foto em Base64 ou URL
 
   // --- DADOS DO MENU "OPTIONS" (PERFIL CUSTOM) ---
   course        String?   // Ex: "Computer Science"
   bio           String?   // Biografia curta
 
   // --- DADOS DO MODAL DE "ONBOARDING" ---
-  role          String?   // "student", "researcher", "entrepreneur", etc.
+  role          String?   // "student", "researcher", etc.
   phone         String?   // "(00) 00000-0000"
-  identityId    String?   // O ID digitado (CPF, Matrícula, etc.)
+  identityId    String?   // CPF, Matrícula, etc.
   idType        String?   // "wallet" ou "role_id"
-  walletAddress String?   // Caso o usuário conecte via Wallet no futuro
+  walletAddress String?   // Carteira Crypto
 
   // --- DADOS DE COMPROVAÇÃO E ADMIN ---
-  kycStatus     String    @default("pending") // "pending", "approved", "rejected"
-  documents     Json?     // Para salvar metadados dos PDFs enviados (ex: { nome: "comprovante.pdf", date: "..." })
-  institution   String?   // Caso seja professor ou pesquisador
+  kycStatus     String    @default("pending")
+  documents     Json?     // Metadados dos PDFs
+  institution   String?   // Instituição de ensino
 
   // Datas de controle
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relacionamentos para o NextAuth (Obrigatório para Login funcionar com Banco)
+  // --- RELACIONAMENTOS ---
   accounts      Account[]
   sessions      Session[]
-
-  // Relacionamento com o Feed (Opcional por enquanto, mas recomendado para o futuro)
+  
+  // Relacionamento com o Feed
   posts         Post[]
   comments      Comment[]
+
+  // Relacionamento com a Área de Trabalho (Lounge)
+  userSpaceData UserSpaceData?
 }
 
-// --- MODELOS DE FEED (ATUALIZADOS PARA RELAÇÃO) ---
-
-model NewsPost {
+// --- NOVO MODELO: MEMÓRIA DO LOUNGE & SALAS ---
+model UserSpaceData {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  subtitle    String?
-  content     String
-  imageUrl    String?
-  publishDate DateTime
-  status      String   @default("draft") // "published" ou "draft"
-  createdAt   DateTime @default(now())
+  
+  // Conexão com o Usuário
+  userId      String   @unique @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Dados Persistentes
+  schedule    Json?    // Array das aulas (JSON puro)
+  chatHistory Json?    // Histórico do Chat (Array de objetos)
+  stickyNote  String?  // Texto do post-it
+  activeProject Json?  // Projeto ativo
+  citations     Json?  // Citações geradas pelos agentes
+  workContent String?
+  workTitle String?
+
   updatedAt   DateTime @updatedAt
 }
 
+// --- MODELOS DE FEED ---
 model Post {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
-  likes     String[]  @default([])
-  createdAt DateTime  @default(now())
+  likes     String[] @default([])
+  createdAt DateTime @default(now())
 
-  // Linkando o Post ao Usuário Real (Opcional: mantive user String para compatibilidade antiga)
-  user      String    // Nome de exibição (Snapshotted)
-
-  // Relação real (Para quando quisermos puxar a foto atualizada)
-  userId    String?   @db.ObjectId
-  author    User?     @relation(fields: [userId], references: [id])
+  // Autor do Post
+  user      String   // Nome de exibição (Snapshot)
+  userId    String?  @db.ObjectId
+  author    User?    @relation(fields: [userId], references: [id])
 
   comments  Comment[]
 }
@@ -80,15 +88,16 @@ model Comment {
   user      String   // Nome de exibição
   createdAt DateTime @default(now())
 
+  // Relação com Post
   postId    String   @db.ObjectId
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  // Relação real com Usuário
+  // Relação com Usuário
   userId    String?  @db.ObjectId
   author    User?    @relation(fields: [userId], references: [id])
 }
 
-// --- MODELOS PADRÃO DO NEXTAUTH (NECESSÁRIOS PARA ADAPTER) ---
+// --- MODELOS PADRÃO DO NEXTAUTH ---
 model Account {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
   userId            String  @db.ObjectId

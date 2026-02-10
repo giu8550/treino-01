@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion"; 
 import {
     BookOpenIcon, UsersIcon, BeakerIcon,
-    XMarkIcon, NewspaperIcon, GlobeAmericasIcon,
-    CpuChipIcon, ClipboardDocumentCheckIcon
+    XMarkIcon, GlobeAmericasIcon,
+    CpuChipIcon, ClipboardDocumentCheckIcon,
+    EyeIcon, EyeSlashIcon
 } from "@heroicons/react/24/outline";
 
 import { Navbar } from "@/components/main/navbar";
@@ -34,24 +35,33 @@ const LoungeEarth = dynamic(() => import("@/components/sub/LoungeEarth"), {
     loading: () => <div className="w-40 h-40 rounded-full border border-white/5 animate-pulse" />
 }) as any;
 
-// ALTERAÇÃO 2: Caminhos e Pastas em Inglês (lounge-us)
 // Módulos Privados
 const ProjectsModule = dynamic(() => import("./main-lounge/projects/page"), { loading: LoadingIcon });
 const ExamsModule = dynamic(() => import("./main-lounge/exams/page"), { loading: LoadingIcon });
-const LessonsModule = dynamic(() => import("./main-lounge/classes/page"), { loading: LoadingIcon }); 
+const LessonsModule = dynamic(() => import("./main-lounge/lessons/page"), { loading: LoadingIcon }); 
 
 // Módulos Públicos
-const ResearchModule = dynamic(() => import("./main-lounge/research/page"), { loading: LoadingIcon });
-const NewsModule = dynamic(() => import("./main-lounge/news/page"), { loading: LoadingIcon });
+// CHANGE: Renamed "NewsModule" import to reflect its new role as "Research", pointing to the previous news folder
+const ResearchModule = dynamic(() => import("./main-lounge/researches/page"), { loading: LoadingIcon });
 
 export default function LoungePageUS() {
-    // Simulação de Login (Logic removed for direct access)
-    // const isLoggedIn = false; 
+    // --- 1. CONFIGURAÇÃO DAS ABAS ---
+    const [tabs, setTabs] = useState([
+        { id: 'lessons', label: 'Classes', icon: <BookOpenIcon className="w-5 h-5" /> },
+        { id: 'exams', label: 'Exams', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" /> },
+        { id: 'projects', label: 'Projects', icon: <BeakerIcon className="w-5 h-5" /> },
+        // CHANGE: "Research" now uses the logic that was previously "News"
+        { id: 'research', label: 'Research', icon: <CpuChipIcon className="w-5 h-5" /> },
+        { id: 'community', label: 'Community', icon: <UsersIcon className="w-5 h-5" /> },
+    ]);
 
-    const [activeTab, setActiveTab] = useState("community");
+    const [activeTab, setActiveTab] = useState("lessons"); 
     const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
     const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
     const [isFeedActive, setIsFeedActive] = useState(false);
+    
+    // --- FOCUS MODE STATE ---
+    const [isFocusMode, setIsFocusMode] = useState(false);
 
     useEffect(() => {
         document.body.style.overflow = "hidden";
@@ -68,7 +78,6 @@ export default function LoungePageUS() {
     // --- LÓGICA DE RENDERIZAÇÃO ---
     const renderMainContent = () => {
         switch (activeTab) {
-            // --- PUBLIC MODULES ---
             case "community":
                 return (
                     <div className="w-full flex flex-col items-center">
@@ -80,13 +89,11 @@ export default function LoungePageUS() {
                         </motion.div>
                         
                         <AnimatePresence mode="wait">
-                            {/* Verifica se a região selecionada é US (ajuste conforme seu componente Earth) */}
                             {(selectedRegion === 'us' || selectedRegion === 'na') && (
                                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-xl">
                                     {!isFeedActive ? (
                                         <div className={`p-8 rounded-[2.5rem] ${cardStyle} text-center`}>
                                             <GlobeAmericasIcon className="w-8 h-8 mx-auto text-[#0f172a] dark:text-blue-400 mb-4" />
-                                            {/* Tradução da UI */}
                                             <h3 className="text-lg font-bold text-[#0f172a] dark:text-white">Cluster USA</h3>
                                             <button 
                                                 onClick={() => setIsFeedActive(true)} 
@@ -101,19 +108,13 @@ export default function LoungePageUS() {
                         </AnimatePresence>
                     </div>
                 );
+            // CHANGE: Maps 'research' tab to the module that was previously 'news'
             case "research":
                 return <ResearchModule />;
-            case "news":
-                return <NewsModule />;
-
-            // --- FORMERLY PRIVATE MODULES (Restrictions Removed) ---
             case "projects":
                 return <ProjectsModule />;
             case "exams":
                 return <ExamsModule />;
-            case "lessons":
-                return <LessonsModule />;
-
             default:
                 return null;
         }
@@ -121,31 +122,97 @@ export default function LoungePageUS() {
 
     return (
         <div className="relative z-0 w-screen h-screen dark:bg-[#010816] bg-[#e2e8f0] transition-colors duration-1000 font-sans overflow-hidden flex flex-col">
-            <Navbar />
             
-            <div className="flex items-start justify-start px-4 gap-6 pt-32 w-full h-full relative">
+            {/* CONDITIONAL NAVBAR RENDER */}
+            <AnimatePresence>
+                {!isFocusMode && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        exit={{ opacity: 0, y: -50 }}
+                        className="fixed top-0 left-0 w-full z-50"
+                    >
+                        <Navbar />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
+            {/* CONTAINER: Adjusts padding based on Focus Mode */}
+            <motion.div 
+                layout 
+                className={`flex items-start justify-start px-4 gap-6 w-full h-full relative transition-all duration-700 ${isFocusMode ? 'pt-4' : 'pt-32'}`}
+            >
                 
-                {/* SIDEBAR (Labels Traduzidas) */}
+                {/* --- SIDEBAR --- */}
                 <motion.aside
+                    layout
                     onMouseEnter={() => setIsSidebarExpanded(true)}
                     onMouseLeave={() => setIsSidebarExpanded(false)}
-                    className={`z-10 h-[70vh] rounded-[2.5rem] ${cardStyle} transition-all duration-500 flex flex-col items-center py-6 gap-4 ${isSidebarExpanded ? 'w-64 px-6' : 'w-20'}`}
+                    className={`z-10 rounded-[2.5rem] ${cardStyle} transition-all duration-500 flex flex-col items-center py-6 gap-4 
+                        ${isSidebarExpanded ? 'w-64 px-6' : 'w-20'}
+                        ${isFocusMode ? 'h-[96vh]' : 'h-[70vh]'} 
+                    `}
                 >
-                    <div className="flex flex-col gap-2 w-full flex-1 justify-center">
-                        <SidebarItem icon={<BeakerIcon className="w-5 h-5" />} label="Projects" active={activeTab === 'projects'} expanded={isSidebarExpanded} onClick={() => setActiveTab('projects')} />
-                        <SidebarItem icon={<ClipboardDocumentCheckIcon className="w-5 h-5" />} label="Exams" active={activeTab === 'exams'} expanded={isSidebarExpanded} onClick={() => setActiveTab('exams')} />
-                        <SidebarItem icon={<BookOpenIcon className="w-5 h-5" />} label="Classes" active={activeTab === 'lessons'} expanded={isSidebarExpanded} onClick={() => setActiveTab('lessons')} />
-                        <SidebarItem icon={<UsersIcon className="w-5 h-5" />} label="Community" active={activeTab === 'community'} expanded={isSidebarExpanded} onClick={() => setActiveTab('community')} />
-                        <SidebarItem icon={<CpuChipIcon className="w-5 h-5" />} label="Research" active={activeTab === 'research'} expanded={isSidebarExpanded} onClick={() => setActiveTab('research')} />
-                        <SidebarItem icon={<NewspaperIcon className="w-5 h-5" />} label="News" active={activeTab === 'news'} expanded={isSidebarExpanded} onClick={() => setActiveTab('news')} />
+                    <Reorder.Group 
+                        axis="y" 
+                        values={tabs} 
+                        onReorder={setTabs} 
+                        className="flex flex-col gap-2 w-full flex-1 justify-center"
+                    >
+                        {tabs.map((item) => (
+                            <Reorder.Item 
+                                key={item.id} 
+                                value={item}
+                                whileDrag={{ scale: 1.05, cursor: "grabbing" }}
+                                className="relative z-20"
+                            >
+                                <SidebarItem 
+                                    icon={item.icon} 
+                                    label={item.label} 
+                                    active={activeTab === item.id} 
+                                    expanded={isSidebarExpanded} 
+                                    onClick={() => setActiveTab(item.id)} 
+                                />
+                            </Reorder.Item>
+                        ))}
+                    </Reorder.Group>
+
+                    {/* FOCUS MODE TOGGLE BUTTON */}
+                    <div className="w-full pt-4 border-t dark:border-white/10 border-black/5 mt-auto">
+                        <button 
+                            onClick={() => setIsFocusMode(!isFocusMode)}
+                            className={`flex items-center gap-5 w-full p-4 rounded-2xl transition-all 
+                                ${isFocusMode 
+                                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' 
+                                    : 'dark:text-white/40 text-slate-500 hover:dark:text-white hover:text-[#0f172a]'}`}
+                        >
+                            <div className="shrink-0">
+                                {isFocusMode ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                            </div>
+                            {isSidebarExpanded && (
+                                <motion.span 
+                                    initial={{ opacity: 0 }} 
+                                    animate={{ opacity: 1 }} 
+                                    className="text-[10px] font-black uppercase tracking-widest truncate"
+                                >
+                                    {isFocusMode ? "Exit Focus" : "Focus Mode"}
+                                </motion.span>
+                            )}
+                        </button>
                     </div>
+
                 </motion.aside>
 
-                {/* MAIN CONTENT AREA */}
-                <main className={`z-10 flex-1 h-[82vh] rounded-[3.5rem] ${cardStyle} overflow-hidden flex flex-col relative`}>
+                {/* --- MAIN CONTENT AREA --- */}
+                <motion.main 
+                    layout
+                    className={`z-10 flex-1 rounded-[3.5rem] ${cardStyle} overflow-hidden flex flex-col relative transition-all duration-700
+                        ${isFocusMode ? 'h-[96vh]' : 'h-[82vh]'}
+                    `}
+                >
                     <div className="p-10 pb-4 flex justify-between items-center border-b dark:border-white/5 border-black/5">
                         <h2 className="text-xl font-black uppercase tracking-[0.3em] dark:text-white text-[#0f172a] leading-none">
-                            {activeTab === 'exams' ? 'Exams' : activeTab === 'projects' ? 'Projects' : activeTab === 'lessons' ? 'Classes' : activeTab === 'research' ? 'Research' : activeTab === 'news' ? 'News' : activeTab}
+                            {tabs.find(t => t.id === activeTab)?.label || activeTab}
                         </h2>
                         {selectedRegion && activeTab === 'community' && (
                             <button onClick={() => setSelectedRegion(null)} className="flex items-center gap-2 px-4 py-1.5 dark:bg-white/10 bg-[#0f172a] rounded-full text-[9px] font-black text-white uppercase tracking-widest hover:scale-105 transition-all">
@@ -154,35 +221,47 @@ export default function LoungePageUS() {
                         )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-12 pt-6">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-12 pt-6 relative">
+                        
+                        {/* KEEP ALIVE FOR LESSONS */}
+                        <div className={`${activeTab === 'lessons' ? 'block' : 'hidden'} h-full w-full`}>
+                            <LessonsModule />
+                        </div>
+
                         <AnimatePresence mode="wait">
-                            <motion.div
-                                key={activeTab}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 10 }}
-                                transition={{ duration: 0.2 }}
-                                className="h-full"
-                            >
-                                {renderMainContent()}
-                            </motion.div>
+                            {activeTab !== 'lessons' && (
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="h-full"
+                                >
+                                    {renderMainContent()}
+                                </motion.div>
+                            )}
                         </AnimatePresence>
+
                     </div>
-                </main>
+                </motion.main>
 
                 <LoungeChatWidget />
                 
-            </div>
+            </motion.div>
         </div>
     );
 }
 
 function SidebarItem({ icon, label, active, expanded, onClick }: any) {
     return (
-        <button onClick={onClick} className={`flex items-center gap-5 w-full p-4 rounded-2xl transition-all 
+        <button 
+            onPointerDown={(e) => onClick()}
+            className={`flex items-center gap-5 w-full p-4 rounded-2xl transition-all cursor-grab active:cursor-grabbing
             ${active
             ? 'dark:bg-white/10 bg-[#0f172a] text-white shadow-lg border dark:border-white/10 border-transparent'
-            : 'dark:text-white/40 text-slate-500 hover:dark:text-white hover:text-[#0f172a]'}`}>
+            : 'dark:text-white/40 text-slate-500 hover:dark:text-white hover:text-[#0f172a]'}`}
+        >
             <div className="shrink-0">{icon}</div>
             {expanded && <motion.span initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="text-[10px] font-black uppercase tracking-widest truncate">{label}</motion.span>}
         </button>
