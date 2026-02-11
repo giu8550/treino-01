@@ -98,6 +98,19 @@ model Comment {
   author    User?    @relation(fields: [userId], references: [id])
 }
 
+// --- MODELO DE NOTÍCIAS ---
+model NewsPost {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  subtitle    String?
+  content     String
+  imageUrl    String?
+  publishDate DateTime @default(now())
+  status      String   @default("draft") // "draft" ou "published"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // --- MODELOS PADRÃO DO NEXTAUTH ---
 model Account {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId

@@ -1,58 +1,82 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Lock, CheckCircle2, XCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-// Importação otimizada de Imagem
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
-// 1. Importação da Tradução
-import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import {
+    Terminal, Lock, CheckCircle2, XCircle,
+    BookOpen, ClipboardList, Cpu, Activity,
+    Users, Eye, EyeOff
+} from 'lucide-react';
+import { Navbar } from "@/components/main/navbar";
+import { LoungeChatWidget } from "@/components/sub/LoungeChatWidget";
 
-// Lista de chaves do i18n para os cursos
+// --- 1. CONFIGURAÇÃO DE IMPORTS (MODULOS CYBER) ---
+const LoadingModule = () => (
+    <div className="w-full h-full flex items-center justify-center text-cyan-500/50 animate-pulse text-xs tracking-widest uppercase">
+        Loading Cyber-Stream...
+    </div>
+);
+
+const ClassesModule = dynamic(() => import('./main-hall/classes/page').then(mod => mod.default), { loading: LoadingModule });
+const ExamsModule = dynamic(() => import('./main-hall/exams/page').then(mod => mod.default), { loading: LoadingModule });
+const ProjectsModule = dynamic(() => import('./main-hall/projects/page').then(mod => mod.default), { loading: LoadingModule });
+const ResearchModule = dynamic(() => import('./main-hall/researches/page').then(mod => mod.default), { loading: LoadingModule });
+const CommunityModule = dynamic(() => import('./main-hall/community/page').then(mod => mod.default), { loading: LoadingModule });
+
+// --- 2. LISTA DE CURSOS (PARTÍCULAS) ---
 const COURSE_KEYS = [
-    "tech_room.courses.cs", "tech_room.courses.se", "tech_room.courses.is", "tech_room.courses.ce",
-    "tech_room.courses.ads", "tech_room.courses.net", "tech_room.courses.infosec", "tech_room.courses.db",
-    "tech_room.courses.it_mgmt", "tech_room.courses.games", "tech_room.courses.ai", "tech_room.courses.ds",
-    "tech_room.courses.cloud", "tech_room.courses.devops", "tech_room.courses.cyber", "tech_room.courses.block",
-    "tech_room.courses.bigdata", "tech_room.courses.mba"
+    "Computer Science", "Software Eng.", "InfoSec", "Cloud Computing",
+    "DevOps", "AI & ML", "Big Data", "Blockchain", "Cybersecurity",
+    "Networks", "Database Systems", "IoT", "Game Dev", "UX/UI Design"
 ];
 
-const ZaeonComputerScienceRoom = () => {
-    // 2. Inicialização do Hook de Tradução
-    const { t } = useTranslation();
-    const router = useRouter();
+export default function ZaeonComputerScienceRoom() {
 
+    // --- ESTADOS GERAIS ---
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+    // --- ESTADOS DO MODAL ---
     const [inputValue, setInputValue] = useState('');
     const [isError, setIsError] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(true);
 
+    // --- ESTADOS DA UI ---
+    const [activeTab, setActiveTab] = useState("classes");
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+    const [isFocusMode, setIsFocusMode] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
+
+    // Sidebar Timer (Hover Intent)
+    const sidebarTimerRef = useRef<NodeJS.Timeout | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const modalRef = useRef<HTMLDivElement>(null);
 
-    // Detectar mudança de tema para atualizar o canvas
+    // --- TABS ---
+    const [tabs, setTabs] = useState([
+        { id: 'classes', label: 'Classes', icon: <BookOpen size={18} /> },
+        { id: 'exams', label: 'Exams', icon: <ClipboardList size={18} /> },
+        { id: 'projects', label: 'Projects', icon: <Cpu size={18} /> },
+        { id: 'research', label: 'Research', icon: <Activity size={18} /> },
+        { id: 'community', label: 'Communities', icon: <Users size={18} /> },
+    ]);
+
+    // --- 1. SETUP INICIAL ---
     useEffect(() => {
-        const checkTheme = () => {
-            const isDark = document.documentElement.classList.contains('dark');
-            setIsDarkMode(isDark);
-        };
-        checkTheme();
-        const observer = new MutationObserver(checkTheme);
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-        const timer = setTimeout(() => setIsLoaded(true), 1000);
-        return () => {
-            clearTimeout(timer);
-            observer.disconnect();
-        };
+        const timer = setTimeout(() => setIsLoaded(true), 500);
+        return () => clearTimeout(timer);
     }, []);
 
+    // --- 2. LÓGICA DE AUTENTICAÇÃO ("INIT") ---
     const handleAuth = () => {
-        if (inputValue === "ZA-2026") {
+        if (inputValue.toLowerCase() === "init") {
             setIsError(false);
-            console.log("Acesso Permitido");
-            // router.push('/dashboard');
+            setIsAuthenticating(true);
+            setTimeout(() => {
+                setIsAuthenticating(false);
+                setIsAuthenticated(true);
+            }, 2500);
         } else {
             setIsError(true);
             setTimeout(() => setIsError(false), 1000);
@@ -63,156 +87,79 @@ const ZaeonComputerScienceRoom = () => {
         if (e.key === 'Enter') handleAuth();
     };
 
-    // --- PHYSICS ENGINE AVANÇADA ---
+    // --- 3. PHYSICS ENGINE (BACKGROUND FIXED) ---
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Traduz os cursos dinamicamente
-        const translatedCourses = COURSE_KEYS.map(key => t(key));
-
         let animationFrameId: number;
         let mouse = { x: -1000, y: -1000, radius: 150 };
 
-        const handleMouseMove = (event: MouseEvent) => {
-            mouse.x = event.clientX;
-            mouse.y = event.clientY;
-        };
-
-        const handleMouseLeave = () => { mouse.x = -1000; mouse.y = -1000; }
-
+        const handleMouseMove = (event: MouseEvent) => { mouse.x = event.clientX; mouse.y = event.clientY; };
+        const handleMouseLeave = () => { mouse.x = -1000; mouse.y = -1000; };
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseout', handleMouseLeave);
 
-        const resize = () => {
-            if (canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        };
+        const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
         window.addEventListener('resize', resize);
         resize();
 
         class Particle {
             x: number; y: number; vx: number; vy: number; text: string; width: number; height: number; color: string;
-
             constructor(text: string, canvasW: number, canvasH: number) {
                 this.text = text;
-                const minX = canvasW * 0.35; // Nasce apenas na área livre
+                const minX = canvasW * 0.35;
                 this.x = Math.random() * (canvasW - minX) + minX;
                 this.y = Math.random() * canvasH;
                 this.vx = (Math.random() - 0.5) * 0.5;
                 this.vy = (Math.random() - 0.5) * 0.5;
-                this.width = text.length * 7 + 20;
+                this.width = text.length * 8 + 20;
                 this.height = 28;
-                // Cores vibrantes para o destaque lateral
-                const colors = ['#A855F7', '#10B981', '#3B82F6', '#06b6d4'];
+                const colors = ['#A855F7', '#3B82F6', '#06b6d4', '#6366f1'];
                 this.color = colors[Math.floor(Math.random() * colors.length)];
             }
-
-            update(canvasW: number, canvasH: number, modalRect: DOMRect | null, particles: Particle[]) {
-                // Movimento
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // 0. Mouse Repulsion
-                const dxMouse = this.x - mouse.x;
-                const dyMouse = this.y - mouse.y;
-                const distanceMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
-
-                if (distanceMouse < mouse.radius) {
-                    const force = (mouse.radius - distanceMouse) / mouse.radius;
-                    const forceX = (dxMouse / distanceMouse) * force * 3;
-                    const forceY = (dyMouse / distanceMouse) * force * 3;
-                    this.x += forceX;
-                    this.y += forceY;
+            update(canvasW: number, canvasH: number, particles: Particle[]) {
+                this.x += this.vx; this.y += this.vy;
+                const dx = this.x - mouse.x; const dy = this.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < mouse.radius) {
+                    const force = (mouse.radius - dist) / mouse.radius;
+                    this.x += (dx / dist) * force * 3; this.y += (dy / dist) * force * 3;
                 }
-
-                // 1. Paredes da Tela e Imagem
-                const imageBarrier = canvasW * 0.34; // 34% da tela é a imagem
+                const imageBarrier = canvasW * 0.30;
                 if (this.x + this.width > canvasW) { this.x = canvasW - this.width; this.vx *= -1; }
-                if (this.x < imageBarrier) { this.x = imageBarrier; this.vx *= -1; } // Colisão Sólida com Imagem
+                if (this.x < imageBarrier) { this.x = imageBarrier; this.vx *= -1; }
                 if (this.y + this.height > canvasH) { this.y = canvasH - this.height; this.vy *= -1; }
                 if (this.y < 0) { this.y = 0; this.vy *= -1; }
-
-                // 2. COLISÃO COM O MODAL (IMPENETRÁVEL)
-                if (modalRect) {
-                    const pad = 15; // Margem de segurança
-                    if (this.x < modalRect.right + pad &&
-                        this.x + this.width > modalRect.left - pad &&
-                        this.y < modalRect.bottom + pad &&
-                        this.y + this.height > modalRect.top - pad) {
-
-                        const overlapLeft = (this.x + this.width) - (modalRect.left - pad);
-                        const overlapRight = (modalRect.right + pad) - this.x;
-                        const overlapTop = (this.y + this.height) - (modalRect.top - pad);
-                        const overlapBottom = (modalRect.bottom + pad) - this.y;
-
-                        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-
-                        if (minOverlap === overlapLeft) {
-                            this.x = modalRect.left - pad - this.width;
-                            this.vx = -Math.abs(this.vx);
-                        } else if (minOverlap === overlapRight) {
-                            this.x = modalRect.right + pad;
-                            this.vx = Math.abs(this.vx);
-                        } else if (minOverlap === overlapTop) {
-                            this.y = modalRect.top - pad - this.height;
-                            this.vy = -Math.abs(this.vy);
-                        } else if (minOverlap === overlapBottom) {
-                            this.y = modalRect.bottom + pad;
-                            this.vy = Math.abs(this.vy);
-                        }
-                    }
-                }
-
-                // 3. Colisão entre Baloes
                 for (let other of particles) {
                     if (other === this) continue;
                     if (this.x < other.x + other.width && this.x + this.width > other.x &&
                         this.y < other.y + other.height && this.y + this.height > other.y) {
-
                         const tempVx = this.vx; this.vx = other.vx; other.vx = tempVx;
                         const tempVy = this.vy; this.vy = other.vy; other.vy = tempVy;
-                        this.x += this.vx; this.y += this.vy;
                     }
                 }
             }
-
-            draw(context: CanvasRenderingContext2D, isDark: boolean) {
-                context.beginPath();
-                context.roundRect(this.x, this.y, this.width, this.height, 6);
-                context.strokeStyle = this.color;
-                context.lineWidth = 1;
-                context.stroke();
-
-                // Fundo do balão se adapta ao tema
-                context.fillStyle = isDark ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.7)";
-                context.fill();
-
-                // Texto se adapta ao tema
-                context.fillStyle = isDark ? "#eee" : "#1f2937";
-                context.font = "bold 10px monospace";
-                context.fillText(this.text, this.x + 10, this.y + 18);
+            draw(ctx: CanvasRenderingContext2D) {
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 6);
+                ctx.strokeStyle = this.color; ctx.lineWidth = 1; ctx.stroke();
+                ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.fill();
+                ctx.fillStyle = "#e2e8f0"; ctx.font = "bold 11px monospace";
+                ctx.fillText(this.text, this.x + 10, this.y + 18);
             }
         }
 
-        // Instancia usando os nomes traduzidos
-        let particles: Particle[] = translatedCourses.map(course => new Particle(course, canvas.width, canvas.height));
+        let particles = COURSE_KEYS.map(c => new Particle(c, canvas.width, canvas.height));
 
         const animate = () => {
             if (!ctx || !canvas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const modalRect = modalRef.current ? modalRef.current.getBoundingClientRect() : null;
-
-            const isDarkNow = document.documentElement.classList.contains('dark');
-
-            particles.forEach(p => {
-                p.update(canvas.width, canvas.height, modalRect, particles);
-                p.draw(ctx, isDarkNow);
-            });
+            particles.forEach(p => { p.update(canvas.width, canvas.height, particles); p.draw(ctx); });
             animationFrameId = requestAnimationFrame(animate);
         };
-
         animate();
         return () => {
             window.removeEventListener('resize', resize);
@@ -220,152 +167,235 @@ const ZaeonComputerScienceRoom = () => {
             window.removeEventListener('mouseout', handleMouseLeave);
             cancelAnimationFrame(animationFrameId);
         };
-    }, [t]); // Adicionada dependência [t] para atualizar o canvas ao mudar idioma
+    }, []);
+
+    // --- SIDEBAR LOGIC (Delay 2s) ---
+    const handleSidebarEnter = () => { sidebarTimerRef.current = setTimeout(() => setIsSidebarExpanded(true), 2000); };
+    const handleSidebarLeave = () => { if (sidebarTimerRef.current) clearTimeout(sidebarTimerRef.current); setIsSidebarExpanded(false); };
+
+    // --- STYLES CYBER (Azul/Roxo/Slate) ---
+    const cardStyle = `
+        dark:bg-[#0f172a]/80 bg-white/60
+        backdrop-blur-[20px] 
+        border dark:border-cyan-500/20 border-white/40
+        shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]
+    `;
 
     return (
-        <div className="relative w-screen h-screen overflow-hidden bg-gray-100 dark:bg-black font-mono text-gray-900 dark:text-white selection:bg-green-500/30 transition-colors duration-500">
+        <div className="relative w-screen h-screen overflow-hidden font-mono bg-[#e2e8f0] dark:bg-[#010816] text-slate-800 dark:text-slate-200 transition-colors duration-1000">
 
-            {/* CAMADA 1: IMAGEM (Única e Estática) */}
-            <motion.div
-                className="absolute inset-0 z-10 pointer-events-none"
-                animate={{ opacity: isLoaded ? 1 : 0 }}
-                transition={{ duration: 1 }}
-            >
-                <div className="absolute top-16 bottom-0 left-0 w-1/3 border-r border-gray-300 dark:border-white/5 bg-transparent">
-                    {/* ALTERAÇÃO AQUI: Substituído img por Image com fill */}
-                    <Image
-                        src="/assets/computer.png"
-                        alt="Zaeon Tech Room"
-                        fill
-                        className="object-cover object-center opacity-100"
-                        priority
-                    />
-                    <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-gray-100 dark:from-black via-gray-100/50 dark:via-black/50 to-transparent"></div>
+            {/* 1. BACKGROUND FIXO */}
+            <motion.div className="absolute inset-0 z-0 pointer-events-none" animate={{ opacity: isLoaded ? 1 : 0 }} transition={{ duration: 1 }}>
+                <div className="absolute top-16 bottom-0 left-0 w-1/3 border-r border-slate-300 dark:border-white/5 bg-transparent">
+                    <Image src="/assets/computer.png" alt="Cyber Room" fill className="object-cover object-center opacity-80" priority />
+                    <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#e2e8f0] dark:from-[#010816] to-transparent"></div>
                 </div>
             </motion.div>
+            <canvas ref={canvasRef} className="absolute inset-0 z-0 pointer-events-none" />
 
-            {/* CAMADA 2: CANVAS (Z-20) */}
-            <canvas ref={canvasRef} className="absolute inset-0 z-20 pointer-events-none" />
-
-            {/* CAMADA 3: MODAL (Z-50) */}
+            {/* 2. MODAL DE SENHA */}
             <AnimatePresence>
-                {isLoaded && (
+                {isLoaded && !isAuthenticated && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{
-                            opacity: 1,
-                            scale: 1,
-                            x: isError ? [0, -10, 10, -10, 10, 0] : 0
-                        }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1, x: isError ? [0, -10, 10, -10, 10, 0] : 0 }}
+                        exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+                        transition={{ duration: 0.5 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md px-4"
                     >
-                        <div
-                            ref={modalRef}
-                            className={`pointer-events-auto w-full max-w-[440px] transition-all duration-300 relative
-                bg-white dark:bg-black 
-                border-2
-                ${isError
-                                ? 'border-red-500 dark:border-red-600 shadow-[0_0_30px_rgba(239,68,68,0.4)] dark:shadow-red-900/50'
-                                : 'border-gray-200 dark:border-green-800 shadow-xl dark:shadow-green-900/30'
-                            }
-              `}
-                        >
-                            {/* Top Bar */}
-                            <div className={`border-b p-2 py-1.5 flex items-center justify-between select-none transition-colors duration-300
-                ${isError
-                                ? 'bg-red-50 dark:bg-red-900/30 border-red-100 dark:border-red-800/50'
-                                : 'bg-gray-50 dark:bg-green-900/20 border-gray-100 dark:border-green-800/50'
-                            }`}>
-                                <div className={`flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest ${isError ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-green-500'}`}>
-                                    <Terminal size={10} />
-                                    {/* TRADUÇÃO APLICADA */}
-                                    <span>
-                    {isError ? t('tech_room.access_denied_code') : t('tech_room.gateway_title')}
-                  </span>
+                        <div className={`w-full max-w-[440px] bg-[#0f172a] border-2 shadow-2xl relative overflow-hidden transition-colors duration-300
+                            ${isError ? 'border-red-500 shadow-red-500/20' : 'border-cyan-500/30 shadow-cyan-500/20'}`}>
+
+                            <div className={`border-b p-2 flex justify-between bg-slate-900/50 ${isError ? 'border-red-500/30' : 'border-cyan-500/30'}`}>
+                                <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest ${isError ? 'text-red-400' : 'text-cyan-400'}`}>
+                                    <Terminal size={12} /> {isError ? "ACCESS_DENIED" : "SYSTEM_GATEWAY"}
                                 </div>
-                                <div className="flex gap-1">
-                                    <div className={`w-1.5 h-1.5 border animate-pulse rounded-full ${isError ? 'bg-red-500 border-red-400' : 'bg-green-500 border-green-400'}`}></div>
-                                </div>
+                                <div className={`w-2 h-2 rounded-full animate-pulse ${isError ? 'bg-red-500' : 'bg-cyan-500'}`} />
                             </div>
 
-                            {/* Corpo */}
-                            <div className="p-5 relative overflow-hidden">
-                                <div className="absolute inset-0 bg-[length:100%_3px] pointer-events-none z-0 opacity-0 dark:opacity-100 bg-[linear-gradient(rgba(0,20,0,0)_50%,rgba(0,100,0,0.02)_50%)]"></div>
-
-                                <div className="relative z-10 flex flex-col gap-4">
-
-                                    {/* Header */}
-                                    <div className={`border-l-2 pl-3 py-0.5 transition-colors duration-300 ${isError ? 'border-red-500' : 'border-gray-400 dark:border-green-600'}`}>
-                                        <h2 className={`text-base font-bold tracking-wider flex items-center gap-2 ${isError ? 'text-red-600 dark:text-red-500' : 'text-gray-800 dark:text-white'}`}>
-                                            {isError ? <XCircle className="w-4 h-4" /> : <Lock className={`w-4 h-4 ${isError ? '' : 'text-gray-400 dark:text-green-500'}`} />}
-                                            {/* TRADUÇÃO APLICADA */}
-                                            {t('tech_room.restricted_title')}
-                                        </h2>
-                                        <p className={`text-[10px] mt-0.5 uppercase tracking-widest transition-colors ${isError ? 'text-red-500' : 'text-gray-500 dark:text-green-500/70'}`}>
-                                            {/* TRADUÇÃO APLICADA */}
-                                            {isError ? t('tech_room.msg_denied') : t('tech_room.student_area')}
-                                        </p>
-                                    </div>
-
-                                    {/* Input */}
-                                    <div className="space-y-3 pt-1">
-                                        <div className="relative group">
-                                            {/* TRADUÇÃO APLICADA */}
-                                            <label className={`text-[9px] uppercase font-bold mb-1 block transition-colors ${isError ? 'text-red-500' : 'text-gray-400 dark:text-green-500/50'}`}>
-                                                {t('tech_room.key_label')}
-                                            </label>
-                                            <div className={`flex items-center border transition-colors duration-300 
-                        ${isError
-                                                ? 'border-red-300 bg-red-50 dark:border-red-500/60 dark:bg-red-900/10'
-                                                : 'border-gray-200 bg-gray-50 dark:border-green-500/60 dark:bg-green-900/10'
-                                            }`}>
-                                                <span className={`pl-3 font-bold text-sm transition-colors ${isError ? 'text-red-500' : 'text-gray-400 dark:text-green-500'}`}>{'>'}</span>
-                                                <input
-                                                    type="password"
-                                                    value={inputValue}
-                                                    onChange={(e) => { setInputValue(e.target.value); setIsError(false); }}
-                                                    onKeyDown={handleKeyDown}
-                                                    className={`w-full bg-transparent border-none px-3 py-2 text-sm focus:ring-0 font-mono tracking-widest 
-                            ${isError ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-700/50'}`}
-                                                    placeholder="••••••••"
-                                                    autoFocus
-                                                />
-                                            </div>
+                            <div className="p-8 relative">
+                                {!isAuthenticating ? (
+                                    <>
+                                        <div className={`border-l-2 pl-4 mb-6 ${isError ? 'border-red-500' : 'border-cyan-500'}`}>
+                                            <h2 className={`font-bold text-lg flex items-center gap-2 ${isError ? 'text-red-400' : 'text-white'}`}>
+                                                {isError ? <XCircle size={18} /> : <Lock size={18} />}
+                                                {isError ? "Invalid Protocol" : "Secure Environment"}
+                                            </h2>
+                                            <p className="text-[10px] uppercase tracking-widest mt-1 text-slate-400">Initialize Connection</p>
                                         </div>
 
-                                        <button
-                                            onClick={handleAuth}
-                                            className={`w-full border font-bold py-2 text-[10px] uppercase tracking-[0.25em] transition-all flex items-center justify-center gap-2 group duration-300 hover:brightness-105
-                      ${isError
-                                                ? 'bg-red-100 border-red-200 text-red-600 dark:bg-red-800/40 dark:border-red-600 dark:text-red-300'
-                                                : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200 dark:bg-green-800/40 dark:border-green-600 dark:text-green-300'
-                                            }`}
-                                        >
-                                            {/* TRADUÇÃO APLICADA */}
-                                            {isError ? t('tech_room.btn_wrong') : t('tech_room.btn_auth')}
-                                        </button>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Command Line</label>
+                                                <div className={`flex items-center bg-slate-900/50 border px-3 py-2 ${isError ? 'border-red-500/50' : 'border-slate-700 focus-within:border-cyan-500'}`}>
+                                                    <span className="text-cyan-500 mr-2">{'>'}</span>
+                                                    <input
+                                                        type="text"
+                                                        value={inputValue}
+                                                        onChange={(e) => { setInputValue(e.target.value); setIsError(false); }}
+                                                        onKeyDown={handleKeyDown}
+                                                        placeholder="Type 'init' to start..."
+                                                        className="bg-transparent border-none w-full text-white font-mono text-sm outline-none placeholder:text-slate-600"
+                                                        autoFocus
+                                                    />
+                                                </div>
+                                            </div>
+                                            <button onClick={handleAuth} className="w-full py-3 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-bold uppercase text-xs tracking-[0.2em] transition-all">
+                                                Execute
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="py-8 flex flex-col items-center justify-center gap-4">
+                                        <div className="text-cyan-400 font-mono text-sm animate-pulse">INITIALIZING CORE SYSTEMS...</div>
+                                        <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: "100%" }}
+                                                transition={{ duration: 2.2, ease: "easeInOut" }}
+                                                className="h-full bg-cyan-500 shadow-[0_0_10px_#06b6d4]"
+                                            />
+                                        </div>
+                                        <div className="flex justify-between w-full text-[8px] text-slate-500 font-mono uppercase">
+                                            <span>Loading Modules</span>
+                                            <span>100%</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                            {/* Rodapé */}
-                            <div className={`border-t p-1.5 flex justify-between text-[7px] uppercase tracking-wider transition-colors duration-300
-                ${isError
-                                ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/40 text-red-500'
-                                : 'bg-gray-50 dark:bg-black/90 border-gray-100 dark:border-green-900/40 text-gray-400 dark:text-green-800/70'
-                            }`}>
-                                {/* TRADUÇÃO APLICADA */}
-                                <span>{t('tech_room.tunnel')}</span>
-                                <span>{isError ? t('tech_room.status_fail') : t('tech_room.status_wait')}</span>
+            {/* 3. NAVBAR */}
+            <AnimatePresence>
+                {!isFocusMode && isAuthenticated && (
+                    <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1, transition: { delay: 0.5 } }} className="fixed top-0 left-0 w-full z-50 pointer-events-auto">
+                        <Navbar />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 4. MAIN UI */}
+            <AnimatePresence>
+                {isAuthenticated && (
+                    <motion.div
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0, transition: { delay: 0.2, duration: 0.8 } }}
+                        className={`flex items-start justify-start px-4 gap-6 w-full h-full relative z-10 transition-all duration-700 ${isFocusMode ? 'pt-4' : 'pt-32'}`}
+                    >
+                        {/* SIDEBAR: Bem fina (w-12), nomes dos módulos aparecem ao expandir */}
+                        <motion.aside
+                            layout
+                            className={`z-20 rounded-[2.5rem] ${cardStyle} transition-all duration-500 flex flex-col items-center py-6 gap-4 
+                                ${isSidebarExpanded ? 'w-48 px-4' : 'w-12'} 
+                                ${isFocusMode ? 'h-[96vh]' : 'h-[70vh]'} 
+                            `}
+                            onMouseEnter={handleSidebarEnter}
+                            onMouseLeave={handleSidebarLeave}
+                        >
+                            <Reorder.Group axis="y" values={tabs} onReorder={setTabs} className="flex flex-col gap-2 w-full flex-1 justify-center">
+                                {tabs.map((item) => (
+                                    <Reorder.Item key={item.id} value={item}>
+                                        <button
+                                            onClick={() => { setActiveTab(item.id); setIsMinimized(false); }}
+                                            className={`flex items-center gap-4 w-full p-3 rounded-xl transition-all relative overflow-hidden group
+                                            ${activeTab === item.id
+                                                    ? 'dark:bg-white/10 bg-[#0f172a] text-white shadow-lg border dark:border-white/10 border-transparent'
+                                                    : 'dark:text-white/40 text-slate-500 hover:dark:text-white hover:text-[#0f172a]'
+                                                }`}
+                                        >
+                                            <div className="shrink-0 relative z-10 flex justify-center w-full">{item.icon}</div>
+                                            {isSidebarExpanded && (
+                                                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] font-black uppercase tracking-widest truncate relative z-10 whitespace-nowrap">
+                                                    {item.label}
+                                                </motion.span>
+                                            )}
+                                        </button>
+                                    </Reorder.Item>
+                                ))}
+                            </Reorder.Group>
+
+                            <div className="w-full pt-4 mt-auto border-t dark:border-white/10 border-black/5">
+                                <button
+                                    onClick={() => setIsFocusMode(!isFocusMode)}
+                                    className={`flex items-center gap-4 w-full p-3 rounded-xl transition-all 
+                                        ${isFocusMode
+                                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                            : 'dark:text-white/40 text-slate-500 hover:dark:text-white hover:text-[#0f172a]'
+                                        }`}
+                                >
+                                    <div className="shrink-0 flex justify-center w-full">
+                                        {isFocusMode ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </div>
+                                    {isSidebarExpanded && (
+                                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] font-black uppercase tracking-widest truncate">
+                                            {isFocusMode ? "Exit" : "Focus"}
+                                        </motion.span>
+                                    )}
+                                </button>
                             </div>
+                        </motion.aside>
 
+                        {/* CONTENT AREA */}
+                        <AnimatePresence>
+                            {!isMinimized && (
+                                <motion.main
+                                    layout
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.3 } }}
+                                    className={`z-10 flex-1 rounded-[3.5rem] ${cardStyle} overflow-hidden flex flex-col relative transition-all duration-700
+                                        ${isFocusMode ? 'h-[96vh]' : 'h-[82vh]'}
+                                    `}
+                                >
+                                    {/* HEADER DA JANELA (ESTILO MAC - AMARELO ESQUERDA) */}
+                                    <div className="p-10 pb-4 flex items-center gap-4 border-b dark:border-white/5 border-black/5">
+
+                                        {/* Botão Amarelo (Minimize) Estilo Mac */}
+                                        <div
+                                            onClick={() => setIsMinimized(true)}
+                                            className="w-3 h-3 rounded-full bg-[#f59e0b] border border-[#d97706] shadow-sm cursor-pointer hover:bg-[#fbbf24] active:scale-95 transition-transform"
+                                            title="Minimize Window"
+                                        />
+
+                                        {/* Título do Módulo */}
+                                        <h2 className="text-xl font-black uppercase tracking-[0.3em] dark:text-white text-[#0f172a] leading-none flex items-center gap-3">
+                                            <Terminal className="w-6 h-6 text-cyan-500" />
+                                            {tabs.find(t => t.id === activeTab)?.label}
+                                        </h2>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-12 pt-6 relative">
+                                        <AnimatePresence mode="wait">
+                                            <motion.div
+                                                key={activeTab}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 10 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="h-full"
+                                            >
+                                                {activeTab === 'classes' && <ClassesModule />}
+                                                {activeTab === 'exams' && <ExamsModule />}
+                                                {activeTab === 'projects' && <ProjectsModule />}
+                                                {activeTab === 'research' && <ResearchModule />}
+                                                {activeTab === 'community' && <CommunityModule />}
+                                            </motion.div>
+                                        </AnimatePresence>
+                                    </div>
+                                </motion.main>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="relative z-50">
+                            <LoungeChatWidget defaultOpen={false} />
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
         </div>
     );
-};
-
-export default ZaeonComputerScienceRoom;
+}
