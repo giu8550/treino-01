@@ -14,10 +14,11 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?   // Foto em Base64 ou URL
-
-  // --- DADOS DO MENU "OPTIONS" (PERFIL CUSTOM) ---
   course        String?   // Ex: "Computer Science"
   bio           String?   // Biografia curta
+  age           Int?
+  gender        String?
+  torsoImage    String?
 
   // --- DADOS DO MODAL DE "ONBOARDING" ---
   role          String?   // "student", "researcher", etc.
