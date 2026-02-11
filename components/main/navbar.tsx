@@ -84,7 +84,7 @@ const NavbarComponent = () => {
 
             {/* Link Homework agora sempre renderiza porque showHomework é true */}
             {showHomework && (
-                <Link href="/homework" className={getLinkClassName("/homework")}>
+                <Link href="/research-lab" className={getLinkClassName("/homework")}>
                   {t("navbar.homework")}
                 </Link>
             )}

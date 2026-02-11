@@ -12,7 +12,7 @@ import HeroPage from "@/components/sub/hero-content";
 // Outros componentes
 import Encryption from "@/components/main/encryption";
 import StudyRoomsPage from "@/app/study-rooms/page";
-import IntroOverlay from "@/src/components/main/intro-overlay"; 
+import IntroOverlay from "@/src/components/main/intro-overlay";
 import { Navbar } from "@/components/main/navbar";
 import { Footer } from "@/components/main/footer";
 
@@ -49,7 +49,7 @@ export default function Home() {
         // Pequeno delay para sincronizar com o fim do fade-out da intro
         setTimeout(() => {
             setStartContent(true);
-        }, 400); 
+        }, 400);
     };
 
     return (
@@ -62,9 +62,9 @@ export default function Home() {
 
             {/* O conteúdo principal só renderiza após a intro */}
             {startContent && (
-                <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 1.5 }}
                     className="relative flex flex-col h-full"
                 >
@@ -73,23 +73,23 @@ export default function Home() {
                         você pode remover este aqui ou remover o de dentro do HeroPage 
                         para evitar duplicidade e pesar o app. O ideal é manter ESTE aqui. */}
                     <StarsCanvas />
-                    
+
                     <Navbar />
-                    
+
                     <div className="flex flex-col gap-20">
                         {/* --- AQUI ESTÁ A CORREÇÃO --- */}
                         {/* Usamos o HeroPage que tem o w-full max-w-[520px] configurado */}
                         <HeroPage />
-                        
+
                         <Encryption />
-                        
+
                         <div id="study-rooms" className="w-full">
                             <Suspense fallback={null}>
                                 <StudyRoomsPage />
                             </Suspense>
                         </div>
                     </div>
-                    
+
                     <Footer />
                 </motion.div>
             )}

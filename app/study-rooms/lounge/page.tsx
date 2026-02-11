@@ -38,7 +38,7 @@ const LoungeEarth = dynamic(() => import("@/components/sub/LoungeEarth"), {
 // Módulos Privados
 const ProjectsModule = dynamic(() => import("./main-lounge/projects/page"), { loading: LoadingIcon });
 const ExamsModule = dynamic(() => import("./main-lounge/exams/page"), { loading: LoadingIcon });
-const LessonsModule = dynamic(() => import("./main-lounge/lessons/page"), { loading: LoadingIcon }); 
+const LessonsModule = dynamic(() => import("./main-lounge/classes/page"), { loading: LoadingIcon }); 
 
 // Módulos Públicos
 // CHANGE: Renamed "NewsModule" import to reflect its new role as "Research", pointing to the previous news folder

@@ -9,9 +9,16 @@ import {
 } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 
-export const LoungeChatWidget = () => {
+// Define que o componente aceita uma prop opcional 'defaultOpen'
+interface LoungeChatWidgetProps {
+    defaultOpen?: boolean;
+}
+
+export const LoungeChatWidget = ({ defaultOpen = false }: LoungeChatWidgetProps) => {
     const { t } = useTranslation();
-    const [isOpen, setIsOpen] = useState(true);
+    
+    // Inicializa com o valor passado (false por padrão)
+    const [isOpen, setIsOpen] = useState(defaultOpen);
 
     const glassStyle = `
         dark:bg-[#0f172a]/95 bg-white/90
@@ -26,31 +33,30 @@ export const LoungeChatWidget = () => {
                 y: 0, 
                 opacity: 1, 
                 height: isOpen ? 200 : 48, 
-                width: isOpen ? 340 : 280 
+                width: isOpen ? 340 : 180 // Mais compacto quando fechado
             }}
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
             className={`fixed bottom-0 right-8 z-50 rounded-t-2xl flex flex-col ${glassStyle}`}
         >
             {/* --- HEADER --- */}
             <div 
-                onClick={() => !isOpen && setIsOpen(true)}
-                className="h-12 flex items-center justify-between px-4 bg-[#0f172a] dark:bg-white/5 border-b dark:border-white/5 cursor-pointer shrink-0"
+                onClick={() => setIsOpen(!isOpen)} // Clicar no header alterna o estado
+                className="h-12 flex items-center justify-between px-4 bg-[#0f172a] dark:bg-white/5 border-b dark:border-white/5 cursor-pointer shrink-0 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             >
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                        <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`} />
                     </div>
-                    <span className="text-xs font-black uppercase tracking-widest text-white/50">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/50 truncate">
                         {isOpen 
                             ? t("lounge_chat.system_restricted", "System Restricted") 
-                            : t("lounge_chat.chat_offline", "Chat Offline")}
+                            : t("lounge_chat.chat", "Global Chat")}
                     </span>
                 </div>
                 
                 <div className="flex items-center gap-2">
                     <button 
-                        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-                        className="p-1 hover:bg-white/10 rounded text-white"
+                        className="p-1 hover:bg-white/10 rounded text-slate-500 dark:text-white"
                     >
                         {isOpen ? <MinusIcon className="w-4 h-4" /> : <ChatBubbleLeftRightIcon className="w-4 h-4" />}
                     </button>
