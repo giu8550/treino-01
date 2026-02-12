@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   MapPin, User, Activity, Clock, ChevronUp, ChevronDown, 
   Power, Send, Sparkles, X, AlertCircle, StickyNote,
-  FileText, Plus, Database, Bot, File
+  FileText, Plus, Database, Bot, File, Briefcase, Pen, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,12 +19,25 @@ const initialSchedule = [
   { id: 7, name: "UI Design", teacher: "Sofia B.", room: "Studio", days: [3], hour: 15, color: "from-pink-400 to-rose-500" },
 ];
 
-// Interface para Dados Reais (Docs)
+// --- INTERFACES ---
 interface StoredDoc {
     id: string;
     title: string;
     type: 'pdf' | 'doc';
     size: string;
+}
+
+interface UserItem {
+    id: string;
+    type: 'file' | 'link';
+    name: string;
+    meta: string;
+}
+
+interface UserModule {
+    id: number;
+    title: string;
+    items: UserItem[];
 }
 
 export default function LessonsModule() {
@@ -33,16 +46,10 @@ export default function LessonsModule() {
   // --- STATE ---
   const [classes, setClasses] = useState(initialSchedule);
   const [selectedClass, setSelectedClass] = useState<any>(initialSchedule[0]);
-  
-  // Gadget States (Focus Mode)
   const [gadgetOn, setGadgetOn] = useState(false);
   const [pluggedDay, setPluggedDay] = useState<number | null>(null); 
-
-  // Sticky Note
   const [showSticky, setShowSticky] = useState(true);
   const [stickyText, setStickyText] = useState("");
-
-  // Main Chat States
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'ai', text: string}[]>([
     { role: 'ai', text: "System online. Schedule management active." }
   ]);
@@ -50,15 +57,18 @@ export default function LessonsModule() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // --- NEW MODULE STATES (REAL VARIABLES) ---
+  // --- ZAEON STATES ---
   const [liquidChatHistory, setLiquidChatHistory] = useState<{role: 'user' | 'agent', text: string}[]>([
-      { role: 'agent', text: "Neural Core initialized. Ready for data processing." }
+      { role: 'agent', text: "Zaeon initialized. Ready for data processing." }
   ]);
-  const [storedPdfs, setStoredPdfs] = useState<StoredDoc[]>([
-      { id: '1', title: 'Advanced_Physics.pdf', type: 'pdf', size: '2.4mb' },
-      { id: '2', title: 'Cyber_Ethics_V2.pdf', type: 'pdf', size: '1.1mb' }
-  ]);
+  const [storedPdfs, setStoredPdfs] = useState<StoredDoc[]>([]); 
   const [generatedDocs, setGeneratedDocs] = useState<StoredDoc[]>([]); 
+
+  // --- USER PERSONAL MODULES ---
+  const [userModules, setUserModules] = useState<UserModule[]>([
+      { id: 1, title: "Personal Backpack", items: [] },
+      { id: 2, title: "Project Archives", items: [] }
+  ]);
 
   const constraintsRef = useRef(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -69,7 +79,6 @@ export default function LessonsModule() {
     if (typeof window !== 'undefined') {
         const savedClasses = localStorage.getItem('zaeon_schedule_data');
         const savedSticky = localStorage.getItem('zaeon_sticky_note');
-        
         if (savedClasses) setClasses(JSON.parse(savedClasses));
         if (savedSticky) setStickyText(savedSticky);
         setIsDataLoaded(true);
@@ -83,84 +92,23 @@ export default function LessonsModule() {
       }
   }, [classes, stickyText, isDataLoaded]);
 
-  // --- 2. REATIVIDADE DE DETALHES ---
-  useEffect(() => {
-    if (selectedClass) {
-        const stillExists = classes.find(c => c.id === selectedClass.id);
-        if (!stillExists) setSelectedClass(null);
-    }
-  }, [classes, selectedClass]);
-
-  useEffect(() => {
-    if (chatScrollRef.current) chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-  }, [chatHistory]);
-
-  // --- 3. LÓGICA DE PLUG (Drag & Drop) ---
-  const handleGadgetDragEnd = (event: any, info: any) => {
-    if (!agendaRef.current) return;
-    
-    const agendaRect = agendaRef.current.getBoundingClientRect();
-    const dropX = info.point.x;
-    const dropY = info.point.y;
-
-    const isNearBottom = dropY > agendaRect.bottom - 80 && dropY < agendaRect.bottom + 50;
-    const isInsideX = dropX > agendaRect.left && dropX < agendaRect.right;
-
-    if (isNearBottom && isInsideX) {
-        const relativeX = dropX - agendaRect.left;
-        const colWidth = agendaRect.width / 5;
-        const colIndex = Math.floor(relativeX / colWidth);
-        
-        if (colIndex >= 0 && colIndex <= 4) {
-            setPluggedDay(colIndex);
-            return;
-        }
-    }
-    setPluggedDay(null);
-  };
-
-  const yearSquares = Array.from({ length: 365 }, (_, i) => Math.floor(Math.random() * 4));
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-  const hours = Array.from({ length: 9 }, (_, i) => i + 8);
-  const formatTime = (h: number) => `${h.toString().padStart(2, '0')}:00 - ${(h + 2).toString().padStart(2, '0')}:00`;
-
-  // --- 4. AGENT LOGIC (REAL API) ---
+  // --- 2. HELPERS ---
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
     const userMsg = inputMessage;
     setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
     setInputMessage("");
     setIsProcessing(true);
-
     try {
       const systemContext = JSON.stringify(classes);
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({
-          prompt: userMsg,       
-          agent: "aura", 
-          systemContext: systemContext 
-        })
+        body: JSON.stringify({ prompt: userMsg, agent: "aura", systemContext: systemContext })
       });
-
       const data = await response.json();
       const aiResponse = data.text || "Connection error.";
-
-      try {
-        const cleanResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-        if (cleanResponse.startsWith('[') && cleanResponse.endsWith(']')) {
-            const newSchedule = JSON.parse(cleanResponse);
-            if (Array.isArray(newSchedule)) {
-                setClasses(newSchedule);
-                setChatHistory(prev => [...prev, { role: 'ai', text: "Schedule updated via Neural Link." }]);
-            }
-        } else {
-            setChatHistory(prev => [...prev, { role: 'ai', text: aiResponse }]);
-        }
-      } catch (e) {
-        setChatHistory(prev => [...prev, { role: 'ai', text: aiResponse }]);
-      }
+      setChatHistory(prev => [...prev, { role: 'ai', text: aiResponse }]);
     } catch (error) {
       setChatHistory(prev => [...prev, { role: 'ai', text: "Error connecting to Zaeon Core." }]);
     } finally {
@@ -168,8 +116,57 @@ export default function LessonsModule() {
     }
   };
 
+  const handleGadgetDragEnd = (event: any, info: any) => {
+    if (!agendaRef.current) return;
+    const agendaRect = agendaRef.current.getBoundingClientRect();
+    const dropX = info.point.x;
+    const dropY = info.point.y;
+    const isNearBottom = dropY > agendaRect.bottom - 80 && dropY < agendaRect.bottom + 50;
+    const isInsideX = dropX > agendaRect.left && dropX < agendaRect.right;
+    if (isNearBottom && isInsideX) {
+        const relativeX = dropX - agendaRect.left;
+        const colWidth = agendaRect.width / 5;
+        const colIndex = Math.floor(relativeX / colWidth);
+        if (colIndex >= 0 && colIndex <= 4) setPluggedDay(colIndex);
+        else setPluggedDay(null);
+    } else {
+        setPluggedDay(null);
+    }
+  };
+
+  const handleUserModuleDrop = (e: React.DragEvent, moduleId: number) => {
+      e.preventDefault();
+      const files = Array.from(e.dataTransfer.files);
+      const newItems: UserItem[] = files.map(f => ({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'file',
+          name: f.name,
+          meta: (f.size / 1024 / 1024).toFixed(1) + 'mb'
+      }));
+      setUserModules(prev => prev.map(m => m.id === moduleId ? { ...m, items: [...m.items, ...newItems] } : m));
+  };
+
+  const deleteUserItem = (moduleId: number, itemId: string) => {
+      setUserModules(prev => prev.map(m => m.id === moduleId ? { ...m, items: m.items.filter(i => i.id !== itemId) } : m));
+  };
+
+  const handleAddLink = (moduleId: number) => {
+      const url = prompt("Enter URL (https://...):");
+      if (url) {
+          const name = prompt("Enter Link Name:") || "New Link";
+          setUserModules(prev => prev.map(m => m.id === moduleId ? {
+              ...m, items: [...m.items, { id: Math.random().toString(36).substr(2, 9), type: 'link', name, meta: url }]
+          } : m));
+      }
+  };
+
+  const yearSquares = Array.from({ length: 365 }, (_, i) => Math.floor(Math.random() * 4));
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const hours = Array.from({ length: 9 }, (_, i) => i + 8);
+  const formatTime = (h: number) => `${h.toString().padStart(2, '0')}:00 - ${(h + 2).toString().padStart(2, '0')}:00`;
+
   return (
-    <div ref={constraintsRef} className="relative min-h-screen w-full flex flex-col items-center p-8 bg-transparent font-sans selection:bg-cyan-500/30">
+    <div ref={constraintsRef} className="relative min-h-screen w-full flex flex-col items-center p-8 bg-transparent font-sans selection:bg-cyan-500/30 text-slate-900 dark:text-white transition-colors duration-500">
       
       {/* HEADER / ANNUAL FLOW */}
       <section className="w-full max-w-[1400px] z-10 transition-all duration-700 pointer-events-auto">
@@ -180,7 +177,6 @@ export default function LessonsModule() {
             </div>
             <h3 className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/60">Annual Flow</h3>
           </div>
-          
           <div className="flex items-center gap-2">
             {!showSticky && (
                 <button 
@@ -205,14 +201,7 @@ export default function LessonsModule() {
             <div className="overflow-x-auto pb-2 scrollbar-hide mask-fade-sides">
               <div className="grid grid-rows-7 grid-flow-col gap-[4px] w-max min-w-full">
                 {yearSquares.map((level, i) => (
-                  <div
-                    key={i}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${level === 0 ? 'bg-white/5' :
-                      level === 1 ? 'bg-cyan-900/40 shadow-[0_0_5px_rgba(8,145,178,0.2)]' :
-                        level === 2 ? 'bg-cyan-500/60 shadow-[0_0_8px_rgba(6,182,212,0.4)]' :
-                          'bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)] scale-110'
-                      }`}
-                  />
+                  <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${level === 0 ? 'bg-white/5' : level === 1 ? 'bg-cyan-900/40 shadow-[0_0_5px_rgba(8,145,178,0.2)]' : level === 2 ? 'bg-cyan-500/60 shadow-[0_0_8px_rgba(6,182,212,0.4)]' : 'bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)] scale-110'}`} />
                 ))}
               </div>
             </div>
@@ -223,19 +212,17 @@ export default function LessonsModule() {
       <div className="h-24 pointer-events-none"></div>
 
       {/* --- DRAGGABLE AREA (HORIZONTAL LAYOUT) --- */}
-      <div className="flex justify-center items-start gap-6 flex-wrap z-20 relative w-full h-full pb-32">
+      <div className="flex justify-center items-start gap-6 flex-wrap z-20 relative w-full h-full pb-10">
 
-        {/* 1. AGENT CHAT (Largest) */}
+        {/* 1. AGENT CHAT */}
         <motion.div
           drag
           dragConstraints={constraintsRef}
           whileHover={{ scale: 1.01, cursor: "grab" }}
-          whileDrag={{ scale: 1.05, cursor: "grabbing", zIndex: 100 }}
+          whileDrag={{ scale: 1.05, zIndex: 100 }}
           className="group w-80 h-[380px] relative z-10"
         >
-            <div className="w-full h-full bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 p-5 rounded-[2.5rem] 
-                            shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_20px_40px_-10px_rgba(0,0,0,0.8)]
-                            flex flex-col relative overflow-hidden">
+            <div className="w-full h-full bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 p-5 rounded-[2.5rem] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_20px_40px_-10px_rgba(0,0,0,0.8)] flex flex-col relative overflow-hidden">
                 <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-2 z-10">
                     <div className="flex items-center gap-2">
                         <Sparkles size={12} className="text-cyan-400" />
@@ -246,44 +233,29 @@ export default function LessonsModule() {
                 <div ref={chatScrollRef} className="flex-1 overflow-y-auto scrollbar-hide space-y-3 pr-1 py-2 z-10">
                     {chatHistory.map((msg, idx) => (
                         <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] p-2.5 rounded-2xl text-[10px] leading-relaxed font-medium 
-                                ${msg.role === 'user' 
-                                    ? 'bg-cyan-500/10 text-cyan-200 border border-cyan-500/20 rounded-br-sm' 
-                                    : 'bg-white/5 text-white/80 border border-white/5 rounded-bl-sm'}`}>
+                            <div className={`max-w-[85%] p-2.5 rounded-2xl text-[10px] leading-relaxed font-medium ${msg.role === 'user' ? 'bg-cyan-500/10 text-cyan-200 border border-cyan-500/20 rounded-br-sm' : 'bg-white/5 text-white/80 border border-white/5 rounded-bl-sm'}`}>
                                 {msg.text}
                             </div>
                         </div>
                     ))}
                 </div>
                 <div className="mt-2 pt-2 border-t border-white/5 flex gap-2 z-10">
-                    <input 
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        disabled={isProcessing}
-                        placeholder="Type command..."
-                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-colors"
-                    />
-                    <button onClick={handleSendMessage} disabled={isProcessing} className="p-2 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-400 rounded-xl border border-cyan-500/30 transition-colors disabled:opacity-50">
-                        <Send size={12} />
-                    </button>
+                    <input value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} disabled={isProcessing} placeholder="Type command..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-colors" />
+                    <button onClick={handleSendMessage} disabled={isProcessing} className="p-2 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-400 rounded-xl border border-cyan-500/30 transition-colors disabled:opacity-50"><Send size={12} /></button>
                 </div>
             </div>
         </motion.div>
 
-        {/* 2. SCHEDULE (Medium - Smaller than Chat) */}
+        {/* 2. SCHEDULE */}
         <motion.div
           ref={agendaRef}
           drag
           dragConstraints={constraintsRef}
           whileHover={{ scale: 1.01, cursor: "grab" }}
-          whileDrag={{ scale: 1.05, cursor: "grabbing", zIndex: 100 }}
+          whileDrag={{ scale: 1.05, zIndex: 100 }}
           className="group w-64 h-[340px] relative z-10"
         >
-          <div className={`w-full h-full backdrop-blur-xl border border-white/10 p-5 rounded-[2.5rem] 
-                            shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_20px_40px_-10px_rgba(0,0,0,0.6)]
-                            flex flex-col items-center justify-between relative overflow-hidden transition-colors duration-500
-                            bg-[#172554]/90 dark:bg-black/40`}>
+          <div className={`w-full h-full backdrop-blur-xl border border-white/10 p-5 rounded-[2.5rem] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_20px_40px_-10px_rgba(0,0,0,0.6)] flex flex-col items-center justify-between relative overflow-hidden transition-colors duration-500 bg-[#172554]/90 dark:bg-black/40`}>
             <div className="w-full flex justify-between items-center mb-2 pointer-events-none">
               <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/60">Agenda</span>
               {pluggedDay !== null && <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping shadow-[0_0_10px_#22d3ee]"></div>}
@@ -293,30 +265,18 @@ export default function LessonsModule() {
                 const isPlugged = pluggedDay === dIdx;
                 return (
                   <div key={day} className="flex flex-col h-full flex-1 items-center relative">
-                    <div className={`absolute inset-0 rounded-lg transition-all duration-500 pointer-events-none
-                        ${isPlugged ? 'bg-cyan-500/10 border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)] animate-pulse' : ''}
-                    `}/>
+                    <div className={`absolute inset-0 rounded-lg transition-all duration-500 pointer-events-none ${isPlugged ? 'bg-cyan-500/10 border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)] animate-pulse' : ''}`} />
                     <div className="flex-1 flex flex-col justify-between w-full z-10 gap-[2px]">
                       {hours.map((hour) => {
                         const classAtTime = classes.find(c => c.days.includes(dIdx + 1) && c.hour === hour);
                         return (
-                          <div
-                            key={`${day}-${hour}`}
-                            onPointerDown={() => classAtTime && setSelectedClass(classAtTime)}
-                            className={`w-full flex-1 rounded-[2px] cursor-pointer transition-all duration-300 relative group/cell
-                                ${classAtTime ? `bg-gradient-to-br ${classAtTime.color} opacity-80 hover:opacity-100` : 'bg-white/5 hover:bg-white/10'}
-                            `}
-                          />
+                          <div key={`${day}-${hour}`} onPointerDown={() => classAtTime && setSelectedClass(classAtTime)} className={`w-full flex-1 rounded-[2px] cursor-pointer transition-all duration-300 relative group/cell ${classAtTime ? `bg-gradient-to-br ${classAtTime.color} opacity-80 hover:opacity-100` : 'bg-white/5 hover:bg-white/10'}`} />
                         );
                       })}
                     </div>
                     <div className="mt-2 w-full flex flex-col items-center justify-end h-8 relative">
                         {isPlugged ? (
-                            <motion.div 
-                                layoutId="gadget-fuse"
-                                onClick={() => setPluggedDay(null)}
-                                className="w-full h-6 bg-[#222] border-t-2 border-cyan-500 rounded-b-md shadow-[0_0_10px_#22d3ee] flex items-center justify-center cursor-pointer hover:bg-[#333]"
-                            >
+                            <motion.div layoutId="gadget-fuse" onClick={() => setPluggedDay(null)} className="w-full h-6 bg-[#222] border-t-2 border-cyan-500 rounded-b-md shadow-[0_0_10px_#22d3ee] flex items-center justify-center cursor-pointer hover:bg-[#333]">
                                 <div className={`w-2 h-2 rounded-full ${gadgetOn ? 'bg-cyan-400 shadow-[0_0_5px_#22d3ee]' : 'bg-gray-600'}`}></div>
                             </motion.div>
                         ) : (
@@ -331,17 +291,15 @@ export default function LessonsModule() {
           </div>
         </motion.div>
 
-        {/* 3. DETAILS (Small) */}
+        {/* 3. DETAILS */}
         <motion.div
           drag
           dragConstraints={constraintsRef}
           whileHover={{ scale: 1.05, cursor: "grab" }}
-          whileDrag={{ scale: 1.1, cursor: "grabbing", zIndex: 100 }}
+          whileDrag={{ scale: 1.1, zIndex: 100 }}
           className="group w-52 h-52 relative"
         >
-          <div className="w-full h-full bg-black/40 backdrop-blur-xl border border-white/10 p-6 rounded-[2.5rem] 
-                            shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_20px_40px_-10px_rgba(0,0,0,0.6)]
-                            flex flex-col justify-between relative overflow-hidden">
+          <div className="w-full h-full bg-black/40 backdrop-blur-xl border border-white/10 p-6 rounded-[2.5rem] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_20px_40px_-10px_rgba(0,0,0,0.6)] flex flex-col justify-between relative overflow-hidden">
             {selectedClass ? (
                 <>
                     <div className={`absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br ${selectedClass.color} rounded-full blur-[40px] opacity-40 animate-pulse pointer-events-none`}></div>
@@ -377,30 +335,40 @@ export default function LessonsModule() {
           </div>
         </motion.div>
 
-        {/* 4. STICKY NOTE (Small) */}
+        {/* 4. STICKY NOTE (Corrigida para Modo Claro) */}
         <AnimatePresence>
           {showSticky && (
             <motion.div
               drag
               dragConstraints={constraintsRef}
               whileHover={{ scale: 1.05, cursor: "grab" }}
-              whileDrag={{ scale: 1.1, cursor: "grabbing", zIndex: 90 }}
+              whileDrag={{ scale: 1.1, zIndex: 90 }}
               className="group w-40 h-40 relative z-20"
             >
-                <div className="absolute inset-0 bg-yellow-500/10 rounded-[2rem] blur-xl transition-opacity duration-700 pointer-events-none"></div>
-                <div className="w-full h-full bg-yellow-900/10 backdrop-blur-xl border border-yellow-500/10 p-5 rounded-[2rem] 
-                                shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_15px_30px_-10px_rgba(0,0,0,0.5)]
-                                flex flex-col justify-between relative overflow-hidden">
-                    <button onClick={() => setShowSticky(false)} className="absolute top-3 right-3 text-white/20 hover:text-white transition-colors opacity-0 group-hover:opacity-100 z-20"><X size={14} /></button>
-                    <div className="flex items-center gap-2 text-yellow-500/80 mb-2"><AlertCircle size={12} /><span className="text-[8px] font-bold uppercase tracking-widest">Note</span></div>
-                    <textarea value={stickyText} onChange={(e) => setStickyText(e.target.value)} className="w-full h-full bg-transparent border-none outline-none resize-none text-[10px] text-white/80 font-medium font-mono placeholder-white/20 leading-relaxed scrollbar-hide z-10" placeholder="Write something..." onPointerDown={(e) => e.stopPropagation()} />
-                    <div className="h-0.5 w-12 bg-yellow-500/20 rounded-full mt-auto self-end pointer-events-none"></div>
+                {/* Glow Amarelo */}
+                <div className="absolute inset-0 bg-yellow-500/20 dark:bg-yellow-500/10 rounded-[2rem] blur-xl transition-opacity duration-700 pointer-events-none"></div>
+                
+                {/* Card do Note - Refinado para o Modo Claro */}
+                <div className="w-full h-full bg-[#fbbf24] dark:bg-yellow-900/10 backdrop-blur-xl border border-yellow-600/30 dark:border-yellow-500/10 p-5 rounded-[2rem] shadow-xl dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_15px_30px_-10px_rgba(0,0,0,0.5)] flex flex-col justify-between relative overflow-hidden">
+                    <button onClick={() => setShowSticky(false)} className="absolute top-3 right-3 text-black/20 dark:text-white/20 hover:text-black dark:hover:text-white transition-colors opacity-0 group-hover:opacity-100 z-20"><X size={14} /></button>
+                    <div className="flex items-center gap-2 text-yellow-900 dark:text-yellow-500/80 mb-2 font-black">
+                        <AlertCircle size={12} />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Sticky Note</span>
+                    </div>
+                    <textarea 
+                      value={stickyText} 
+                      onChange={(e) => setStickyText(e.target.value)} 
+                      className="w-full h-full bg-transparent border-none outline-none resize-none text-[10px] text-black dark:text-white/80 font-black font-mono placeholder-black/30 dark:placeholder-white/20 leading-relaxed scrollbar-hide z-10" 
+                      placeholder="Take a note..." 
+                      onPointerDown={(e) => e.stopPropagation()} 
+                    />
+                    <div className="h-0.5 w-12 bg-black/10 dark:bg-yellow-500/20 rounded-full mt-auto self-end pointer-events-none"></div>
                 </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* 5. GADGET "FUSION PLUG" (Tiny) */}
+        {/* 5. GADGET "FUSION PLUG" */}
         <AnimatePresence>
             {pluggedDay === null && (
                 <motion.div
@@ -409,7 +377,7 @@ export default function LessonsModule() {
                     onDragEnd={handleGadgetDragEnd}
                     dragConstraints={constraintsRef}
                     whileHover={{ scale: 1.05, cursor: "grab" }}
-                    whileDrag={{ scale: 1.1, cursor: "grabbing", zIndex: 100 }}
+                    whileDrag={{ scale: 1.1, zIndex: 100 }}
                     className="group w-16 h-24 relative z-50"
                 >
                     <div className="w-full h-full bg-gradient-to-b from-[#333] to-[#111] border border-gray-600 rounded-md shadow-[0_10px_20px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)] flex flex-col items-center justify-between p-2 relative overflow-hidden">
@@ -430,62 +398,40 @@ export default function LessonsModule() {
 
       </div>
 
-      {/* --- NEURAL CORE (Longer Scroll) --- */}
-      <div className="w-full flex justify-center py-20">
-        {/* 4. LIQUID NEURAL INTERFACE (ZAEON) - Edição Refinada dos Fios e Visual */}
+      {/* --- NEURAL CORE SECTION (ZAEON) --- */}
+      <div className="w-full flex justify-center py-20 relative z-20">
         <motion.div
             drag
             dragConstraints={constraintsRef}
             whileHover={{ cursor: "grab" }}
             whileDrag={{ cursor: "grabbing", zIndex: 100 }}
-            className="group relative z-10 flex items-center gap-10" // Aumentado o gap para os fios aparecerem melhor
+            className="group relative flex items-center gap-10"
         >
-           {/* --- DYNAMIC ENERGY CORDS --- */}
             <div className="absolute inset-0 pointer-events-none overflow-visible">
                 {[
-                    { yStart: 130, yEnd: 84, delay: 0 },   // Fio Superior A
-                    { yStart: 150, yEnd: 176, delay: 0.7 }, // Fio Superior B
-                    // --- AJUSTADOS ABAIXO ---
-                    { yStart: 320, yEnd: 290, delay: 0.2 }, // Fio Inferior A (Subiu de 380 para 320)
-                    { yStart: 340, yEnd: 356, delay: 0.7 }  // Fio Inferior B (Subiu de 400 para 340)
+                    { yStart: 130, yEnd: 84, delay: 0 },
+                    { yStart: 340, yEnd: 356, delay: 0.2 } 
                 ].map((cord, idx) => (
                     <div key={idx} className="absolute left-[384px] overflow-visible">
-                        {/* O Fio Físico (Base Estática) */}
                         <svg width="80" height="450" viewBox="0 0 80 450" className="overflow-visible opacity-30">
-                            <path 
-                                d={`M 0 ${cord.yStart} C 40 ${cord.yStart}, 30 ${cord.yEnd}, 80 ${cord.yEnd}`}
-                                fill="none"
-                                stroke="#22d3ee"
-                                strokeWidth="2"
-                            />
+                            <path d={`M 0 ${cord.yStart} C 40 ${cord.yStart}, 30 ${cord.yEnd}, 80 ${cord.yEnd}`} fill="none" stroke="#22d3ee" strokeWidth="2" />
                         </svg>
-
-                        {/* O Fluxo de Energia (Dinâmico) */}
-                        <svg width="80" height="200" viewBox="0 0 80 200" className="absolute top-0 overflow-visible">
+                        <svg width="80" height="450" viewBox="0 0 80 450" className="absolute top-0 overflow-visible">
                             <motion.path 
                                 d={`M 0 ${cord.yStart} C 40 ${cord.yStart}, 30 ${cord.yEnd}, 80 ${cord.yEnd}`}
-                                fill="none"
-                                stroke="#22d3ee"
-                                strokeWidth="3"
-                                strokeDasharray="10 40" // Cria o efeito de "partícula"
-                                initial={{ strokeDashoffset: 0 }}
-                                animate={{ strokeDashoffset: -100 }}
-                                transition={{ 
-                                    duration: 2, 
-                                    repeat: Infinity, 
-                                    ease: "linear",
-                                    delay: cord.delay 
-                                }}
+                                fill="none" stroke="#22d3ee" strokeWidth="3" strokeDasharray="10 40"
+                                initial={{ strokeDashoffset: 0 }} animate={{ strokeDashoffset: -100 }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: cord.delay }}
                                 className="drop-shadow-[0_0_8px_#22d3ee]"
                             />
                         </svg>
                     </div>
                 ))}
-
-                {/* Pontos de Conexão com Glow Real */}
+                <div className="absolute left-[382px] top-[125px] w-1 h-[40px] bg-cyan-400 shadow-[0_0_15px_#22d3ee] rounded-full animate-pulse" />
+                <div className="absolute left-[382px] top-[335px] w-1 h-[40px] bg-cyan-400 shadow-[0_0_15px_#22d3ee] rounded-full animate-pulse" />
             </div>
 
-            {/* A. JANELA DE CHAT ZAEON (Estilo Liquid Glass) */}
+            {/* A. ZAEON CHAT */}
             <div className="w-96 h-[450px] bg-white/10 dark:bg-black/40 bg-white/70 backdrop-blur-3xl border border-white/30 dark:border-white/10 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden relative z-10 transition-all duration-500">
                 <div className="h-16 border-b border-white/20 flex items-center px-6 gap-4 bg-white/10">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 shadow-lg flex items-center justify-center border border-white/20">
@@ -505,8 +451,8 @@ export default function LessonsModule() {
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed backdrop-blur-md shadow-sm
                                 ${m.role === 'user' 
-                                    ? 'bg-blue-600 dark:bg-blue-500 text-white font-bold rounded-br-none' 
-                                    : 'bg-white/80 dark:bg-white/5 text-slate-900 dark:text-white/90 border border-white/20 dark:border-white/10 rounded-bl-none'
+                                    ? 'bg-blue-600 dark:bg-blue-500 text-white font-bold rounded-br-none shadow-md' 
+                                    : 'bg-white/80 dark:bg-white/5 text-slate-900 dark:text-white/90 border border-white/20 dark:border-white/10 rounded-bl-none shadow-sm'
                                 }`}>
                                 {m.text}
                             </div>
@@ -516,57 +462,163 @@ export default function LessonsModule() {
 
                 <div className="p-4 bg-white/10 border-t border-white/20">
                     <div className="flex items-center gap-2 bg-slate-200/50 dark:bg-black/30 rounded-full px-2 py-2 border border-white/30 dark:border-white/5">
-                        <input className="bg-transparent flex-1 text-xs text-slate-900 dark:text-white px-3 outline-none placeholder:text-slate-500 dark:placeholder:text-white/20" placeholder="Communicate with Zaeon..." />
-                        <button className="w-9 h-9 rounded-full bg-blue-600 dark:bg-cyan-500 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg">
-                            <Send size={14} className="text-white" />
-                        </button>
+                        <input className="bg-transparent flex-1 text-xs text-slate-900 dark:text-white px-3 outline-none placeholder:text-slate-500 dark:placeholder:text-white/20" placeholder="Ask Zaeon..." />
+                        <button className="w-9 h-9 rounded-full bg-blue-600 dark:bg-cyan-500 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"><Send size={14} className="text-white" /></button>
                     </div>
                 </div>
             </div>
 
-            {/* B. GADGETS (STORES) */}
+            {/* B. GADGETS COLUMN */}
             <div className="flex flex-col gap-14 z-10">
-                {/* Library Gadget */}
-                <div className="h-32 min-w-[150px] max-w-[320px] bg-white/20 dark:bg-black/50 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[1.8rem] p-4 flex flex-col relative shadow-xl transition-all duration-300">
-                    <div className="flex items-center gap-2 text-slate-700 dark:text-white/40 mb-3 border-b border-white/10 pb-2">
-                        <Database size={13} className="text-blue-500 dark:text-cyan-400" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Library</span>
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto scrollbar-hide items-center h-full">
-                        {storedPdfs.map((pdf) => (
-                            <div key={pdf.id} className="min-w-[65px] h-18 bg-white/50 dark:bg-white/5 rounded-xl border border-white/30 dark:border-white/10 flex flex-col items-center justify-center gap-1 p-1 shadow-sm hover:bg-white/80 dark:hover:bg-white/10 transition-all">
-                                <FileText size={18} className="text-blue-600 dark:text-cyan-400" />
-                                <span className="text-[7px] text-slate-800 dark:text-white/60 text-center truncate w-full px-1">{pdf.title}</span>
-                            </div>
-                        ))}
-                        <div className="min-w-[45px] h-18 rounded-xl border border-dashed border-slate-400 dark:border-white/20 flex items-center justify-center text-slate-500 dark:text-white/30 hover:border-blue-500 transition-all">
-                            <Plus size={16} />
+                <div 
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        const files = Array.from(e.dataTransfer.files);
+                        const pdfs = files.filter(f => f.type === 'application/pdf').map(f => ({
+                            id: Math.random().toString(36).substr(2, 9), title: f.name, type: 'pdf' as const, size: (f.size / 1024 / 1024).toFixed(1) + 'mb'
+                        }));
+                        setStoredPdfs(prev => [...prev, ...pdfs]);
+                    }}
+                    className="h-32 min-w-[150px] max-w-[450px] transition-all duration-500 bg-white/70 dark:bg-black/60 backdrop-blur-3xl border border-white/40 dark:border-white/10 rounded-[1.8rem] p-4 flex flex-col relative shadow-2xl"
+                >
+                    <div className="flex items-center justify-between mb-3 border-b border-blue-200/50 dark:border-white/20 pb-2 text-slate-800 dark:text-white">
+                        <div className="flex items-center gap-2">
+                            <Database size={13} className="text-blue-600 dark:text-cyan-400 drop-shadow-[0_0_5px_rgba(37,99,235,0.4)]" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Library</span>
                         </div>
+                    </div>
+                    <div className="flex gap-2 items-center h-full overflow-x-auto scrollbar-hide pr-2">
+                        {storedPdfs.map((pdf) => (
+                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={pdf.id} onPointerDown={(e) => e.stopPropagation()} className="group/item w-20 h-20 bg-blue-50/50 dark:bg-white/10 rounded-xl border border-blue-200/50 dark:border-white/20 flex flex-col items-center justify-center gap-0.5 p-2 relative cursor-pointer hover:bg-white dark:hover:bg-white/20 transition-all shrink-0 shadow-sm">
+                                <button onClick={(e) => { e.stopPropagation(); setStoredPdfs(prev => prev.filter(p => p.id !== pdf.id)); }} className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-4 bg-red-500 text-white rounded-t-md flex items-center justify-center opacity-0 group-hover/item:opacity-100 shadow-lg hover:h-5 transition-all z-30 border-x border-t border-white/30"><X size={8} strokeWidth={4} /></button>
+                                <FileText size={22} className="text-blue-600 dark:text-cyan-400 mb-1" />
+                                <span className="text-[8px] text-slate-900 dark:text-white font-black text-center truncate w-full block px-0.5">{pdf.title}</span>
+                            </motion.div>
+                        ))}
+                        <label onPointerDown={(e) => e.stopPropagation()} className="w-16 h-20 rounded-xl border-2 border-dashed border-blue-300/50 dark:border-white/30 flex items-center justify-center text-blue-400 dark:text-white hover:bg-blue-50 dark:hover:bg-white/10 hover:border-blue-500 cursor-pointer transition-all group/add shrink-0">
+                            <input type="file" className="hidden" accept=".pdf" onChange={(e) => { if (e.target.files && e.target.files[0]) { const f = e.target.files[0]; setStoredPdfs(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), title: f.name, type: 'pdf', size: (f.size / 1024 / 1024).toFixed(1) + 'mb' }]); } }} />
+                            <Plus size={20} className="group-hover/add:scale-125 transition-transform" />
+                        </label>
                     </div>
                 </div>
 
-                {/* Fabricator Gadget */}
-                <div className="h-32 min-w-[150px] max-w-[320px] bg-white/20 dark:bg-black/50 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[1.8rem] p-4 flex flex-col relative shadow-xl transition-all duration-300">
-                    <div className="flex items-center gap-2 text-slate-700 dark:text-white/40 mb-3 border-b border-white/10 pb-2">
-                        <Activity size={13} className="text-purple-500" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Fabricator</span>
+                {/* Gadget 2: Doc Fabricator */}
+                <div className="h-32 min-w-[150px] max-w-[450px] transition-all duration-500 bg-white/70 dark:bg-black/60 backdrop-blur-3xl border border-white/40 dark:border-white/10 rounded-[1.8rem] p-4 flex flex-col relative shadow-2xl text-slate-800 dark:text-white">
+                    <div className="flex items-center justify-between mb-3 border-b border-purple-200/50 dark:border-white/20 pb-2">
+                        <div className="flex items-center gap-2">
+                            <Activity size={13} className="text-purple-600 dark:text-purple-400" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Fabricator</span>
+                        </div>
                     </div>
-                    <div className="flex gap-2 overflow-x-auto scrollbar-hide items-center h-full">
+                    <div className="flex gap-2 items-center h-full overflow-x-auto scrollbar-hide pr-2">
                          {generatedDocs.length > 0 ? generatedDocs.map((doc) => (
-                            <div key={doc.id} className="min-w-[65px] h-18 bg-blue-100 dark:bg-cyan-900/20 rounded-xl border border-blue-200 dark:border-cyan-500/20 flex flex-col items-center justify-center gap-1 p-1 shadow-inner">
-                                <File size={18} className="text-purple-600 dark:text-purple-400" />
-                                <span className="text-[7px] text-slate-800 dark:text-white/60 text-center truncate w-full px-1">{doc.title}</span>
-                            </div>
+                            <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} key={doc.id} onPointerDown={(e) => e.stopPropagation()} className="group/item w-20 h-20 bg-purple-50/30 dark:bg-purple-500/20 rounded-xl border border-purple-200 dark:border-purple-400/40 flex flex-col items-center justify-center gap-0.5 p-2 relative cursor-pointer shadow-sm hover:shadow-purple-200 dark:hover:bg-purple-500/30 transition-all shrink-0">
+                                <button onClick={(e) => { e.stopPropagation(); setGeneratedDocs(prev => prev.filter(d => d.id !== doc.id)); }} className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-4 bg-red-500 text-white rounded-t-md flex items-center justify-center opacity-0 group-hover/item:opacity-100 shadow-lg hover:h-5 transition-all z-30 border-x border-t border-white/30"><X size={8} strokeWidth={4} /></button>
+                                <File size={22} className="text-purple-600 dark:text-purple-300 mb-1" />
+                                <span className="text-[8px] text-slate-900 dark:text-white font-black text-center truncate w-full block px-0.5">{doc.title}</span>
+                            </motion.div>
                         )) : (
-                            <div className="w-full flex items-center justify-center gap-2 text-slate-400 dark:text-white/20">
-                                <span className="w-1.5 h-1.5 bg-slate-400 dark:bg-white/40 rounded-full animate-pulse"></span>
-                                <span className="text-[9px] font-bold uppercase tracking-widest">Awaiting Output</span>
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 dark:border-white/5 rounded-xl shrink-0 text-slate-400 dark:text-white">
+                                <Activity size={18} className="opacity-40 animate-pulse" />
+                                <span className="text-[7px] font-black uppercase tracking-[0.2em] opacity-40">System Idle</span>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
         </motion.div>
+      </div>
+
+      {/* --- NEW: PERSONAL WORKSPACE (VIRTUAL BACKPACK) --- */}
+      <div className="w-full flex justify-center gap-8 pb-32 flex-wrap relative z-20">
+          {userModules.map((mod) => (
+              <motion.div 
+                  key={mod.id}
+                  drag
+                  dragConstraints={constraintsRef}
+                  dragMomentum={false} 
+                  dragElastic={0.1}    
+                  whileHover={{ scale: 1.01, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.3)" }}
+                  whileDrag={{ scale: 1.05, zIndex: 100, cursor: "grabbing" }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => handleUserModuleDrop(e, mod.id)}
+                  className="h-44 min-w-[280px] max-w-[500px] flex-1 transition-all duration-300 bg-white/70 dark:bg-black/60 backdrop-blur-3xl border border-white/40 dark:border-white/10 rounded-[1.8rem] p-5 flex flex-col relative shadow-xl group cursor-grab"
+              >
+                  <div className="flex items-center justify-between mb-4 border-b border-emerald-200/50 dark:border-white/20 pb-2">
+                      <div className="flex items-center gap-2 w-full">
+                          <Briefcase size={14} className="text-emerald-500 dark:text-emerald-400 drop-shadow-[0_0_5px_rgba(16,185,129,0.4)] shrink-0" />
+                          <input 
+                              value={mod.title}
+                              onPointerDown={(e) => e.stopPropagation()} 
+                              onChange={(e) => setUserModules(prev => prev.map(m => m.id === mod.id ? { ...m, title: e.target.value } : m))}
+                              className="bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white outline-none w-full focus:border-b focus:border-emerald-500 transition-colors placeholder-slate-400"
+                              placeholder="MODULE NAME"
+                          />
+                          <Pen size={10} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </div>
+                      <span className="text-[8px] text-slate-400 dark:text-white/40 font-mono ml-2 whitespace-nowrap">{mod.items.length} ITEMS</span>
+                  </div>
+
+                  <div className="flex gap-2 items-center h-full overflow-x-auto scrollbar-hide pr-2">
+                      {mod.items.map((item) => (
+                          <motion.div 
+                              key={item.id} 
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              onPointerDown={(e) => e.stopPropagation()} 
+                              onClick={() => item.type === 'link' && window.open(item.meta, '_blank')}
+                              className={`group/file w-20 h-24 rounded-xl border flex flex-col items-center justify-center gap-1 p-2 relative cursor-pointer transition-all shrink-0 shadow-sm
+                                ${item.type === 'link' 
+                                    ? 'bg-blue-50/40 dark:bg-blue-900/10 border-blue-200/50 dark:border-blue-500/20 hover:bg-white dark:hover:bg-white/10' 
+                                    : 'bg-emerald-50/30 dark:bg-emerald-900/10 border-emerald-200/50 dark:border-emerald-500/20 hover:bg-white dark:hover:bg-white/10'
+                                }`}
+                          >
+                              <button 
+                                  onClick={(e) => { e.stopPropagation(); deleteUserItem(mod.id, item.id); }}
+                                  className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/file:opacity-100 shadow-lg hover:scale-110 transition-all z-30 border border-white/50"
+                              >
+                                  <X size={10} strokeWidth={3} />
+                              </button>
+                              
+                              {item.type === 'link' ? (
+                                  <div className="relative">
+                                      <div className="absolute inset-0 bg-blue-400 blur-[8px] opacity-20 rounded-full"></div>
+                                      <Globe size={24} className="text-blue-500 dark:text-blue-400 relative z-10" />
+                                  </div>
+                              ) : (
+                                  <FileText size={24} className="text-emerald-600 dark:text-emerald-400 drop-shadow-sm" />
+                              )}
+
+                              <span className="text-[8px] text-slate-900 dark:text-white font-black text-center truncate w-full block px-0.5 mt-1">{item.name}</span>
+                              <span className="text-[6px] text-slate-500 dark:text-white/40 font-mono uppercase truncate w-full text-center">
+                                  {item.type === 'link' ? 'LINK' : item.meta}
+                              </span>
+                          </motion.div>
+                      ))}
+
+                      <div className="flex flex-col gap-1 shrink-0 ml-1">
+                          <label 
+                              onPointerDown={(e) => e.stopPropagation()}
+                              className="w-10 h-10 rounded-lg border border-dashed border-emerald-300/50 dark:border-white/20 flex items-center justify-center text-emerald-500 dark:text-white hover:bg-emerald-50 dark:hover:bg-white/10 hover:border-emerald-500 cursor-pointer transition-all"
+                              title="Upload File"
+                          >
+                              <input type="file" className="hidden" multiple onChange={(e) => { if (e.target.files) { const files = Array.from(e.target.files); const newItems: UserItem[] = files.map(f => ({ id: Math.random().toString(36).substr(2, 9), type: 'file', name: f.name, meta: (f.size / 1024 / 1024).toFixed(1) + 'mb' })); setUserModules(prev => prev.map(m => m.id === mod.id ? { ...m, items: [...m.items, ...newItems] } : m)); } }} />
+                              <Plus size={16} />
+                          </label>
+
+                          <button 
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={() => handleAddLink(mod.id)}
+                              className="w-10 h-10 rounded-lg border border-dashed border-blue-300/50 dark:border-white/20 flex items-center justify-center text-blue-500 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-white/10 hover:border-blue-500 cursor-pointer transition-all"
+                              title="Add Link"
+                          >
+                              <Globe size={16} />
+                          </button>
+                      </div>
+                  </div>
+              </motion.div>
+          ))}
       </div>
 
     </div>
