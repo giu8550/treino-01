@@ -33,12 +33,12 @@ interface Comment {
 interface Post {
     id: string;
     user: string;
-    userImage?: string; // Adicionado para suportar fotos de perfil
+    userImage?: string; 
     content: string;
     time: string;
     likes: number;
     isLiked: boolean;
-    comments: Comment[]; // CORRIGIDO: de commentsList para comments
+    comments: Comment[]; 
 }
 
 // --- CONFIGURAÇÃO DO GLOBO ---
@@ -55,7 +55,7 @@ const latLonToVector3 = (lat: number, lon: number, radius: number) => {
     return new THREE.Vector3(x, y, z);
 };
 
-// Marcador com Hover corrigido
+// Marcador com Hover
 const LocationMarker = ({ lat, lon, code, onHover, onClick }: any) => {
     const ref = useRef<THREE.Mesh>(null);
     const position = latLonToVector3(lat, lon, 0.785);
@@ -72,8 +72,8 @@ const LocationMarker = ({ lat, lon, code, onHover, onClick }: any) => {
             ref={ref}
             position={position}
             onClick={(e) => { e.stopPropagation(); onClick(code); }}
-            onPointerOver={(e) => { e.stopPropagation(); onHover(code); }}
-            onPointerOut={(e) => { e.stopPropagation(); onHover(null); }}
+            onPointerOver={(e) => { e.stopPropagation(); onHover(code); document.body.style.cursor = 'pointer'; }}
+            onPointerOut={(e) => { e.stopPropagation(); onHover(null); document.body.style.cursor = 'auto'; }}
         >
             <sphereGeometry args={[0.035, 16, 16]} />
             <meshBasicMaterial color={COLOR_DOT} toneMapped={false} />
@@ -255,7 +255,7 @@ export default function ZaeonLobby() {
             {/* MAIN CARD */}
             <div className="h-[80vh] flex-1 max-w-5xl bg-white/5 backdrop-blur-md border border-white/10 rounded-r-[40px] flex flex-col relative overflow-hidden shadow-2xl">
 
-                {/* HEADER */}
+                {/* HEADER - ZAEON GLOBAL NETWORK */}
                 <div className="w-full pt-10 pb-4 flex flex-col items-center z-[60] pointer-events-none">
                     <h1 className="text-[10px] font-black uppercase tracking-[1em] text-white/40 flex items-center gap-4">
                         <span className="w-8 h-[1px] bg-white/10" />
@@ -277,15 +277,15 @@ export default function ZaeonLobby() {
                                 <div className="flex items-center gap-2">
                                     <CpuChipIcon className="w-4 h-4 text-cyan-400" />
                                     <span className="text-[9px] font-black text-white uppercase tracking-widest">
-                        {selectedRegion ? selectedRegion : hoveredCluster}
-                    </span>
+                                        {selectedRegion ? selectedRegion : hoveredCluster}
+                                    </span>
                                 </div>
 
                                 <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full border border-white/5">
                                     <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse" : "bg-red-500"}`} />
                                     <span className="text-[7px] font-bold text-white/50 uppercase">
-                        {isConnected ? "ONLINE" : "OFFLINE"}
-                    </span>
+                                        {isConnected ? "ONLINE" : "OFFLINE"}
+                                    </span>
                                 </div>
                             </div>
 
@@ -297,16 +297,17 @@ export default function ZaeonLobby() {
                 </AnimatePresence>
 
                 {/* GLOBO 3D */}
+                {/* Ajustado: camera position de [0,0,2.5] para [0,-0.2,3.5] para deixar o globo menor e visível */}
                 <div className="absolute inset-0 z-0 pt-10">
-                    <Canvas camera={{ position: [0, 0, 2.5], fov: 45 }} gl={{ antialias: true }}>
+                    <Canvas camera={{ position: [0, -1.8, 6.5], fov: 45 }} gl={{ antialias: true }}>
                         <ambientLight intensity={0.7} />
                         <pointLight position={[10, 10, 10]} intensity={2.5} />
                         <CyberGlobe onSelectRegion={handleSelectRegion} onHoverRegion={setHoveredCluster} />
-                        <OrbitControls enableZoom={false} enablePan={false} rotateSpeed={0.4} />
+                        <OrbitControls enableZoom={true} enablePan={false} rotateSpeed={0.5} minDistance={2.5} maxDistance={6} />
                     </Canvas>
                 </div>
 
-                {/* GAVETA INFERIOR */}
+                {/* GAVETA INFERIOR (MODAL) */}
                 <AnimatePresence>
                     {selectedRegion && (
                         <motion.div
@@ -314,7 +315,7 @@ export default function ZaeonLobby() {
                             animate={{ y: "20%" }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 120 }}
-                            className="absolute inset-x-0 bottom-0 z-50 h-[80%] bg-black/80 backdrop-blur-3xl border-t border-white/10 rounded-t-[40px] shadow-[0_-50px_100px_rgba(0,0,0,0.8)] flex flex-col"
+                            className="absolute inset-x-0 bottom-0 z-50 h-[80%] bg-black/80 backdrop-blur-3xl border-t border-white/10 rounded-t-[40px] shadow-[0_-50px_100px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto"
                         >
                             <div onClick={closeAll} className="w-20 h-1.5 bg-white/20 rounded-full mx-auto mt-4 mb-2 cursor-pointer hover:bg-red-500 transition-colors" />
 
@@ -385,10 +386,8 @@ export default function ZaeonLobby() {
                                                         </div>
                                                         <div className="py-6 space-y-6">
                                                             <h3 className="text-[9px] font-black uppercase tracking-widest text-cyan-500/50 mb-4 pl-2">
-                                                                {/* CORRIGIDO: de commentsList para comments */}
                                                                 Respostas ({selectedPost.comments?.length || 0})
                                                             </h3>
-                                                            {/* CORRIGIDO: de commentsList para comments */}
                                                             {selectedPost.comments?.map((comment) => (
                                                                 <div key={comment.id} className="flex gap-4 pl-4 border-l border-white/5">
                                                                     <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
@@ -435,7 +434,7 @@ export default function ZaeonLobby() {
             </div>
 
             <style jsx global>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar:-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 210, 255, 0.3); }
@@ -448,7 +447,6 @@ export default function ZaeonLobby() {
 function FeedPost({ post, onLike, onClick, isDetailView = false }: any) {
     return (
         <div onClick={!isDetailView ? onClick : undefined} className={`bg-white/[0.03] border border-white/5 p-5 rounded-3xl transition-all group flex gap-5 ${!isDetailView ? 'hover:bg-white/[0.06] cursor-pointer' : ''} ${isDetailView ? 'bg-white/[0.05] border-cyan-500/20' : ''}`}>
-            {/* AVATAR DINÂMICO ADICIONADO */}
             <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 overflow-hidden flex items-center justify-center shrink-0 border border-white/10 shadow-lg">
                 {post.userImage ? (
                     <img src={post.userImage} alt="" className="w-full h-full object-cover" />
@@ -471,7 +469,6 @@ function FeedPost({ post, onLike, onClick, isDetailView = false }: any) {
                     </button>
                     <button className="flex items-center gap-1.5 text-white/20 hover:text-cyan-400 transition-colors">
                         <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                        {/* CORRIGIDO: de commentsList para comments */}
                         <span className="text-[10px] font-mono">{post.comments?.length || 0}</span>
                     </button>
                 </div>

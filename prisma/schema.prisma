@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
@@ -13,23 +16,25 @@ model User {
   name          String?
   email         String?   @unique
   emailVerified DateTime?
-  image         String?   // Foto em Base64 ou URL
+  image         String?   // Foto de Perfil (Base64 ou URL)
+  
+  // Dados de Perfil & Onboarding
   course        String?   // Ex: "Computer Science"
   bio           String?   // Biografia curta
   age           Int?
   gender        String?
-  torsoImage    String?
-
-  // --- DADOS DO MODAL DE "ONBOARDING" ---
+  torsoImage    String?   // Foto de corpo inteiro/torso para o Lounge
   role          String?   // "student", "researcher", etc.
   phone         String?   // "(00) 00000-0000"
+  
+  // Dados de Identidade & Crypto
   identityId    String?   // CPF, Matrícula, etc.
   idType        String?   // "wallet" ou "role_id"
   walletAddress String?   // Carteira Crypto
-
-  // --- DADOS DE COMPROVAÇÃO E ADMIN ---
+  
+  // Dados Administrativos & KYC
   kycStatus     String    @default("pending")
-  documents     Json?     // Metadados dos PDFs
+  documents     Json?     // Metadados dos PDFs enviados
   institution   String?   // Instituição de ensino
 
   // Datas de controle
@@ -44,39 +49,55 @@ model User {
   posts         Post[]
   comments      Comment[]
 
-  // Relacionamento com a Área de Trabalho (Lounge)
+  // Relacionamento com a Área de Trabalho (Lounge Memory)
   userSpaceData UserSpaceData?
 }
 
-// --- NOVO MODELO: MEMÓRIA DO LOUNGE & SALAS ---
-model UserSpaceData {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  
-  // Conexão com o Usuário
-  userId      String   @unique @db.ObjectId
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Dados Persistentes
-  schedule    Json?    // Array das aulas (JSON puro)
-  chatHistory Json?    // Histórico do Chat (Array de objetos)
-  stickyNote  String?  // Texto do post-it
-  activeProject Json?  // Projeto ativo
-  citations     Json?  // Citações geradas pelos agentes
-  workContent String?
-  workTitle String?
-
-  updatedAt   DateTime @updatedAt
+// --- CONFIGURAÇÕES GLOBAIS DO SISTEMA (NOVO) ---
+// Armazena dados únicos, como a mensagem diária da Zaeon no LoungeEarth
+model SystemSetting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique // Ex: "global_message"
+  value     String   // O texto da mensagem
+  updatedAt DateTime @updatedAt
 }
 
-// --- MODELOS DE FEED ---
+// --- MEMÓRIA DO LOUNGE & SALAS ---
+model UserSpaceData {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Conexão com o Usuário
+  userId        String   @unique @db.ObjectId
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Dados Persistentes do Lounge
+  schedule      Json?    // Array das aulas (JSON puro)
+  chatHistory   Json?    // Histórico do Chat com a IA (Array de objetos)
+  stickyNote    String?  // Texto do post-it amarelo
+  activeProject Json?    // Projeto ativo no momento
+  citations     Json?    // Citações geradas pelos agentes
+  workContent   String?  // Conteúdo de trabalho salvo
+  workTitle     String?  // Título do trabalho salvo
+
+  updatedAt     DateTime @updatedAt
+}
+
+// --- MODELOS DE FEED (ATUALIZADO) ---
 model Post {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
-  likes     String[] @default([])
+  likes     String[] @default([]) // Array de IDs de usuários que deram like
   createdAt DateTime @default(now())
 
+  // --- NOVO CAMPO: SALA/CATEGORIA ---
+  // Define em qual feed este post aparece. 
+  // Padrão: "lounge". Opções: "cyber", "bio", "quantic", "humanities"
+  room      String   @default("lounge") 
+
   // Autor do Post
-  user      String   // Nome de exibição (Snapshot)
+  user      String   // Snapshot do nome de exibição para performance
+  userImage String?  // Snapshot da imagem de perfil para performance (NOVO)
+  
   userId    String?  @db.ObjectId
   author    User?    @relation(fields: [userId], references: [id])
 
@@ -111,7 +132,7 @@ model NewsPost {
   updatedAt   DateTime @updatedAt
 }
 
-// --- MODELOS PADRÃO DO NEXTAUTH ---
+// --- MODELOS PADRÃO DO NEXTAUTH (Auth.js) ---
 model Account {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
   userId            String  @db.ObjectId
