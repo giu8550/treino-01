@@ -27,6 +27,11 @@ model User {
   role          String?   // "student", "researcher", etc.
   phone         String?   // "(00) 00000-0000"
   
+  // --- GAMIFICAÇÃO & PROGRESSO (NOVO) ---
+  level         Int       @default(1)  // Nível do usuário na plataforma
+  streak        Int       @default(0)  // Dias consecutivos de atividade
+  xp            Int       @default(0)  // Pontos de experiência
+  
   // Dados de Identidade & Crypto
   identityId    String?   // CPF, Matrícula, etc.
   idType        String?   // "wallet" ou "role_id"
@@ -53,7 +58,7 @@ model User {
   userSpaceData UserSpaceData?
 }
 
-// --- CONFIGURAÇÕES GLOBAIS DO SISTEMA (NOVO) ---
+// --- CONFIGURAÇÕES GLOBAIS DO SISTEMA ---
 // Armazena dados únicos, como a mensagem diária da Zaeon no LoungeEarth
 model SystemSetting {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -79,24 +84,28 @@ model UserSpaceData {
   workContent   String?  // Conteúdo de trabalho salvo
   workTitle     String?  // Título do trabalho salvo
 
+  // --- OBJETIVOS & HÁBITOS (NOVO) ---
+  // Armazena a matriz de hábitos: [{ id, name, days: [bool] }]
+  objectives    Json?    
+
   updatedAt     DateTime @updatedAt
 }
 
-// --- MODELOS DE FEED (ATUALIZADO) ---
+// --- MODELOS DE FEED ---
 model Post {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
   likes     String[] @default([]) // Array de IDs de usuários que deram like
   createdAt DateTime @default(now())
 
-  // --- NOVO CAMPO: SALA/CATEGORIA ---
+  // --- CAMPO: SALA/CATEGORIA ---
   // Define em qual feed este post aparece. 
   // Padrão: "lounge". Opções: "cyber", "bio", "quantic", "humanities"
   room      String   @default("lounge") 
 
   // Autor do Post
   user      String   // Snapshot do nome de exibição para performance
-  userImage String?  // Snapshot da imagem de perfil para performance (NOVO)
+  userImage String?  // Snapshot da imagem de perfil para performance
   
   userId    String?  @db.ObjectId
   author    User?    @relation(fields: [userId], references: [id])
