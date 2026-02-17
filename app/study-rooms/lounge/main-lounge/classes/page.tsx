@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   MapPin, User, Activity, Clock, ChevronUp, ChevronDown, 
   Power, Send, Sparkles, X, AlertCircle, StickyNote,
-  FileText, Plus, Database, Bot, File, Briefcase, Pen, Globe
+  FileText, Plus, Database, Bot, File, Briefcase, Pen, Globe,
+  Users, Layers, Share2, Copy, Link as LinkIcon, ArrowUpRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 
 // --- INITIAL DATA ---
 const initialSchedule = [
@@ -20,27 +23,213 @@ const initialSchedule = [
 ];
 
 // --- INTERFACES ---
-interface StoredDoc {
-    id: string;
-    title: string;
-    type: 'pdf' | 'doc';
-    size: string;
-}
+interface StoredDoc { id: string; title: string; type: 'pdf' | 'doc'; size: string; }
+interface UserItem { id: string; type: 'file' | 'link'; name: string; meta: string; }
+interface UserModule { id: number; title: string; items: UserItem[]; }
 
-interface UserItem {
-    id: string;
-    type: 'file' | 'link';
-    name: string;
-    meta: string;
-}
+// --- COMPONENT: COLLECTIVE BUILD NODE (UPDATED) ---
+const CollectiveZone = ({ classes, currentUser, dragConstraints }: { classes: any[], currentUser: any, dragConstraints: any }) => {
+    const [activeClassId, setActiveClassId] = useState(classes[0].id);
+    const [inviteCode, setInviteCode] = useState<string | null>(null);
+    const [members, setMembers] = useState<any[]>([]);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [chatMsg, setChatMsg] = useState("");
+    const [groupMessages, setGroupMessages] = useState<{user: string, text: string}[]>([
+        { user: 'System', text: 'Secure channel established.' }
+    ]);
 
-interface UserModule {
-    id: number;
-    title: string;
-    items: UserItem[];
-}
+    const activeClass = classes.find(c => c.id === activeClassId);
+
+    const generateCode = () => {
+        setIsGenerating(true);
+        setTimeout(() => {
+            const code = `ZAE-${Math.random().toString(36).substr(2, 4).toUpperCase()}-${Math.floor(Math.random() * 99)}`;
+            setInviteCode(code);
+            setIsGenerating(false);
+            if (currentUser && members.length === 0) {
+                setMembers([currentUser]); // Add self as first member
+            }
+        }, 1500);
+    };
+
+    const sendGroupMessage = () => {
+        if (!chatMsg.trim()) return;
+        setGroupMessages(prev => [...prev, { user: currentUser?.name || 'You', text: chatMsg }]);
+        setChatMsg("");
+    };
+
+    return (
+        <motion.div 
+            drag
+            dragConstraints={dragConstraints}
+            whileHover={{ cursor: "grab" }}
+            whileDrag={{ cursor: "grabbing", zIndex: 100 }}
+            className="w-full mt-10 mb-20 max-w-[1400px] relative z-30"
+        >
+            <div className="relative w-full bg-white/70 dark:bg-black/30 backdrop-blur-3xl border border-slate-300 dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl flex flex-col gap-6 overflow-hidden">
+                
+                {/* Header: Class Switcher & Title */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-300/50 dark:border-white/10 pb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-500">
+                            {/* ÍCONE ALTERADO PARA USERS (COLETIVIDADE) */}
+                            <Users size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Collective Build Node</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Real-time collaboration workspace</p>
+                        </div>
+                    </div>
+
+                    {/* Class Switcher Pills */}
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-full pb-1">
+                        {classes.map(cls => (
+                            <button
+                                key={cls.id}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={() => { setActiveClassId(cls.id); setInviteCode(null); setMembers([]); }}
+                                className={`px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border
+                                    ${activeClassId === cls.id 
+                                        ? `bg-slate-800 text-white border-slate-900 dark:bg-white dark:text-black shadow-lg` 
+                                        : 'bg-white/50 dark:bg-white/5 text-slate-500 border-slate-200 dark:border-white/10 hover:bg-white dark:hover:bg-white/10'
+                                    }`}
+                            >
+                                {cls.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex flex-col lg:flex-row gap-8 h-[500px]">
+                    
+                    {/* LEFT: Collective Chat */}
+                    <div className="flex-1 flex flex-col bg-slate-50/50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-[2rem] p-1 relative overflow-hidden" onPointerDown={(e) => e.stopPropagation()}>
+                        <div className="px-6 py-4 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-black/20">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">{activeClass?.name} Channel</span>
+                            </div>
+                            <Users size={14} className="text-slate-400" />
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                            {groupMessages.map((msg, i) => (
+                                <div key={i} className={`flex flex-col ${msg.user === (currentUser?.name || 'You') ? 'items-end' : 'items-start'}`}>
+                                    <span className="text-[8px] text-slate-400 mb-1 ml-1">{msg.user}</span>
+                                    <div className={`max-w-[80%] px-4 py-2 rounded-2xl text-[11px] font-medium leading-relaxed
+                                        ${msg.user === (currentUser?.name || 'You') 
+                                            ? 'bg-indigo-600 text-white rounded-tr-none' 
+                                            : 'bg-white dark:bg-white/10 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-tl-none'
+                                        }`}
+                                    >
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="p-3 bg-white/60 dark:bg-black/20 border-t border-slate-200 dark:border-white/5">
+                            <div className="flex items-center gap-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-2 py-2">
+                                <input 
+                                    value={chatMsg}
+                                    onChange={(e) => setChatMsg(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && sendGroupMessage()}
+                                    placeholder={`Message ${activeClass?.name} group...`} 
+                                    className="flex-1 bg-transparent px-4 text-xs font-medium text-slate-800 dark:text-white placeholder:text-slate-400 outline-none"
+                                />
+                                <button onClick={sendGroupMessage} className="w-8 h-8 bg-slate-800 dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform">
+                                    <ArrowUpRight size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT: Collaboration Slots & Invite */}
+                    <div className="w-full lg:w-80 flex flex-col gap-4">
+                        
+                        {/* Invite Generator */}
+                        <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-[2rem] p-6 text-center relative overflow-hidden group" onPointerDown={(e) => e.stopPropagation()}>
+                            {!inviteCode ? (
+                                <div className="flex flex-col items-center gap-3 relative z-10">
+                                    <div className="w-12 h-12 bg-white dark:bg-white/10 rounded-full flex items-center justify-center shadow-lg mb-1">
+                                        <Share2 size={20} className="text-indigo-500" />
+                                    </div>
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-white">Build Together</h4>
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight px-4">Create a secure link to invite peers to this module.</p>
+                                    <button 
+                                        onClick={generateCode}
+                                        disabled={isGenerating}
+                                        className="mt-2 px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full text-[10px] font-bold uppercase tracking-wider hover:scale-105 transition-transform w-full"
+                                    >
+                                        {isGenerating ? "Generating..." : "Generate Invite Code"}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-3 relative z-10">
+                                    <div className="w-full bg-white/50 dark:bg-black/30 border border-dashed border-indigo-400/50 rounded-xl p-4 flex flex-col items-center">
+                                        <span className="text-[9px] font-bold text-indigo-500 uppercase mb-1">Access Code</span>
+                                        <span className="text-2xl font-black font-mono text-slate-800 dark:text-white tracking-widest select-all">{inviteCode}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-emerald-500 text-[10px] font-bold bg-emerald-500/10 px-3 py-1 rounded-full">
+                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                                        Session Active
+                                    </div>
+                                    <button onClick={() => { navigator.clipboard.writeText(`zaeon.io/join/${inviteCode}`); }} className="flex items-center gap-2 text-[10px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors">
+                                        <Copy size={12} /> Copy Link
+                                    </button>
+                                </div>
+                            )}
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/20 rounded-full blur-[40px] group-hover:bg-indigo-500/30 transition-all duration-700" />
+                        </div>
+
+                        {/* ACTIVE NODES - LÓGICA DINÂMICA (SEM SLOTS VAZIOS FIXOS) */}
+                        <div className="flex-1 bg-white/40 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-[2rem] p-4 flex flex-col gap-3 relative overflow-y-auto custom-scrollbar" onPointerDown={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-between pl-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Active Nodes</span>
+                                <span className="text-[9px] font-mono text-slate-400">{members.length} Online</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 flex-1 content-start">
+                                {members.length === 0 ? (
+                                    <div className="col-span-2 flex flex-col items-center justify-center opacity-40 h-full min-h-[100px]">
+                                        <Users size={24} className="text-slate-400 mb-2" />
+                                        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Waiting for peers...</span>
+                                    </div>
+                                ) : (
+                                    members.map((member, i) => (
+                                        <div key={i} className="aspect-square rounded-2xl border border-slate-300/50 dark:border-white/10 bg-white/30 dark:bg-black/20 flex flex-col items-center justify-center relative overflow-hidden group/slot shadow-sm">
+                                            <motion.div 
+                                                initial={{ scale: 0.5, opacity: 0 }} 
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                className="flex flex-col items-center gap-2 z-10 w-full"
+                                            >
+                                                <div className="w-12 h-12 rounded-full border-2 border-indigo-500 p-0.5 bg-white/10 backdrop-blur-md shadow-lg">
+                                                    <div className="w-full h-full rounded-full overflow-hidden bg-slate-800 flex items-center justify-center">
+                                                        {member.image ? <Image src={member.image} alt="" fill className="object-cover" /> : <User size={20} className="text-white" />}
+                                                    </div>
+                                                </div>
+                                                <div className="text-center w-full px-2">
+                                                    <span className="text-[9px] font-bold text-slate-800 dark:text-white truncate block">{member.name}</span>
+                                                    <span className="text-[7px] font-bold text-indigo-500 bg-indigo-500/10 px-1.5 py-0.5 rounded-full inline-block mt-0.5">CONNECTED</span>
+                                                </div>
+                                            </motion.div>
+                                            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover/slot:opacity-100 transition-opacity pointer-events-none" />
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
 
 export default function LessonsModule() {
+  const { data: session } = useSession();
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [showYearBoard, setShowYearBoard] = useState(true);
   
   // --- STATE ---
@@ -55,7 +244,6 @@ export default function LessonsModule() {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // --- ZAEON STATES ---
   const [liquidChatHistory, setLiquidChatHistory] = useState<{role: 'user' | 'agent', text: string}[]>([
@@ -70,6 +258,8 @@ export default function LessonsModule() {
       { id: 2, title: "Project Archives", items: [] }
   ]);
 
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+
   const constraintsRef = useRef(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const agendaRef = useRef<HTMLDivElement>(null);
@@ -83,7 +273,13 @@ export default function LessonsModule() {
         if (savedSticky) setStickyText(savedSticky);
         setIsDataLoaded(true);
     }
-  }, []);
+
+    if (session?.user) {
+        setSelectedUser({ ...session.user, role: (session.user as any).role || 'ARCHITECT' });
+    } else {
+        setSelectedUser({ name: "Operative", role: "ARCHITECT", course: "Computer Science" });
+    }
+  }, [session]);
 
   useEffect(() => { 
       if (isDataLoaded) {
@@ -99,21 +295,10 @@ export default function LessonsModule() {
     setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
     setInputMessage("");
     setIsProcessing(true);
-    try {
-      const systemContext = JSON.stringify(classes);
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ prompt: userMsg, agent: "aura", systemContext: systemContext })
-      });
-      const data = await response.json();
-      const aiResponse = data.text || "Connection error.";
-      setChatHistory(prev => [...prev, { role: 'ai', text: aiResponse }]);
-    } catch (error) {
-      setChatHistory(prev => [...prev, { role: 'ai', text: "Error connecting to Zaeon Core." }]);
-    } finally {
+    setTimeout(() => {
+      setChatHistory(prev => [...prev, { role: 'ai', text: "Data acknowledged. Schedule updated." }]);
       setIsProcessing(false);
-    }
+    }, 1000);
   };
 
   const handleGadgetDragEnd = (event: any, info: any) => {
@@ -166,7 +351,7 @@ export default function LessonsModule() {
   const formatTime = (h: number) => `${h.toString().padStart(2, '0')}:00 - ${(h + 2).toString().padStart(2, '0')}:00`;
 
   return (
-    <div ref={constraintsRef} className="relative min-h-screen w-full flex flex-col items-center p-8 bg-transparent font-sans selection:bg-cyan-500/30 text-slate-900 dark:text-white transition-colors duration-500">
+    <div ref={constraintsRef} className="relative min-h-screen w-full flex flex-col items-center p-8 bg-transparent font-sans selection:bg-cyan-500/30 text-slate-900 dark:text-white transition-colors duration-500 overflow-x-hidden">
       
       {/* HEADER / ANNUAL FLOW */}
       <section className="w-full max-w-[1400px] z-10 transition-all duration-700 pointer-events-auto">
@@ -335,7 +520,7 @@ export default function LessonsModule() {
           </div>
         </motion.div>
 
-        {/* 4. STICKY NOTE (Corrigida para Modo Claro) */}
+        {/* 4. STICKY NOTE */}
         <AnimatePresence>
           {showSticky && (
             <motion.div
@@ -620,6 +805,9 @@ export default function LessonsModule() {
               </motion.div>
           ))}
       </div>
+
+      {/* 6. COLLECTIVE BUILD ZONE (New) */}
+      <CollectiveZone classes={classes} currentUser={session?.user} dragConstraints={constraintsRef} />
 
     </div>
   );

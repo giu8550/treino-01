@@ -10,125 +10,116 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// --- MODELO DE USUÁRIO (O CORAÇÃO DO SISTEMA) ---
+// --- MODELO DE USUÁRIO ---
 model User {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
   email         String?   @unique
   emailVerified DateTime?
-  image         String?   // Foto de Perfil (Base64 ou URL)
+  image         String?   
   
-  // Dados de Perfil & Onboarding
-  course        String?   // Ex: "Computer Science"
-  bio           String?   // Biografia curta
+  // Profile
+  course        String?   
+  bio           String?   
   age           Int?
   gender        String?
-  torsoImage    String?   // Foto de corpo inteiro/torso para o Lounge
-  role          String?   // "student", "researcher", etc.
-  phone         String?   // "(00) 00000-0000"
+  torsoImage    String?   
+  role          String?   
+  phone         String?   
   
-  // --- GAMIFICAÇÃO & PROGRESSO (NOVO) ---
-  level         Int       @default(1)  // Nível do usuário na plataforma
-  streak        Int       @default(0)  // Dias consecutivos de atividade
-  xp            Int       @default(0)  // Pontos de experiência
+  // Gamification
+  level         Int       @default(1)
+  streak        Int       @default(0)
+  xp            Int       @default(0)
   
-  // Dados de Identidade & Crypto
-  identityId    String?   // CPF, Matrícula, etc.
-  idType        String?   // "wallet" ou "role_id"
-  walletAddress String?   // Carteira Crypto
+  // Identity
+  identityId    String?   
+  idType        String?   
+  walletAddress String?   
   
-  // Dados Administrativos & KYC
+  // Admin
   kycStatus     String    @default("pending")
-  documents     Json?     // Metadados dos PDFs enviados
-  institution   String?   // Instituição de ensino
+  documents     Json?     
+  institution   String?   
 
-  // Datas de controle
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // --- RELACIONAMENTOS ---
+  // Relations
   accounts      Account[]
   sessions      Session[]
-  
-  // Relacionamento com o Feed
   posts         Post[]
   comments      Comment[]
-
-  // Relacionamento com a Área de Trabalho (Lounge Memory)
   userSpaceData UserSpaceData?
 }
 
-// --- CONFIGURAÇÕES GLOBAIS DO SISTEMA ---
-// Armazena dados únicos, como a mensagem diária da Zaeon no LoungeEarth
-model SystemSetting {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  key       String   @unique // Ex: "global_message"
-  value     String   // O texto da mensagem
-  updatedAt DateTime @updatedAt
-}
-
-// --- MEMÓRIA DO LOUNGE & SALAS ---
+// --- MEMÓRIA DO LOUNGE & SALAS (ATUALIZADO) ---
 model UserSpaceData {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   
-  // Conexão com o Usuário
   userId        String   @unique @db.ObjectId
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Dados Persistentes do Lounge
-  schedule      Json?    // Array das aulas (JSON puro)
-  chatHistory   Json?    // Histórico do Chat com a IA (Array de objetos)
-  stickyNote    String?  // Texto do post-it amarelo
-  activeProject Json?    // Projeto ativo no momento
-  citations     Json?    // Citações geradas pelos agentes
-  workContent   String?  // Conteúdo de trabalho salvo
-  workTitle     String?  // Título do trabalho salvo
+  // --- STATE PERSISTENCE (Sincronizado com o Frontend) ---
+  
+  // 1. Layout & UI States (YearBoard toggle, Gadget On/Off, Plug Position, Sticky Visibility)
+  layoutState   Json?    // Ex: { showYearBoard: true, gadgetOn: false, pluggedDay: 2, showSticky: true }
 
-  // --- OBJETIVOS & HÁBITOS (NOVO) ---
-  // Armazena a matriz de hábitos: [{ id, name, days: [bool] }]
-  objectives    Json?    
+  // 2. Data Content
+  schedule      Json?    // Array de aulas (classes)
+  stickyNote    String?  // Texto do post-it
+  
+  // 3. Modules Data
+  chatHistory   Json?    // Histórico do Assistant (Role: User/AI)
+  zaeonChat     Json?    // Histórico do Zaeon (Role: User/Agent)
+  library       Json?    // Docs salvos (storedPdfs)
+  fabricator    Json?    // Docs gerados (generatedDocs)
+  personalModules Json?  // Backpack & Archives (userModules)
+
+  // 4. Objectives (Profile Page)
+  objectives    Json?    // Matriz de hábitos
+
+  // Legacy/Other
+  activeProject Json?    
+  citations     Json?    
+  workContent   String?  
+  workTitle     String?  
 
   updatedAt     DateTime @updatedAt
 }
 
-// --- MODELOS DE FEED ---
+// ... (Restante dos modelos SystemSetting, Post, Comment, NewsPost, Account, Session mantidos iguais)
+model SystemSetting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique 
+  value     String   
+  updatedAt DateTime @updatedAt
+}
+
 model Post {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
-  likes     String[] @default([]) // Array de IDs de usuários que deram like
+  likes     String[] @default([]) 
   createdAt DateTime @default(now())
-
-  // --- CAMPO: SALA/CATEGORIA ---
-  // Define em qual feed este post aparece. 
-  // Padrão: "lounge". Opções: "cyber", "bio", "quantic", "humanities"
   room      String   @default("lounge") 
-
-  // Autor do Post
-  user      String   // Snapshot do nome de exibição para performance
-  userImage String?  // Snapshot da imagem de perfil para performance
-  
+  user      String   
+  userImage String?  
   userId    String?  @db.ObjectId
   author    User?    @relation(fields: [userId], references: [id])
-
   comments  Comment[]
 }
 
 model Comment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
-  user      String   // Nome de exibição
+  user      String   
   createdAt DateTime @default(now())
-
-  // Relação com Post
   postId    String   @db.ObjectId
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  // Relação com Usuário
   userId    String?  @db.ObjectId
   author    User?    @relation(fields: [userId], references: [id])
 }
 
-// --- MODELO DE NOTÍCIAS ---
 model NewsPost {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
@@ -136,12 +127,11 @@ model NewsPost {
   content     String
   imageUrl    String?
   publishDate DateTime @default(now())
-  status      String   @default("draft") // "draft" ou "published"
+  status      String   @default("draft") 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-// --- MODELOS PADRÃO DO NEXTAUTH (Auth.js) ---
 model Account {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
   userId            String  @db.ObjectId
@@ -155,9 +145,7 @@ model Account {
   scope             String?
   id_token          String? @db.String
   session_state     String?
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([provider, providerAccountId])
 }
 
