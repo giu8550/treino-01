@@ -5,7 +5,8 @@ import {
   MapPin, User, Activity, Clock, ChevronUp, ChevronDown, 
   Power, Send, Sparkles, X, AlertCircle, StickyNote,
   FileText, Plus, Database, Bot, File, Briefcase, Pen, Globe,
-  Users, Layers, Share2, Copy, Link as LinkIcon, ArrowUpRight
+  Users, Layers, Share2, Copy, Link as LinkIcon, ArrowUpRight,
+  Type, Image as ImageIcon, Bold, Italic, Hash, UploadCloud
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
@@ -27,7 +28,7 @@ interface StoredDoc { id: string; title: string; type: 'pdf' | 'doc'; size: stri
 interface UserItem { id: string; type: 'file' | 'link'; name: string; meta: string; }
 interface UserModule { id: number; title: string; items: UserItem[]; }
 
-// --- COMPONENT: COLLECTIVE BUILD NODE (UPDATED) ---
+// --- COMPONENT: COLLECTIVE BUILD NODE ---
 const CollectiveZone = ({ classes, currentUser, dragConstraints }: { classes: any[], currentUser: any, dragConstraints: any }) => {
     const [activeClassId, setActiveClassId] = useState(classes[0].id);
     const [inviteCode, setInviteCode] = useState<string | null>(null);
@@ -64,7 +65,7 @@ const CollectiveZone = ({ classes, currentUser, dragConstraints }: { classes: an
             dragConstraints={dragConstraints}
             whileHover={{ cursor: "grab" }}
             whileDrag={{ cursor: "grabbing", zIndex: 100 }}
-            className="w-full mt-10 mb-20 max-w-[1400px] relative z-30"
+            className="w-full mt-10 max-w-[1400px] relative z-30"
         >
             <div className="relative w-full bg-white/70 dark:bg-black/30 backdrop-blur-3xl border border-slate-300 dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl flex flex-col gap-6 overflow-hidden">
                 
@@ -72,7 +73,6 @@ const CollectiveZone = ({ classes, currentUser, dragConstraints }: { classes: an
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-300/50 dark:border-white/10 pb-6">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-500">
-                            {/* ÍCONE ALTERADO PARA USERS (COLETIVIDADE) */}
                             <Users size={20} />
                         </div>
                         <div>
@@ -182,7 +182,7 @@ const CollectiveZone = ({ classes, currentUser, dragConstraints }: { classes: an
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/20 rounded-full blur-[40px] group-hover:bg-indigo-500/30 transition-all duration-700" />
                         </div>
 
-                        {/* ACTIVE NODES - LÓGICA DINÂMICA (SEM SLOTS VAZIOS FIXOS) */}
+                        {/* ACTIVE NODES - DYNAMIC */}
                         <div className="flex-1 bg-white/40 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-[2rem] p-4 flex flex-col gap-3 relative overflow-y-auto custom-scrollbar" onPointerDown={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-between pl-2">
                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Active Nodes</span>
@@ -227,12 +227,114 @@ const CollectiveZone = ({ classes, currentUser, dragConstraints }: { classes: an
     );
 };
 
+// --- COMPONENT: COLLAB EDITOR (BLOG MODULE) ---
+const CollabEditor = ({ dragConstraints }: { dragConstraints: any }) => {
+    return (
+        <div className="w-full max-w-[1400px] flex flex-col items-center mb-20 relative z-30">
+            {/* ENERGY CORD (Connecting Node to Editor) */}
+            <div className="h-16 w-full flex justify-center relative">
+                <svg width="20" height="100%" viewBox="0 0 20 64" className="overflow-visible">
+                    {/* Glowing Wire */}
+                    <line x1="10" y1="0" x2="10" y2="64" stroke="#6366f1" strokeWidth="2" className="opacity-30" />
+                    <motion.line 
+                        x1="10" y1="0" x2="10" y2="64" 
+                        stroke="#818cf8" strokeWidth="3"
+                        strokeDasharray="10 20"
+                        initial={{ strokeDashoffset: 0 }}
+                        animate={{ strokeDashoffset: 100 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        className="opacity-80 drop-shadow-[0_0_8px_#6366f1]"
+                    />
+                    {/* Connection Point Top */}
+                    <circle cx="10" cy="0" r="4" fill="#6366f1" className="animate-pulse" />
+                    {/* Connection Point Bottom */}
+                    <circle cx="10" cy="64" r="4" fill="#6366f1" className="animate-pulse" />
+                </svg>
+            </div>
+
+            {/* EDITOR MODULE */}
+            <motion.div 
+                drag
+                dragConstraints={dragConstraints}
+                whileHover={{ cursor: "grab" }}
+                whileDrag={{ cursor: "grabbing", zIndex: 100 }}
+                className="relative w-full bg-white/70 dark:bg-black/30 backdrop-blur-3xl border border-slate-300 dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl flex flex-col gap-6 overflow-hidden"
+            >
+                {/* Editor Header */}
+                <div className="flex items-center justify-between border-b border-slate-300/50 dark:border-white/10 pb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-500">
+                            <Pen size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Neural Editor</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Drafting research papers & blogs</p>
+                        </div>
+                    </div>
+                    
+                    {/* Toolbar */}
+                    <div className="flex items-center gap-2 bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-2 py-1">
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><Type size={14} /></button>
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><Bold size={14} /></button>
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><Italic size={14} /></button>
+                        <div className="w-px h-4 bg-slate-300 dark:bg-white/20 mx-1"></div>
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><ImageIcon size={14} /></button>
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><LinkIcon size={14} /></button>
+                    </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex flex-col gap-4" onPointerDown={(e) => e.stopPropagation()}>
+                    <input 
+                        type="text" 
+                        placeholder="Untitled Article..." 
+                        className="text-3xl font-black bg-transparent border-none outline-none text-slate-800 dark:text-white placeholder:text-slate-300 dark:placeholder:text-white/20"
+                    />
+                    <input 
+                        type="text" 
+                        placeholder="Add a subtitle or brief description..." 
+                        className="text-sm font-medium bg-transparent border-none outline-none text-slate-500 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-white/10"
+                    />
+                    
+                    {/* Tags Input */}
+                    <div className="flex items-center gap-2 text-indigo-500 text-xs font-bold">
+                        <Hash size={12} />
+                        <input type="text" placeholder="Add tags (e.g., #Zaeon #Research)" className="bg-transparent outline-none w-full text-indigo-500 placeholder:text-indigo-500/40" />
+                    </div>
+
+                    <div className="w-full h-px bg-slate-200 dark:bg-white/5 my-2"></div>
+
+                    <textarea 
+                        className="w-full h-64 bg-transparent border-none outline-none resize-none text-sm leading-relaxed text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-white/10 custom-scrollbar"
+                        placeholder="Start typing your research content here..."
+                    />
+
+                    {/* Media Drop Zone */}
+                    <div className="w-full h-24 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
+                        <div className="p-2 bg-slate-100 dark:bg-white/5 rounded-full group-hover:scale-110 transition-transform">
+                            <UploadCloud size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Drop images or files to attach</span>
+                    </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="flex justify-end pt-4 border-t border-slate-300/50 dark:border-white/10">
+                    <button className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg hover:shadow-indigo-500/30 transition-all">
+                        <Send size={12} /> Publish to Feed
+                    </button>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
+
 export default function LessonsModule() {
   const { data: session } = useSession();
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [showYearBoard, setShowYearBoard] = useState(true);
   
-  // --- STATE ---
+  // CODE 1 STATE
   const [classes, setClasses] = useState(initialSchedule);
   const [selectedClass, setSelectedClass] = useState<any>(initialSchedule[0]);
   const [gadgetOn, setGadgetOn] = useState(false);
@@ -245,7 +347,7 @@ export default function LessonsModule() {
   const [inputMessage, setInputMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // --- ZAEON STATES ---
+  // CODE 2 STATE
   const [liquidChatHistory, setLiquidChatHistory] = useState<{role: 'user' | 'agent', text: string}[]>([
       { role: 'agent', text: "Zaeon initialized. Ready for data processing." }
   ]);
@@ -592,6 +694,7 @@ export default function LessonsModule() {
             whileDrag={{ cursor: "grabbing", zIndex: 100 }}
             className="group relative flex items-center gap-10"
         >
+            {/* ENERGY CORDS ANIMATION (Restored) */}
             <div className="absolute inset-0 pointer-events-none overflow-visible">
                 {[
                     { yStart: 130, yEnd: 84, delay: 0 },
@@ -806,8 +909,105 @@ export default function LessonsModule() {
           ))}
       </div>
 
-      {/* 6. COLLECTIVE BUILD ZONE (New) */}
+      {/* 6. COLLECTIVE BUILD ZONE */}
       <CollectiveZone classes={classes} currentUser={session?.user} dragConstraints={constraintsRef} />
+
+      {/* 7. NEURAL EDITOR (NEW) */}
+      <div className="w-full max-w-[1400px] flex flex-col items-center mb-20 relative z-30">
+            {/* ENERGY CORD (Connecting Node to Editor) */}
+            <div className="h-16 w-full flex justify-center relative">
+                <svg width="20" height="100%" viewBox="0 0 20 64" className="overflow-visible">
+                    {/* Glowing Wire */}
+                    <line x1="10" y1="0" x2="10" y2="64" stroke="#6366f1" strokeWidth="2" className="opacity-30" />
+                    <motion.line 
+                        x1="10" y1="0" x2="10" y2="64" 
+                        stroke="#818cf8" strokeWidth="3"
+                        strokeDasharray="10 20"
+                        initial={{ strokeDashoffset: 0 }}
+                        animate={{ strokeDashoffset: 100 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        className="opacity-80 drop-shadow-[0_0_8px_#6366f1]"
+                    />
+                    {/* Connection Points */}
+                    <circle cx="10" cy="0" r="4" fill="#6366f1" className="animate-pulse" />
+                    <circle cx="10" cy="64" r="4" fill="#6366f1" className="animate-pulse" />
+                </svg>
+            </div>
+
+            {/* EDITOR MODULE */}
+            <motion.div 
+                drag
+                dragConstraints={constraintsRef}
+                whileHover={{ cursor: "grab" }}
+                whileDrag={{ cursor: "grabbing", zIndex: 100 }}
+                className="relative w-full bg-white/70 dark:bg-black/30 backdrop-blur-3xl border border-slate-300 dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl flex flex-col gap-6 overflow-hidden"
+            >
+                {/* Editor Header */}
+                <div className="flex items-center justify-between border-b border-slate-300/50 dark:border-white/10 pb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-500">
+                            <Pen size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Neural Editor</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Drafting research papers & blogs</p>
+                        </div>
+                    </div>
+                    
+                    {/* Toolbar */}
+                    <div className="flex items-center gap-2 bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-2 py-1">
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><Type size={14} /></button>
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><Bold size={14} /></button>
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><Italic size={14} /></button>
+                        <div className="w-px h-4 bg-slate-300 dark:bg-white/20 mx-1"></div>
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><ImageIcon size={14} /></button>
+                        <button className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 transition-colors"><LinkIcon size={14} /></button>
+                    </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex flex-col gap-4" onPointerDown={(e) => e.stopPropagation()}>
+                    <input 
+                        type="text" 
+                        placeholder="Untitled Article..." 
+                        className="text-3xl font-black bg-transparent border-none outline-none text-slate-800 dark:text-white placeholder:text-slate-300 dark:placeholder:text-white/20"
+                    />
+                    <input 
+                        type="text" 
+                        placeholder="Add a subtitle or brief description..." 
+                        className="text-sm font-medium bg-transparent border-none outline-none text-slate-500 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-white/10"
+                    />
+                    
+                    {/* Tags Input */}
+                    <div className="flex items-center gap-2 text-indigo-500 text-xs font-bold">
+                        <Hash size={12} />
+                        <input type="text" placeholder="Add tags (e.g., #Zaeon #Research)" className="bg-transparent outline-none w-full text-indigo-500 placeholder:text-indigo-500/40" />
+                    </div>
+
+                    <div className="w-full h-px bg-slate-200 dark:bg-white/5 my-2"></div>
+
+                    <textarea 
+                        className="w-full h-64 bg-transparent border-none outline-none resize-none text-sm leading-relaxed text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-white/10 custom-scrollbar"
+                        placeholder="Start typing your research content here..."
+                    />
+
+                    {/* Media Drop Zone */}
+                    <div className="w-full h-24 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
+                        <div className="p-2 bg-slate-100 dark:bg-white/5 rounded-full group-hover:scale-110 transition-transform">
+                            <UploadCloud size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Drop images or files to attach</span>
+                    </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="flex justify-end pt-4 border-t border-slate-300/50 dark:border-white/10">
+                    <button className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg hover:shadow-indigo-500/30 transition-all">
+                        <Send size={12} /> Publish to Feed
+                    </button>
+                </div>
+            </motion.div>
+        </div>
 
     </div>
   );
