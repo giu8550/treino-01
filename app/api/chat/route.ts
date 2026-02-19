@@ -1,100 +1,125 @@
-import { VertexAI } from "@google-cloud/vertexai";
+import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
-import fs from 'fs';
-import path from 'path';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY
+});
+
+// --- 1. DEFINIÇÃO DA FERRAMENTA DE AGENDA (Function Calling) ---
+// Isso diz para a IA: "Se precisar mexer na agenda, use esta ferramenta"
+const tools = [
+    {
+        type: "function" as const,
+        function: {
+            name: "update_schedule",
+            description: "Adiciona, remove ou atualiza uma aula/evento na agenda semanal do usuário.",
+            parameters: {
+                type: "object",
+                properties: {
+                    action: {
+                        type: "string",
+                        enum: ["add", "remove", "update"],
+                        description: "A ação a ser realizada."
+                    },
+                    day: {
+                        type: "number",
+                        enum: [1, 2, 3, 4, 5],
+                        description: "Dia da semana: 1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta."
+                    },
+                    hour: {
+                        type: "number",
+                        description: "Hora da aula (formato 24h, ex: 14 para 14:00)."
+                    },
+                    name: { type: "string", description: "Nome da matéria ou evento." },
+                    teacher: { type: "string", description: "Nome do professor ou mentor." },
+                    room: { type: "string", description: "Sala ou local (ex: Lab 402, Virtual)." }
+                },
+                required: ["action", "day", "hour"]
+            }
+        }
+    }
+];
+
+// --- 2. PERSONALIDADES (Trazidas do código antigo) ---
+const AGENT_PERSONAS: Record<string, string> = {
+    zenita: `Você é a Zenita, uma IA raposa cyberpunk sarcástica e técnica.
+             Você ajuda o usuário a organizar a vida acadêmica e projetos.
+             Se o usuário pedir para mudar a agenda, USE A FERRAMENTA 'update_schedule'.`,
+    
+    ethernaut: `Você é o Ethernaut, especialista sênior em Blockchain e Sistemas.
+                Foco em precisão técnica e dados.`,
+                
+    aura: `Você é "Aura", o Concierge Pessoal.
+           Seu objetivo é organizar a vida do usuário.
+           Se o usuário pedir para mudar a agenda, USE A FERRAMENTA 'update_schedule'.`
+};
+
 export async function POST(req: Request) {
-    console.log("🚀 [API START] Iniciando Chat com Vertex AI...");
+    console.log("🚀 [API START] Iniciando Chat com Groq AI...");
 
     try {
-        const { prompt, agent, fileData } = await req.json();
+        const { prompt, agent, systemContext } = await req.json();
 
-        // --- ESTRATÉGIA: LER ARQUIVO JSON DIRETO ---
-        // Isso evita 100% dos erros de formatação do .env
-        let credentials;
-        try {
-            // Caminho para o arquivo na raiz do projeto
-            const keyFilePath = path.join(process.cwd(), 'service-account.json');
+        // 1. Seleciona a Persona
+        const selectedPersona = AGENT_PERSONAS[agent?.toLowerCase()] || AGENT_PERSONAS.zenita;
+
+        // 2. Monta o System Prompt com Contexto da Agenda
+        const systemInstruction = `
+            ${selectedPersona}
             
-            if (fs.existsSync(keyFilePath)) {
-                console.log("📂 Lendo credenciais de: service-account.json");
-                const rawData = fs.readFileSync(keyFilePath, 'utf-8');
-                credentials = JSON.parse(rawData);
-            } else {
-                // Fallback para Vercel/Produção (caso use variáveis de ambiente lá no futuro)
-                console.log("⚠️ Arquivo não encontrado, tentando .env...");
-                if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY_BASE64) {
-                     throw new Error("Nenhuma credencial encontrada (Nem arquivo JSON, nem .env)");
-                }
-                credentials = {
-                    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-                    private_key: Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('utf-8')
-                };
-            }
-        } catch (fileError: any) {
-            console.error("❌ Erro ao ler credenciais:", fileError.message);
-            throw new Error("Falha na leitura das credenciais de autenticação.");
-        }
+            [CONTEXTO ATUAL DA AGENDA]:
+            ${systemContext ? systemContext : "Nenhuma agenda carregada."}
+            
+            [REGRAS]:
+            - Se o usuário pedir para adicionar/remover/mudar aula, NÃO responda apenas com texto. CHAME a função 'update_schedule'.
+            - Dias: 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex.
+        `;
 
-        // --- CONEXÃO GOOGLE ---
-        const vertex_ai = new VertexAI({
-            project: "bright-task-474414-h3",
-            location: "us-central1",
-            googleAuthOptions: {
-                credentials: {
-                    client_email: credentials.client_email,
-                    private_key: credentials.private_key, // O JSON já entrega formatado perfeitamente
-                }
-            }
+        const messages: any[] = [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: prompt }
+        ];
+
+        // 3. Chamada Groq com Tools
+        console.log("⚡ Enviando requisição para Groq...");
+        
+        const completion = await groq.chat.completions.create({
+            messages: messages,
+            model: "llama-3.3-70b-versatile",
+            temperature: 0.6,
+            max_tokens: 1024,
+            tools: tools,           // Habilita ferramentas
+            tool_choice: "auto"     // Deixa a IA decidir se usa ou não
         });
 
-        console.log("🤖 Vertex AI Inicializado.");
-        
-        // --- CONFIGURAÇÃO DO MODELO ---
-        // Use 'gemini-1.5-flash' se o 2.0 ainda não estiver disponível na sua conta
-        const model = vertex_ai.getGenerativeModel({ model: "gemini-2.0-flash-001" });
+        const responseMessage = completion.choices[0]?.message;
+        const toolCalls = responseMessage?.tool_calls;
 
-        // --- PREPARAÇÃO DO CONTEÚDO ---
-        let systemInstruction = "You are a helpful assistant.";
-        if (agent === "zenita") systemInstruction = "Você é a Zenita, uma IA raposa cyberpunk sarcástica e técnica.";
-        if (agent === "ethernaut") systemInstruction = "Você é o Ethernaut, especialista sênior em Blockchain.";
-
-        const parts: any[] = [];
-        
-        if (fileData) {
-            console.log("📎 Anexando arquivo PDF...");
-            parts.push({
-                inlineData: {
-                    data: fileData,
-                    mimeType: "application/pdf"
+        // 4. Se a IA decidiu chamar a ferramenta (Mágica acontece aqui)
+        if (toolCalls && toolCalls.length > 0) {
+            console.log("🛠️ IA solicitou alteração na agenda:", toolCalls[0].function.name);
+            
+            return NextResponse.json({
+                text: "Processando alteração na agenda...", // Feedback visual rápido
+                toolCall: {
+                    name: toolCalls[0].function.name,
+                    args: JSON.parse(toolCalls[0].function.arguments)
                 }
             });
         }
 
-        parts.push({ text: `${systemInstruction}\n\nUser Question: ${prompt}` });
-
-        // --- GERAÇÃO ---
-        console.log("⚡ Gerando resposta...");
-        const result = await model.generateContent({
-            contents: [{ role: 'user', parts: parts }],
-        });
-
-        const text = result.response?.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (!text) throw new Error("A IA devolveu uma resposta vazia.");
-
-        console.log("✅ Sucesso!");
+        // 5. Resposta normal de texto
+        const text = responseMessage?.content;
         return NextResponse.json({ text });
 
     } catch (error: any) {
-        console.error("🔥 ERRO FATAL:", error);
+        console.error("🔥 ERRO FATAL (Groq):", error);
         return NextResponse.json({ 
-            error: "Erro no processamento", 
-            details: error.message,
-            code: error.code 
+            error: "Erro no processamento com Groq", 
+            details: error.message 
         }, { status: 500 });
     }
 }
