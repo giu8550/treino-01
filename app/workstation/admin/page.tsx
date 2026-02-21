@@ -11,7 +11,7 @@ import {
     PhoneIcon, ChatBubbleLeftEllipsisIcon, DocumentTextIcon,
     ServerIcon, SunIcon, MoonIcon,
     PlusIcon, PhotoIcon, CalendarDaysIcon, GlobeAmericasIcon, 
-    TrashIcon
+    TrashIcon, LanguageIcon // Ícone novo para tradução
 } from "@heroicons/react/24/outline";
 import MatrixRain from "@/components/main/star-background";
 
@@ -51,14 +51,18 @@ interface UserRequest {
     source: "google_quick" | "manual_form";
 }
 
+// Suporte global de idiomas
+type Locale = "pt" | "en" | "zh" | "es" | "fr";
+
 interface NewsPost {
     id: string;
-    title: string;
-    subtitle: string;
-    content: string;
+    title: Record<Locale, string>;
+    subtitle: Record<Locale, string>;
+    content: Record<Locale, string>;
     imageUrl: string;
     publishDate: string; // YYYY-MM-DD
     status: "published" | "draft";
+    category: "news" | "report"; 
 }
 
 const STARTUP_DATE = new Date("2026-01-15T00:00:00");
@@ -71,6 +75,10 @@ export default function AdminControlRoom() {
     const [activeBoard, setActiveBoard] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState(true);
 
+    // --- STATES DO I18N ---
+    const [currentLocale, setCurrentLocale] = useState<Locale>("pt");
+    const [isTranslating, setIsTranslating] = useState(false);
+
     // --- STATES DO QUEUE ---
     const [requests, setRequests] = useState<UserRequest[]>([]);
     const [selectedReq, setSelectedReq] = useState<UserRequest | null>(null);
@@ -80,13 +88,14 @@ export default function AdminControlRoom() {
     // --- STATES DO REPORTS (NEWS) ---
     const [newsList, setNewsList] = useState<NewsPost[]>([]);
     const [currentPost, setCurrentPost] = useState<NewsPost>({
-        id: '', // IMPORTANTE: Começa vazio para indicar "novo post" para a API
-        title: '',
-        subtitle: '',
-        content: '',
+        id: '',
+        title: { pt: '', en: '', zh: '', es: '', fr: '' },
+        subtitle: { pt: '', en: '', zh: '', es: '', fr: '' },
+        content: { pt: '', en: '', zh: '', es: '', fr: '' },
         imageUrl: '',
         publishDate: new Date().toISOString().split('T')[0],
-        status: 'draft'
+        status: 'draft',
+        category: 'news' 
     });
 
     useEffect(() => { 
@@ -131,10 +140,14 @@ export default function AdminControlRoom() {
             const res = await fetch('/api/news');
             if (res.ok) {
                 const data = await res.json();
-                // Formata a data ISO do banco para YYYY-MM-DD para o input funcionar
                 const formattedList = data.map((post: any) => ({
                     ...post,
-                    publishDate: post.publishDate ? post.publishDate.split('T')[0] : ''
+                    publishDate: post.publishDate ? post.publishDate.split('T')[0] : '',
+                    category: post.category || 'news',
+                    // Compatibilidade com posts antigos que não eram objetos Json
+                    title: typeof post.title === 'string' ? { pt: post.title, en: '', zh: '', es: '', fr: '' } : post.title,
+                    subtitle: typeof post.subtitle === 'string' ? { pt: post.subtitle, en: '', zh: '', es: '', fr: '' } : post.subtitle,
+                    content: typeof post.content === 'string' ? { pt: post.content, en: '', zh: '', es: '', fr: '' } : post.content,
                 }));
                 setNewsList(formattedList);
             }
@@ -149,52 +162,98 @@ export default function AdminControlRoom() {
         }
     }, [activeTab]);
 
+    // --- HANDLERS DO I18N (TRANSLATE ASSIST) ---
+    const handleAITranslate = async () => {
+        const sourceText = currentPost.content[currentLocale];
+        if (!sourceText) return alert("Escreva algo no idioma atual primeiro.");
+        
+        setIsTranslating(true);
+        // Exemplo de integração. O ideal é você enviar para sua rota de IA
+        try {
+            const res = await fetch('/api/translate', {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    text: sourceText, 
+                    sourceLang: currentLocale,
+                    // Poderíamos pedir para a IA traduzir para todos os outros idiomas de uma vez
+                    targetLangs: ['pt', 'en', 'zh', 'es', 'fr'].filter(l => l !== currentLocale) 
+                })
+            });
+            
+            if (res.ok) {
+                const translations = await res.json(); // ex: { en: "Hello", es: "Hola" ... }
+                setCurrentPost(prev => ({
+                    ...prev,
+                    content: { ...prev.content, ...translations.content },
+                    title: { ...prev.title, ...translations.title },
+                    subtitle: { ...prev.subtitle, ...translations.subtitle }
+                }));
+                alert("Tradução IA concluída com sucesso.");
+            } else {
+                // Mock de espera caso a rota não exista ainda
+                setTimeout(() => {
+                    alert("Função de Tradução conectada à interface. Crie a Rota API para ativar.");
+                }, 1000);
+            }
+        } catch (error) {
+            alert("Erro de conexão com o serviço de tradução.");
+        } finally {
+            setIsTranslating(false);
+        }
+    };
+
     // --- HANDLERS DO REPORTS ---
     const handleNewPost = () => {
         setCurrentPost({
-            id: '', // Resetar ID para criar novo
-            title: '',
-            subtitle: '',
-            content: '',
+            id: '', 
+            title: { pt: '', en: '', zh: '', es: '', fr: '' },
+            subtitle: { pt: '', en: '', zh: '', es: '', fr: '' },
+            content: { pt: '', en: '', zh: '', es: '', fr: '' },
             imageUrl: '',
             publishDate: new Date().toISOString().split('T')[0],
-            status: 'draft'
+            status: 'draft',
+            category: 'news' 
         });
     };
 
     const handleSavePost = async () => {
-        if (!currentPost.title) return alert("Title is required");
+        if (!currentPost.title.pt && !currentPost.title.en) return alert("É necessário um título (PT ou EN) no mínimo.");
+
+        // Garante que o post seja salvo como publicado
+        const postToSave = { 
+            ...currentPost, 
+            status: 'published' 
+        };
 
         try {
-            // Chamada REAL para a API
             const res = await fetch('/api/news', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(currentPost)
+                body: JSON.stringify(postToSave)
             });
 
             if (res.ok) {
                 const savedPost = await res.json();
                 
-                // Se foi salvo, atualiza a lista lateral
                 fetchNews(); 
                 
-                // Se era novo, seta o ID retornado para modo de edição
                 if (!currentPost.id) {
-                    setCurrentPost(prev => ({ ...prev, id: savedPost.id }));
+                    setCurrentPost(prev => ({ ...prev, id: savedPost.id, status: 'published' }));
+                } else {
+                    setCurrentPost(prev => ({ ...prev, status: 'published' }));
                 }
-                alert("Post synced with Zaeon Database.");
+                alert("Post sincronizado globalmente no Zaeon Database.");
             } else {
-                alert("Failed to save.");
+                alert("Falha ao salvar.");
             }
         } catch (error) {
             console.error(error);
-            alert("Connection error.");
+            alert("Erro de conexão.");
         }
     };
 
     const handleDeletePost = async () => {
-        if (!currentPost.id) return; // Não dá pra deletar rascunho não salvo
+        if (!currentPost.id) return; 
         if (!confirm("Are you sure you want to delete this post?")) return;
 
         try {
@@ -203,8 +262,8 @@ export default function AdminControlRoom() {
             });
 
             if (res.ok) {
-                fetchNews(); // Atualiza lista
-                handleNewPost(); // Limpa editor
+                fetchNews(); 
+                handleNewPost(); 
             }
         } catch (error) {
             console.error(error);
@@ -316,7 +375,7 @@ export default function AdminControlRoom() {
                         {/* LISTA DE NOTÍCIAS (ESQUERDA) */}
                         <div className="w-[320px] bg-slate-200/40 dark:bg-[#0a0a14]/60 backdrop-blur-md rounded-[45px] border border-slate-200 dark:border-white/10 flex flex-col shadow-inner overflow-hidden">
                             <div className="p-8 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-white/50 dark:bg-black/20">
-                                <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tighter">Posts</h2>
+                                <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tighter">Global Posts</h2>
                                 <button onClick={handleNewPost} className="p-2 bg-slate-800 dark:bg-white text-white dark:text-black rounded-full hover:scale-110 transition-transform">
                                     <PlusIcon className="w-4 h-4" />
                                 </button>
@@ -327,10 +386,20 @@ export default function AdminControlRoom() {
                                 ) : (
                                     newsList.map((post) => (
                                         <div key={post.id} onClick={() => setCurrentPost(post)} className={`p-4 rounded-3xl cursor-pointer transition-all border ${currentPost.id === post.id ? 'bg-white dark:bg-cyan-900/30 border-cyan-500' : 'bg-white/40 dark:bg-white/5 border-transparent hover:bg-white dark:hover:bg-white/10'}`}>
-                                            <h4 className="font-bold text-xs text-slate-800 dark:text-white truncate">{post.title || "Untitled"}</h4>
-                                            <div className="flex justify-between mt-2 opacity-50 text-[10px]">
+                                            <h4 className="font-bold text-xs text-slate-800 dark:text-white truncate">
+                                                {/* Mostra o título no idioma ativo, ou cai pro PT/EN se estiver vazio */}
+                                                {post.title[currentLocale] || post.title.pt || post.title.en || "Untitled"}
+                                            </h4>
+                                            
+                                            <div className="flex justify-between items-center mt-3 opacity-60 text-[9px] font-bold tracking-widest uppercase">
                                                 <span>{post.publishDate}</span>
-                                                <span className="uppercase">{post.status}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={post.category === 'report' ? 'text-amber-500 dark:text-amber-400' : 'text-cyan-600 dark:text-cyan-400'}>
+                                                        {post.category || 'news'}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span>{post.status}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))
@@ -341,19 +410,37 @@ export default function AdminControlRoom() {
                         {/* EDITOR (DIREITA) */}
                         <div className="flex-1 bg-white dark:bg-[#0a0a14]/90 backdrop-blur-xl rounded-[45px] border border-slate-200 dark:border-white/10 flex flex-col shadow-2xl relative overflow-hidden">
                             
-                            {/* Toolbar de Ação */}
-                            <div className="absolute top-6 right-6 flex gap-2 z-20">
-                                {/* Botão de Deletar com função real */}
+                            {/* Toolbar de Ação e Idiomas */}
+                            <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
+                                
+                                {/* Seletor de Idiomas (PT, EN, ZH, ES, FR) */}
+                                <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 shadow-inner">
+                                    {(["pt", "en", "es", "fr", "zh"] as Locale[]).map((lang) => (
+                                        <button 
+                                            key={lang}
+                                            onClick={() => setCurrentLocale(lang)} 
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currentLocale === lang ? 'bg-white dark:bg-cyan-500 text-black shadow-md' : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+                                        >
+                                            {lang.toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Assistente de Tradução */}
+                                <button onClick={handleAITranslate} disabled={isTranslating} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-cyan-400 hover:bg-cyan-500/10 transition-colors flex items-center gap-2 border border-transparent hover:border-cyan-500/30">
+                                    <LanguageIcon className={`w-5 h-5 ${isTranslating ? 'animate-spin' : ''}`} />
+                                    <span className="text-[10px] font-black uppercase">Auto-Translate</span>
+                                </button>
+
                                 <button onClick={handleDeletePost} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:text-red-500 transition-colors">
                                     <TrashIcon className="w-5 h-5" />
                                 </button>
-                                {/* Botão de Publicar com função real */}
                                 <button onClick={handleSavePost} className="px-6 py-2 rounded-xl bg-slate-900 dark:bg-cyan-500 text-white dark:text-black font-bold text-xs uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2">
-                                    <GlobeAmericasIcon className="w-4 h-4" /> Publish
+                                    <GlobeAmericasIcon className="w-4 h-4" /> Global Sync
                                 </button>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto custom-scrollbar p-12">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-12 pt-20">
                                 <div className="max-w-3xl mx-auto space-y-8">
                                     
                                     {/* Input de Imagem */}
@@ -366,7 +453,6 @@ export default function AdminControlRoom() {
                                                 <span className="text-xs font-bold uppercase tracking-widest">Add Cover Image</span>
                                             </>
                                         )}
-                                        {/* Input "Escondido" mas funcional para colar URL */}
                                         <input 
                                             type="text" 
                                             placeholder="Paste Image URL here"
@@ -376,41 +462,73 @@ export default function AdminControlRoom() {
                                         />
                                     </div>
 
-                                    {/* Data */}
-                                    <div className="flex items-center gap-2 text-slate-400 dark:text-white/40">
-                                        <CalendarDaysIcon className="w-4 h-4" />
-                                        <input 
-                                            type="date" 
-                                            value={currentPost.publishDate}
-                                            onChange={(e) => setCurrentPost({...currentPost, publishDate: e.target.value})}
-                                            className="bg-transparent border-none outline-none text-xs font-bold uppercase tracking-widest cursor-pointer"
-                                        />
+                                    {/* Data & Categoria */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-slate-400 dark:text-white/40">
+                                            <CalendarDaysIcon className="w-4 h-4" />
+                                            <input 
+                                                type="date" 
+                                                value={currentPost.publishDate}
+                                                onChange={(e) => setCurrentPost({...currentPost, publishDate: e.target.value})}
+                                                className="bg-transparent border-none outline-none text-xs font-bold uppercase tracking-widest cursor-pointer"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-[10px] font-black text-cyan-500 uppercase tracking-widest bg-cyan-500/10 px-3 py-1 rounded-lg">
+                                                Editing: {currentLocale === 'zh' ? 'Chinese' : currentLocale === 'pt' ? 'Portuguese' : currentLocale === 'en' ? 'English' : currentLocale === 'es' ? 'Spanish' : 'French'}
+                                            </div>
+
+                                            {/* Toggle de Categoria */}
+                                            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
+                                                <button
+                                                    onClick={() => setCurrentPost({ ...currentPost, category: 'news' })}
+                                                    className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                                                        currentPost.category === 'news'
+                                                            ? 'bg-white dark:bg-cyan-500/20 text-slate-800 dark:text-cyan-400 shadow-sm'
+                                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'
+                                                    }`}
+                                                >
+                                                    Standard
+                                                </button>
+                                                <button
+                                                    onClick={() => setCurrentPost({ ...currentPost, category: 'report' })}
+                                                    className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                                                        currentPost.category === 'report'
+                                                            ? 'bg-white dark:bg-amber-500/20 text-slate-800 dark:text-amber-500 shadow-sm'
+                                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'
+                                                    }`}
+                                                >
+                                                    Report
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* Título e Subtítulo */}
+                                    {/* Título e Subtítulo - SENSÍVEIS AO IDIOMA ATUAL */}
                                     <div className="space-y-4">
                                         <input 
                                             type="text" 
-                                            placeholder="Title" 
+                                            placeholder={`Headline (${currentLocale.toUpperCase()})...`}
                                             className="w-full bg-transparent text-4xl font-black text-slate-800 dark:text-white placeholder:text-slate-300 dark:placeholder:text-white/10 outline-none border-none"
-                                            value={currentPost.title}
-                                            onChange={(e) => setCurrentPost({...currentPost, title: e.target.value})}
+                                            value={currentPost.title[currentLocale]}
+                                            onChange={(e) => setCurrentPost({...currentPost, title: { ...currentPost.title, [currentLocale]: e.target.value }})}
                                         />
                                         <input 
                                             type="text" 
-                                            placeholder="Subtitle..." 
+                                            placeholder={`Subtitle (${currentLocale.toUpperCase()})...`}
                                             className="w-full bg-transparent text-xl font-medium text-slate-500 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-white/10 outline-none border-none"
-                                            value={currentPost.subtitle}
-                                            onChange={(e) => setCurrentPost({...currentPost, subtitle: e.target.value})}
+                                            value={currentPost.subtitle[currentLocale]}
+                                            onChange={(e) => setCurrentPost({...currentPost, subtitle: { ...currentPost.subtitle, [currentLocale]: e.target.value }})}
                                         />
                                     </div>
 
-                                    {/* Corpo do Texto */}
+                                    {/* Corpo do Texto - SENSÍVEL AO IDIOMA ATUAL */}
                                     <textarea 
-                                        placeholder="Tell your story..." 
+                                        placeholder={`Write the full story in ${currentLocale.toUpperCase()}...`} 
                                         className="w-full h-[500px] bg-transparent text-lg leading-relaxed text-slate-700 dark:text-slate-300 placeholder:text-slate-200 dark:placeholder:text-white/5 outline-none resize-none font-serif"
-                                        value={currentPost.content}
-                                        onChange={(e) => setCurrentPost({...currentPost, content: e.target.value})}
+                                        value={currentPost.content[currentLocale]}
+                                        onChange={(e) => setCurrentPost({...currentPost, content: { ...currentPost.content, [currentLocale]: e.target.value }})}
                                     />
                                 </div>
                             </div>

@@ -7,7 +7,8 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
     Terminal, Lock, XCircle,
     BookOpen, ClipboardList, Cpu, Activity,
-    Users, Eye, EyeOff, UserCircle, Zap, ShieldCheck, Aperture
+    Users, Eye, EyeOff, UserCircle, Zap, ShieldCheck, Aperture,
+    Newspaper // --- ADICIONADO: Ícone de notícias ---
 } from 'lucide-react';
 import { Navbar } from "@/components/main/navbar";
 import { LoungeChatWidget } from "@/components/sub/LoungeChatWidget";
@@ -26,13 +27,15 @@ const ProjectsModule = dynamic(() => import('./main-lounge/projects/page').then(
 const ResearchModule = dynamic(() => import('./main-lounge/researches/page').then(mod => mod.default), { loading: LoadingModule });
 const CommunityModule = dynamic(() => import('./main-lounge/community/page').then(mod => mod.default), { loading: LoadingModule });
 const ProfileModule = dynamic(() => import('./main-lounge/profile/page').then(mod => mod.default), { loading: LoadingModule });
+// --- ADICIONADO: Import do Módulo de Notícias ---
+const NewsModule = dynamic(() => import('./main-lounge/news/page').then(mod => mod.default), { loading: LoadingModule });
 
 export default function ZaeonLoungeRoom() {
 
     // --- ESTADOS GERAIS ---
     const [isLoaded, setIsLoaded] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    
+
     // Estados do Loading Imersivo
     const [loadingText, setLoadingText] = useState("SYSTEM CHECK");
     const [progress, setProgress] = useState(0);
@@ -47,20 +50,73 @@ export default function ZaeonLoungeRoom() {
     const sidebarTimerRef = useRef<NodeJS.Timeout | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    // --- TABS ---
-    const [tabs, setTabs] = useState([
+    // --- TABS (BASE INICIAL) ---
+    // Colocamos numa variável para ser fácil de reordenar ao buscar do banco de dados
+    const baseTabs = [
         { id: 'community', label: 'Lounge & Net', icon: <Users size={18} /> },
+        { id: 'news', label: 'News', icon: <Newspaper size={18} /> }, // <-- NOVO MÓDULO AQUI
         { id: 'classes', label: 'Classes', icon: <BookOpen size={18} /> },
         { id: 'exams', label: 'Exams', icon: <ClipboardList size={18} /> },
         { id: 'projects', label: 'Projects', icon: <Cpu size={18} /> },
         { id: 'research', label: 'Research', icon: <Activity size={18} /> },
         { id: 'profile', label: 'Identity', icon: <UserCircle size={18} /> },
-    ]);
+    ];
+
+    const [tabs, setTabs] = useState(baseTabs);
+
+    // --- NOVO: BUSCAR A ORDEM SALVA NO BANCO AO AUTENTICAR ---
+    useEffect(() => {
+        if (isAuthenticated) {
+            const fetchSavedOrder = async () => {
+                try {
+                    // Substitua pela sua rota API que busca o UserSpaceData
+                    const res = await fetch('/api/user-space');
+                    if (res.ok) {
+                        const data = await res.json();
+                        // Se existir uma ordem salva dentro de layoutState
+                        if (data?.layoutState?.sidebarOrder) {
+                            const savedOrder = data.layoutState.sidebarOrder;
+                            // Reconstrói a array baseada na ordem dos IDs salvos
+                            const newTabs = savedOrder
+                                .map((id: string) => baseTabs.find(t => t.id === id))
+                                .filter(Boolean); // Remove nulos caso algum ID não exista mais
+
+                            // Adiciona módulos novos que não estavam na ordem salva (caso você adicione mais futuramente)
+                            const missingTabs = baseTabs.filter(t => !savedOrder.includes(t.id));
+                            setTabs([...newTabs, ...missingTabs]);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Erro ao buscar a ordem da sidebar", error);
+                }
+            };
+            fetchSavedOrder();
+        }
+    }, [isAuthenticated]);
+
+    // --- NOVO: SALVAR A ORDEM NO BANCO QUANDO O USUÁRIO ARRASTAR ---
+    const handleReorder = async (newOrderTabs: any[]) => {
+        setTabs(newOrderTabs); // Atualiza instantaneamente a tela
+        const sidebarOrder = newOrderTabs.map(t => t.id); // Pega apenas os IDs ('community', 'news', etc)
+
+        try {
+            // Envia para a sua rota API que atualiza o layoutState no Prisma
+            await fetch('/api/user-space', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    layoutState: { sidebarOrder }
+                })
+            });
+        } catch (error) {
+            console.error("Erro ao salvar a nova ordem da sidebar", error);
+        }
+    };
 
     // --- 1. BOOT SEQUENCE (MÓDULOS) ---
     useEffect(() => {
         setIsLoaded(true);
-        
+
         const modules = ["PROJECTS", "HUMANS", "AGENTS", "CONTRACTS", "COUNCIL"];
         let currentIndex = 0;
 
@@ -74,7 +130,7 @@ export default function ZaeonLoungeRoom() {
                 setLoadingText("LINK ESTABLISHED");
                 setTimeout(() => setIsAuthenticated(true), 800);
             }
-        }, 600); 
+        }, 600);
 
         return () => clearInterval(interval);
     }, []);
@@ -95,7 +151,7 @@ export default function ZaeonLoungeRoom() {
             x: number; y: number; vx: number; vy: number; text: string;
             constructor(text: string, w: number, h: number) {
                 this.text = text;
-                const minX = w * 0.35; 
+                const minX = w * 0.35;
                 this.x = Math.random() * (w - minX) + minX;
                 this.y = Math.random() * h;
                 this.vx = (Math.random() - 0.5) * 0.5;
@@ -108,7 +164,7 @@ export default function ZaeonLoungeRoom() {
                 if (this.y > h || this.y < 0) this.vy *= -1;
             }
             draw(ctx: CanvasRenderingContext2D) {
-                ctx.fillStyle = "rgba(226, 232, 240, 0.05)"; 
+                ctx.fillStyle = "rgba(226, 232, 240, 0.05)";
                 ctx.font = "bold 10px monospace";
                 ctx.fillText(this.text, this.x, this.y);
             }
@@ -164,7 +220,7 @@ export default function ZaeonLoungeRoom() {
                     >
                         {/* WIDGET CONTAINER */}
                         <div className="relative w-[300px] bg-[#050b14] border border-cyan-900/50 rounded-xl overflow-hidden shadow-[0_0_50px_-10px_rgba(6,182,212,0.15)] flex flex-col p-1">
-                            
+
                             {/* Decorative Tech Corners */}
                             <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-500/50 rounded-tl-lg" />
                             <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-500/50 rounded-tr-lg" />
@@ -173,7 +229,7 @@ export default function ZaeonLoungeRoom() {
 
                             {/* Inner Glass */}
                             <div className="relative z-10 w-full h-full bg-cyan-950/10 backdrop-blur-sm rounded-lg p-6 flex flex-col items-center">
-                                
+
                                 {/* Header Minimal */}
                                 <div className="w-full flex justify-between items-center mb-8 border-b border-cyan-900/30 pb-2">
                                     <span className="text-[9px] text-cyan-600 font-bold tracking-[0.2em]">INIT_ENGINE.V4</span>
@@ -188,13 +244,13 @@ export default function ZaeonLoungeRoom() {
                                 <div className="relative w-20 h-20 flex items-center justify-center mb-8">
                                     {/* Outer Ring */}
                                     <div className="absolute inset-0 border border-dashed border-cyan-800/60 rounded-full animate-[spin_10s_linear_infinite]" />
-                                    
+
                                     {/* Middle Ring (Reverse) */}
                                     <div className="absolute inset-2 border-2 border-t-transparent border-l-cyan-500/80 border-r-transparent border-b-cyan-500/20 rounded-full animate-[spin_2s_linear_infinite_reverse]" />
-                                    
+
                                     {/* Inner Ring (Fast) */}
                                     <div className="absolute inset-5 border border-cyan-400/40 rounded-full animate-pulse" />
-                                    
+
                                     {/* Icon */}
                                     <Aperture className="w-6 h-6 text-cyan-400 animate-[spin_4s_linear_infinite]" />
                                 </div>
@@ -203,7 +259,7 @@ export default function ZaeonLoungeRoom() {
                                 <div className="flex flex-col items-center gap-1 h-10">
                                     <span className="text-[8px] text-cyan-700 uppercase font-mono">Loading Module</span>
                                     <AnimatePresence mode="wait">
-                                        <motion.span 
+                                        <motion.span
                                             key={loadingText}
                                             initial={{ opacity: 0, y: 5, filter: "blur(4px)" }}
                                             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -222,7 +278,7 @@ export default function ZaeonLoungeRoom() {
                                         <span>{Math.round(progress)}%</span>
                                     </div>
                                     <div className="w-full h-[2px] bg-cyan-950 rounded-full overflow-hidden">
-                                        <motion.div 
+                                        <motion.div
                                             className="h-full bg-cyan-400 shadow-[0_0_10px_#22d3ee]"
                                             animate={{ width: `${progress}%` }}
                                             transition={{ ease: "circOut", duration: 0.5 }}
@@ -231,7 +287,7 @@ export default function ZaeonLoungeRoom() {
                                 </div>
 
                             </div>
-                            
+
                             {/* Scanline Overlay */}
                             <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-20 bg-[length:100%_2px,3px_100%] pointer-events-none opacity-20" />
                         </div>
@@ -267,7 +323,8 @@ export default function ZaeonLoungeRoom() {
                             onMouseEnter={handleSidebarEnter}
                             onMouseLeave={handleSidebarLeave}
                         >
-                            <Reorder.Group axis="y" values={tabs} onReorder={setTabs} className="flex flex-col gap-2 w-full flex-1 justify-center">
+                            {/* --- MODIFICADO: Passando o handleReorder em vez de setTabs direto --- */}
+                            <Reorder.Group axis="y" values={tabs} onReorder={handleReorder} className="flex flex-col gap-2 w-full flex-1 justify-center">
                                 {tabs.map((item) => (
                                     <Reorder.Item key={item.id} value={item}>
                                         <button
@@ -345,6 +402,7 @@ export default function ZaeonLoungeRoom() {
                                                 className="h-full"
                                             >
                                                 {/* MÓDULOS CARREGADOS DINAMICAMENTE */}
+                                                {activeTab === 'news' && <NewsModule />} {/* <-- ADICIONADO AQUI */}
                                                 {activeTab === 'classes' && <ClassesModule />}
                                                 {activeTab === 'exams' && <ExamsModule />}
                                                 {activeTab === 'projects' && <ProjectsModule />}

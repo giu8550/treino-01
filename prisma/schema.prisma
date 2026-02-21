@@ -88,7 +88,6 @@ model UserSpaceData {
   updatedAt     DateTime @updatedAt
 }
 
-// ... (Restante dos modelos SystemSetting, Post, Comment, NewsPost, Account, Session mantidos iguais)
 model SystemSetting {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   key       String   @unique 
@@ -120,14 +119,21 @@ model Comment {
   author    User?    @relation(fields: [userId], references: [id])
 }
 
+// --- MODELO ATUALIZADO PARA I18N ---
 model NewsPost {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  subtitle    String?
-  content     String
+  
+  // Campos transformados em Json para suportar os objetos de idioma
+  // Ex: { "pt": "Título", "en": "Title", "zh": "标题", "es": "Título", "fr": "Titre" }
+  title       Json
+  subtitle    Json?
+  content     Json
+  
   imageUrl    String?
   publishDate DateTime @default(now())
-  status      String   @default("draft") 
+  status      String   @default("draft")
+  category    String   @default("news") 
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

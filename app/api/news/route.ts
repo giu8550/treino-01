@@ -21,7 +21,8 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { id, title, subtitle, content, imageUrl, publishDate, status } = body;
+        // A categoria foi adicionada aqui na desestruturação
+        const { id, title, subtitle, content, imageUrl, publishDate, status, category } = body;
 
         // Converte a string de data (2026-02-06) para Objeto Date do JS
         const dateObject = new Date(publishDate);
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
             const updatedPost = await prisma.newsPost.update({
                 where: { id },
                 data: {
-                    title, subtitle, content, imageUrl, status,
+                    title, subtitle, content, imageUrl, status, category,
                     publishDate: dateObject
                 }
             });
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
             // --- CRIAR NOVO (CREATE) ---
             const newPost = await prisma.newsPost.create({
                 data: {
-                    title, subtitle, content, imageUrl, status,
+                    title, subtitle, content, imageUrl, status, category,
                     publishDate: dateObject
                 }
             });

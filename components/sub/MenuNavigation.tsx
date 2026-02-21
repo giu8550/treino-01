@@ -149,6 +149,10 @@ export default function MenuNavigation() {
                    <option value="en">English</option>
                    <option value="pt">Português</option>
                    <option value="es">Español</option>
+                   <option value="zh">中文</option>
+                   <option value="ko">한국어</option>
+                   <option value="fr">Français</option>
+                   <option value="de">Deutsch</option>
                  </select>
                  <ChevronRightIcon className="h-5 w-5 opacity-40 shrink-0" />
                </div>
