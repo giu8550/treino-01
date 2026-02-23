@@ -8,7 +8,7 @@ import {
     Terminal, Lock, XCircle,
     BookOpen, ClipboardList, Cpu, Activity,
     Users, Eye, EyeOff, UserCircle, Zap, ShieldCheck, Aperture,
-    Newspaper // --- ADICIONADO: Ícone de notícias ---
+    Newspaper
 } from 'lucide-react';
 import { Navbar } from "@/components/main/navbar";
 import { LoungeChatWidget } from "@/components/sub/LoungeChatWidget";
@@ -27,7 +27,6 @@ const ProjectsModule = dynamic(() => import('./main-lounge/projects/page').then(
 const ResearchModule = dynamic(() => import('./main-lounge/researches/page').then(mod => mod.default), { loading: LoadingModule });
 const CommunityModule = dynamic(() => import('./main-lounge/community/page').then(mod => mod.default), { loading: LoadingModule });
 const ProfileModule = dynamic(() => import('./main-lounge/profile/page').then(mod => mod.default), { loading: LoadingModule });
-// --- ADICIONADO: Import do Módulo de Notícias ---
 const NewsModule = dynamic(() => import('./main-lounge/news/page').then(mod => mod.default), { loading: LoadingModule });
 
 export default function ZaeonLoungeRoom() {
@@ -42,46 +41,43 @@ export default function ZaeonLoungeRoom() {
 
     // --- ESTADOS DA UI ---
     const [activeTab, setActiveTab] = useState("community");
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
 
     // Refs
-    const sidebarTimerRef = useRef<NodeJS.Timeout | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     // --- TABS (BASE INICIAL) ---
-    // Colocamos numa variável para ser fácil de reordenar ao buscar do banco de dados
+    // REQUISITO 2: News embaixo de Research
     const baseTabs = [
         { id: 'community', label: 'Lounge & Net', icon: <Users size={18} /> },
-        { id: 'news', label: 'News', icon: <Newspaper size={18} /> }, // <-- NOVO MÓDULO AQUI
         { id: 'classes', label: 'Classes', icon: <BookOpen size={18} /> },
         { id: 'exams', label: 'Exams', icon: <ClipboardList size={18} /> },
         { id: 'projects', label: 'Projects', icon: <Cpu size={18} /> },
         { id: 'research', label: 'Research', icon: <Activity size={18} /> },
+        { id: 'news', label: 'News', icon: <Newspaper size={18} /> }, 
         { id: 'profile', label: 'Identity', icon: <UserCircle size={18} /> },
     ];
 
     const [tabs, setTabs] = useState(baseTabs);
 
-    // --- NOVO: BUSCAR A ORDEM SALVA NO BANCO AO AUTENTICAR ---
+    // --- BUSCAR A ORDEM SALVA NO BANCO AO AUTENTICAR ---
     useEffect(() => {
         if (isAuthenticated) {
             const fetchSavedOrder = async () => {
                 try {
-                    // Substitua pela sua rota API que busca o UserSpaceData
                     const res = await fetch('/api/user-space');
                     if (res.ok) {
                         const data = await res.json();
                         // Se existir uma ordem salva dentro de layoutState
-                        if (data?.layoutState?.sidebarOrder) {
-                            const savedOrder = data.layoutState.sidebarOrder;
+                        if (data?.data?.layoutState?.sidebarOrder) {
+                            const savedOrder = data.data.layoutState.sidebarOrder;
                             // Reconstrói a array baseada na ordem dos IDs salvos
                             const newTabs = savedOrder
                                 .map((id: string) => baseTabs.find(t => t.id === id))
-                                .filter(Boolean); // Remove nulos caso algum ID não exista mais
+                                .filter(Boolean);
 
-                            // Adiciona módulos novos que não estavam na ordem salva (caso você adicione mais futuramente)
+                            // Adiciona módulos novos que não estavam na ordem salva
                             const missingTabs = baseTabs.filter(t => !savedOrder.includes(t.id));
                             setTabs([...newTabs, ...missingTabs]);
                         }
@@ -94,15 +90,15 @@ export default function ZaeonLoungeRoom() {
         }
     }, [isAuthenticated]);
 
-    // --- NOVO: SALVAR A ORDEM NO BANCO QUANDO O USUÁRIO ARRASTAR ---
+    // --- SALVAR A ORDEM NO BANCO QUANDO O USUÁRIO ARRASTAR ---
+    // REQUISITO 3: Funcionalidade de mudar os modos ativa e funcional
     const handleReorder = async (newOrderTabs: any[]) => {
         setTabs(newOrderTabs); // Atualiza instantaneamente a tela
-        const sidebarOrder = newOrderTabs.map(t => t.id); // Pega apenas os IDs ('community', 'news', etc)
+        const sidebarOrder = newOrderTabs.map(t => t.id); // Pega apenas os IDs
 
         try {
-            // Envia para a sua rota API que atualiza o layoutState no Prisma
             await fetch('/api/user-space', {
-                method: 'PATCH',
+                method: 'POST', // Mudado para POST para usar a rota de upsert/update padrão que você já deve ter configurada
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     layoutState: { sidebarOrder }
@@ -185,9 +181,6 @@ export default function ZaeonLoungeRoom() {
             cancelAnimationFrame(animationFrameId);
         };
     }, []);
-
-    const handleSidebarEnter = () => { sidebarTimerRef.current = setTimeout(() => setIsSidebarExpanded(true), 1500); };
-    const handleSidebarLeave = () => { if (sidebarTimerRef.current) clearTimeout(sidebarTimerRef.current); setIsSidebarExpanded(false); };
 
     const cardStyle = `
         dark:bg-[#0f172a]/80 bg-white/60
@@ -314,33 +307,28 @@ export default function ZaeonLoungeRoom() {
                         className={`flex items-start justify-start px-4 gap-6 w-full h-full relative z-10 transition-all duration-700 ${isFocusMode ? 'pt-4' : 'pt-32'}`}
                     >
                         {/* SIDEBAR */}
+                        {/* REQUISITO 1: w-12 fixo (sem isSidebarExpanded) */}
                         <motion.aside
                             layout
-                            className={`z-20 rounded-[2.5rem] ${cardStyle} transition-all duration-500 flex flex-col items-center py-6 gap-4 
-                                ${isSidebarExpanded ? 'w-48 px-4' : 'w-12'} 
-                                ${isFocusMode ? 'h-[96vh]' : 'h-[70vh]'} 
-                            `}
-                            onMouseEnter={handleSidebarEnter}
-                            onMouseLeave={handleSidebarLeave}
+                            className={`z-20 rounded-[2.5rem] ${cardStyle} transition-all duration-500 flex flex-col items-center py-6 gap-4 w-12 ${isFocusMode ? 'h-[96vh]' : 'h-[70vh]'}`}
                         >
-                            {/* --- MODIFICADO: Passando o handleReorder em vez de setTabs direto --- */}
                             <Reorder.Group axis="y" values={tabs} onReorder={handleReorder} className="flex flex-col gap-2 w-full flex-1 justify-center">
                                 {tabs.map((item) => (
                                     <Reorder.Item key={item.id} value={item}>
+                                        {/* A tooltip que aparece no hover foi mantida para usabilidade, já que a sidebar é fixa em tamanho mínimo */}
                                         <button
                                             onClick={() => { setActiveTab(item.id); setIsMinimized(false); }}
-                                            className={`flex items-center gap-4 w-full p-3 rounded-xl transition-all relative overflow-hidden group
+                                            className={`flex items-center justify-center w-8 h-8 mx-auto rounded-xl transition-all relative overflow-hidden group
                                             ${activeTab === item.id
                                                     ? 'dark:bg-white/10 bg-[#0f172a] text-white shadow-lg border dark:border-white/10 border-transparent'
                                                     : 'dark:text-white/40 text-slate-500 hover:dark:text-white hover:text-[#0f172a]'
                                                 }`}
                                         >
                                             <div className="shrink-0 relative z-10 flex justify-center w-full">{item.icon}</div>
-                                            {isSidebarExpanded && (
-                                                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] font-black uppercase tracking-widest truncate relative z-10 whitespace-nowrap">
-                                                    {item.label}
-                                                </motion.span>
-                                            )}
+                                             {/* Tooltip para mostrar o nome da aba já que a sidebar não expande mais */}
+                                            <span className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-[9px] rounded font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                                                {item.label}
+                                            </span>
                                         </button>
                                     </Reorder.Item>
                                 ))}
@@ -349,7 +337,7 @@ export default function ZaeonLoungeRoom() {
                             <div className="w-full pt-4 mt-auto border-t dark:border-white/10 border-black/5">
                                 <button
                                     onClick={() => setIsFocusMode(!isFocusMode)}
-                                    className={`flex items-center gap-4 w-full p-3 rounded-xl transition-all 
+                                    className={`flex items-center justify-center w-8 h-8 mx-auto rounded-xl transition-all group relative
                                         ${isFocusMode
                                             ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                                             : 'dark:text-white/40 text-slate-500 hover:dark:text-white hover:text-[#0f172a]'
@@ -358,11 +346,9 @@ export default function ZaeonLoungeRoom() {
                                     <div className="shrink-0 flex justify-center w-full">
                                         {isFocusMode ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </div>
-                                    {isSidebarExpanded && (
-                                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] font-black uppercase tracking-widest truncate">
-                                            {isFocusMode ? "Exit" : "Focus"}
-                                        </motion.span>
-                                    )}
+                                    <span className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-[9px] rounded font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                                        {isFocusMode ? "Exit" : "Focus"}
+                                    </span>
                                 </button>
                             </div>
                         </motion.aside>
@@ -402,7 +388,7 @@ export default function ZaeonLoungeRoom() {
                                                 className="h-full"
                                             >
                                                 {/* MÓDULOS CARREGADOS DINAMICAMENTE */}
-                                                {activeTab === 'news' && <NewsModule />} {/* <-- ADICIONADO AQUI */}
+                                                {activeTab === 'news' && <NewsModule />} 
                                                 {activeTab === 'classes' && <ClassesModule />}
                                                 {activeTab === 'exams' && <ExamsModule />}
                                                 {activeTab === 'projects' && <ProjectsModule />}
@@ -417,7 +403,7 @@ export default function ZaeonLoungeRoom() {
                         </AnimatePresence>
 
                         <div className="relative z-50">
-                            <LoungeChatWidget defaultOpen={false} />
+                            <LoungeChatWidget />
                         </div>
                     </motion.div>
                 )}
