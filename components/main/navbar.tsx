@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useTranslation } from "react-i18next";
 import { useSession } from "next-auth/react";
-import logoPng from "@/app/zaeon-name.png";
+import logoPng from "@/app/oneblood_2.png";
 
 import ThemeToggle from "@/components/sub/ThemeToggle";
 import "../../src/i18n";
@@ -67,10 +67,10 @@ const NavbarComponent = () => {
             <Image
                 src={logoPng}
                 alt="zaeonlogo"
-                width={280}
-                height={150}
+                width={250}
+                height={250}
                 priority
-                className="h-12 w-auto object-contain invert dark:invert-0 transition-all"
+                className="h-18 w-auto object-contain invert dark:invert-0 transition-all"
             />
           </Link>
 
