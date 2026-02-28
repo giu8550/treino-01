@@ -3,143 +3,215 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 
-const WORDS = ["幸运", "信仰", "努力", "教育", "组织", "荣誉", "社区", "胜利", "梦想"];
-const FONT_FAMILY = `"Noto Sans SC", "Microsoft YaHei", "SimHei", monospace, sans-serif`;
-
-const DARK_PALETTE = ["#9ecbff", "#5fb4ff", "#2b8eff", "#1a73e8", "#1572a1", "#00a7a7", "#009688", "#33cccc", "#7dd3fc"];
-const LIGHT_PALETTE = ["#0f172a", "#1e293b", "#334155", "#0369a1", "#1d4ed8", "#000000"];
-
-function buildStreamSource() {
-const chunks: string[] = [];
-for (let i = 0; i < WORDS.length; i++) {
-chunks.push(WORDS[i]);
-if (i % 3 === 1) chunks.push("₿");
-if (i % 5 === 2) chunks.push("Ξ");
-if (i % 7 === 3) chunks.push("ICP");
-}
-return chunks.join("");
-}
-const STREAM_SOURCE = buildStreamSource();
-
-const MatrixRain: React.FC = () => {
-const canvasRef = useRef<HTMLCanvasElement | null>(null);
-const { theme, resolvedTheme } = useTheme();
-const [mounted, setMounted] = useState(false);
-
-useEffect(() => setMounted(true), []);
-
-useEffect(() => {
-if (!mounted) return;
-
-const canvas = canvasRef.current!;
-const ctx = canvas.getContext("2d")!;
-let width = canvas.clientWidth;
-let height = canvas.clientHeight;
-
-const currentTheme = theme === 'system' ? resolvedTheme : theme;
-const isDark = currentTheme === 'dark';
-const activePalette = isDark ? DARK_PALETTE : LIGHT_PALETTE;
-const fadeColor = isDark ? "rgba(3, 0, 20, 0.22)" : "rgba(248, 250, 252, 0.22)";
-
-const applyDPR = () => {
-const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-width = canvas.clientWidth;
-height = canvas.clientHeight;
-canvas.width = Math.floor(width * dpr);
-canvas.height = Math.floor(height * dpr);
-ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-};
-applyDPR();
-
-const fontSize = 13;
-// Mantemos a densidade baixa que você pediu (divisor 0.4)
-const colWidthBase = Math.round((fontSize * 4) / 0.4);
-let columns = Math.max(2, Math.floor(width / colWidthBase));
-
-type Col = { y: number; speed: number; color: string; offset: number };
-let cols: Col[] = new Array(columns).fill(0).map((_, i) => ({
-y: -Math.random() * 50,
-speed: 0.40 + (i % 5) * (0.30 / 5),
-color: activePalette[(i + Math.floor(Math.random() * 3)) % activePalette.length],
-offset: Math.floor(Math.random() * STREAM_SOURCE.length),
-}));
-
-ctx.font = `${fontSize}px ${FONT_FAMILY}`;
-ctx.textBaseline = "top";
-const FADE_LENGTH_LINES = 50;
-const BASE_ALPHA = 0.90;
-const TOP_ALPHA = 0.00;
-
-let animationId: number;
-
-const draw = () => {
-ctx.globalAlpha = 1.0;
-ctx.fillStyle = fadeColor;
-ctx.fillRect(0, 0, width, height);
-
-for (let i = 0; i < columns; i++) {
-const col = cols[i];
-
-// --- LÓGICA DE SIMETRIA ---
-// Se i=0, x=0 (borda esquerda)
-// Se i=último, x=largura total (borda direita)
-const x = columns > 1
-? (i * (width - fontSize)) / (columns - 1)
-: (width - fontSize) / 2;
-
-const headY = col.y * fontSize;
-ctx.fillStyle = col.color;
-
-for (let j = 0; j < FADE_LENGTH_LINES; j++) {
-const y = headY - j * fontSize;
-if (y < -fontSize) break;
-if (y > height + fontSize) continue;
-
-const t = j / (FADE_LENGTH_LINES - 1);
-const alpha = BASE_ALPHA * (1 - t) + TOP_ALPHA * t;
-ctx.globalAlpha = alpha;
-const charIndex = (col.offset + Math.floor(col.y) - j + STREAM_SOURCE.length * 100) % STREAM_SOURCE.length;
-const ch = STREAM_SOURCE.charAt(Math.floor(charIndex));
-ctx.fillText(ch, x, y);
-}
-
-col.y += col.speed;
-if (headY > height + FADE_LENGTH_LINES * fontSize) {
-col.y = -Math.random() * 40;
-col.offset = (col.offset + Math.floor(5 + Math.random() * 25)) % STREAM_SOURCE.length;
-}
-}
-ctx.globalAlpha = 1;
-animationId = requestAnimationFrame(draw);
+type Column = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  speed: number;
+  alpha: number;
 };
 
-animationId = requestAnimationFrame(draw);
-
-const onResize = () => {
-applyDPR();
-columns = Math.max(2, Math.floor(width / colWidthBase));
-cols = new Array(columns).fill(0).map((_, i) => ({
-y: -Math.random() * 50,
-speed: 0.40 + (i % 5) * (0.30 / 5),
-color: activePalette[(i + Math.floor(Math.random() * 3)) % activePalette.length],
-offset: Math.floor(Math.random() * STREAM_SOURCE.length),
-}));
-ctx.font = `${fontSize}px ${FONT_FAMILY}`;
+type Star = {
+  x: number;
+  y: number;
+  r: number;
+  alpha: number;
 };
 
-const ro = new ResizeObserver(onResize);
-ro.observe(canvas);
-return () => { cancelAnimationFrame(animationId); ro.disconnect(); };
-}, [theme, resolvedTheme, mounted]);
+const CyberBackground: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-if (!mounted) return <div className="fixed inset-0 z-0 bg-[#030014]" />;
+  useEffect(() => setMounted(true), []);
 
-return (
-<div className="fixed inset-0 z-0 pointer-events-none transition-colors duration-500">
-<canvas ref={canvasRef} className="w-full h-full" style={{ imageRendering: "auto" }} />
-</div>
-);
+  useEffect(() => {
+    if (!mounted) return;
+
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+
+    let width = canvas.clientWidth;
+    let height = canvas.clientHeight;
+
+    const isDark =
+      (theme === "system" ? resolvedTheme : theme) === "dark";
+
+    const baseBg = isDark ? "#030014" : "#f8fafc";
+
+    const columns: Column[] = [];
+    const stars: Star[] = [];
+
+    const COLUMN_COUNT = isDark ? 60 : 40;
+    const STAR_COUNT = isDark ? 140 : 90;
+
+    function rand(min: number, max: number) {
+      return min + Math.random() * (max - min);
+    }
+
+    function applyDPR() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+
+      width = canvas.clientWidth;
+      height = canvas.clientHeight;
+
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function createColumns() {
+      columns.length = 0;
+
+      for (let i = 0; i < COLUMN_COUNT; i++) {
+        columns.push({
+          x: rand(0, width),
+          y: rand(-height, height),
+          width: rand(1, 3),
+          height: rand(height * 0.3, height * 0.9),
+          speed: rand(0.2, 0.7),
+          alpha: rand(0.05, 0.2),
+        });
+      }
+    }
+
+    function createStars() {
+      stars.length = 0;
+
+      for (let i = 0; i < STAR_COUNT; i++) {
+        stars.push({
+          x: rand(0, width),
+          y: rand(0, height),
+          r: rand(0.5, 1.5),
+          alpha: rand(0.05, 0.2),
+        });
+      }
+    }
+
+    function drawColumns() {
+      ctx.save();
+
+      ctx.globalCompositeOperation = "screen";
+
+      for (const col of columns) {
+        const gradient = ctx.createLinearGradient(
+          col.x,
+          col.y,
+          col.x,
+          col.y + col.height
+        );
+
+        gradient.addColorStop(0, "rgba(0,0,0,0)");
+        gradient.addColorStop(
+          0.5,
+          `rgba(80,200,255,${col.alpha})`
+        );
+        gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+        ctx.fillStyle = gradient;
+
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "rgba(80,200,255,0.6)";
+
+        ctx.fillRect(col.x, col.y, col.width, col.height);
+      }
+
+      ctx.restore();
+    }
+
+    function drawStars() {
+      ctx.save();
+
+      ctx.globalCompositeOperation = "screen";
+
+      for (const s of stars) {
+        ctx.globalAlpha = s.alpha;
+
+        ctx.fillStyle = "rgba(180,240,255,1)";
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawVignette() {
+      const gradient = ctx.createRadialGradient(
+        width / 2,
+        height / 2,
+        100,
+        width / 2,
+        height / 2,
+        width
+      );
+
+      gradient.addColorStop(0, "rgba(0,0,0,0)");
+      gradient.addColorStop(1, "rgba(0,0,0,0.45)");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    let animationId: number;
+
+    function animate() {
+      ctx.fillStyle = baseBg;
+      ctx.fillRect(0, 0, width, height);
+
+      drawColumns();
+      drawStars();
+      drawVignette();
+
+      for (const col of columns) {
+        col.y += col.speed;
+
+        if (col.y > height) {
+          col.y = -col.height;
+          col.x = rand(0, width);
+        }
+      }
+
+      animationId = requestAnimationFrame(animate);
+    }
+
+    applyDPR();
+    createColumns();
+    createStars();
+
+    animate();
+
+    const resize = () => {
+      applyDPR();
+      createColumns();
+      createStars();
+    };
+
+    const observer = new ResizeObserver(resize);
+
+    observer.observe(canvas);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      observer.disconnect();
+    };
+  }, [mounted, theme, resolvedTheme]);
+
+  if (!mounted)
+    return <div className="fixed inset-0 bg-[#030014]" />;
+
+  return (
+    <div className="fixed inset-0 z-0 pointer-events-none">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full"
+      />
+    </div>
+  );
 };
 
-export const StarsCanvas = MatrixRain;
-export default MatrixRain;
+export default CyberBackground;
+export const StarsCanvas = CyberBackground;
